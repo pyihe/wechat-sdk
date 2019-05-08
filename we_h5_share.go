@@ -29,7 +29,7 @@ type H5Response struct {
 //从微信拉取基础支持的access_token
 func getTokenFromWX() (Token, error) {
 	if c.appId == "" || c.appSecret == "" {
-		return nil, e.ErrorInitClinet
+		return nil, e.ErrorInitClient
 	}
 	tokenHost := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + c.appId + "&secret=" + c.appSecret
 	response, err := http.Get(tokenHost)
