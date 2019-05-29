@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-type UnifiedOrder interface {
+type ResultParam interface {
 	Param(p string) string
 }
 

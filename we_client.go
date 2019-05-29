@@ -17,13 +17,6 @@ import (
 	"time"
 )
 
-var (
-	//统一下单必须参数
-	UnifiedOrderMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
-	//统一下单可选参数
-	UnifiedOrderOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt"}
-)
-
 type WeClient interface {
 	SetParams(map[string]interface{})
 	AddParam(key string, value interface{})
@@ -33,8 +26,8 @@ type WeClient interface {
 	GetWxOpenId(code string) (Token, error)
 	GetWxUserInfo(lang string) (User, error)
 	ShareH5(string, ...string) (*H5Response, error)
-	DoUnifiedOrder() (UnifiedOrder, error)
-	DoQueryOrder()
+	DoUnifiedOrder() (ResultParam, error)
+	DoQueryOrder() (ResultParam, error)
 }
 
 type myWeClient struct {
@@ -227,7 +220,7 @@ func (client *myWeClient) ShareH5(url string, nonceStrs ...string) (*H5Response,
 }
 
 //统一下单
-func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
+func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	//校验参数
 	if err := client.checkBaseParam(); err != nil {
 		return nil, err
@@ -239,7 +232,7 @@ func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
 	//校验是否缺少必需的参数，以及将统一下单的参数放入params中
 	params := make(map[string]interface{})
 	var paramNames []string
-	for _, k := range UnifiedOrderMustParam {
+	for _, k := range e.UnifiedOrderMustParam {
 		//sign不用传入
 		if k == "sign" {
 			continue
@@ -252,7 +245,7 @@ func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
 		paramNames = append(paramNames, k)
 	}
 
-	for _, k := range UnifiedOrderOptionalParam {
+	for _, k := range e.UnifiedOrderOptionalParam {
 		if _, ok := client.params[k]; ok {
 			params[k] = client.params[k]
 			paramNames = append(paramNames, k)
@@ -302,6 +295,84 @@ func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
 }
 
 //查询订单
-func (client *myWeClient) DoQueryOrder() {
+func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
+	//参数校验
+	if err := client.checkBaseParam(); err != nil {
+		return nil, err
+	}
 
+	if client.params == nil {
+		return nil, e.ErrorNilParam
+	}
+
+	//接收参数
+	params := make(map[string]interface{})
+	var paramNames []string
+
+	//判断订单号是否传入：因为订单号为微信订单号和自己的订单号，二选一，所以单独判断
+	isOutNumber := false
+	if _, ok := client.params["transaction_id"]; !ok {
+		if _, ok = client.params["out_trade_no"]; !ok {
+			return nil, errors.New("lack of order number")
+		}
+		isOutNumber = true
+	}
+
+	if isOutNumber {
+		params["out_trade_no"] = client.params["out_trade_no"]
+		paramNames = append(paramNames, "out_trade_no")
+	} else {
+		params["transaction_id"] = client.params["transaction_id"]
+		paramNames = append(paramNames, "transaction_id")
+	}
+
+	for _, k := range e.QueryOrderMustParam {
+		if _, ok := client.params[k]; !ok {
+			return nil, errors.New(fmt.Sprintf("lack of param: %v", k))
+		}
+		paramNames = append(paramNames, k)
+		params[k] = client.params[k]
+	}
+
+	for _, k := range e.QueryOrderOptionalParam {
+		if _, ok := client.params[k]; ok {
+			paramNames = append(paramNames, k)
+			params[k] = client.params[k]
+		}
+	}
+
+	//参数排序
+	sort.Strings(paramNames)
+
+	toBeSignStr := ""
+	signType := ""
+	for i, k := range paramNames {
+		if k == "sign_type" {
+			signType = params[k].(string)
+		}
+		if i == 0 {
+			toBeSignStr += fmt.Sprintf("%v=%v", k, params[k])
+		} else {
+			toBeSignStr += fmt.Sprintf("&%v=%v", k, params[k])
+		}
+	}
+	toBeSignStr += fmt.Sprintf("&key=%v", client.appSecret)
+
+	signStr := ""
+	if signType == "HMAC-SHA256" {
+		signStr = strings.ToUpper(signHMACSHA256(toBeSignStr))
+	} else {
+		signStr = strings.ToUpper(signMd5(toBeSignStr))
+	}
+
+	writer := bytes.NewBuffer(make([]byte, 0))
+	maps(params).marshalXML(writer)
+	result, err := postQueryOrder(e.QueryOrderApiUrl, "application/xml;charset=utf-8", writer)
+	if err != nil {
+		return nil, err
+	}
+	if result.sign != signStr {
+		return nil, errors.New("sign wrong")
+	}
+	return result, nil
 }
