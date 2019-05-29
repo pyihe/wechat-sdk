@@ -267,7 +267,7 @@ func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
 	toBeSignStr += fmt.Sprintf("&key=%v", client.appSecret)
 	signValue := ""
 	//根据签名方式签名
-	if _, ok := params["sign_type"]; ok && params["sign_type"].(string) == "HMAC-SHA256" {
+	if signType, ok := params["sign_type"]; ok && signType.(string) == "HMAC-SHA256" {
 		//HMAC-SHA256
 		signValue = strings.ToUpper(signHMACSHA256(toBeSignStr))
 	} else {
