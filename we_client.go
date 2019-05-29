@@ -98,10 +98,21 @@ func (client *myWeClient) DelParam(key string) {
 	client.Unlock()
 }
 
+func (client *myWeClient) checkBaseParam() error {
+	//校验参数
+	if client.appId == "" || client.appSecret == "" || client.mchId == "" {
+		return e.ErrorInitClient
+	}
+	return nil
+}
+
 //获取微信openId
 //code: 用户同意授权后，前端获取的code
 //后端可以校验微信后台设置的state
 func (client *myWeClient) GetWxOpenId(code string) (token Token, err error) {
+	if err = client.checkBaseParam(); err != nil {
+		return
+	}
 	//拉取网页授权token的api
 	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%v&secret=%v&code=%v&grant_type=authorization_code", client.appId, client.appSecret, code)
 
@@ -218,8 +229,8 @@ func (client *myWeClient) ShareH5(url string, nonceStrs ...string) (*H5Response,
 //统一下单
 func (client *myWeClient) DoUnifiedOrder() (UnifiedOrder, error) {
 	//校验参数
-	if client.appId == "" || client.appSecret == "" || client.mchId == "" {
-		return nil, e.ErrorInitClient
+	if err := client.checkBaseParam(); err != nil {
+		return nil, err
 	}
 	if client.params == nil {
 		return nil, e.ErrorNilParam
