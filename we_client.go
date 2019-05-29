@@ -276,10 +276,8 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		signValue = strings.ToUpper(signHMACSHA256(toBeSignStr))
 	} else {
 		//默认用MD5签名
-		params["sign_type"] = "MD5"
 		signValue = strings.ToUpper(signMd5(toBeSignStr))
 	}
-	params["sign"] = signValue
 
 	writer := bytes.NewBuffer(make([]byte, 0))
 	maps(params).marshalXML(writer)
