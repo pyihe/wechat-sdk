@@ -197,7 +197,7 @@ func (client *myWeClient) ShareH5(url string, nonceStrs ...string) (*H5Response,
 	nonceStr := ""
 	if len(nonceStrs) <= 0 {
 		//没有传入随机字符串的话，则生成随机字符串
-		u4, _ := uuid.NewV4()
+		u4 := uuid.NewV4()
 		s := strings.Replace(fmt.Sprintf("%s", u4), "-", "", -1)
 		nonceStr = s[:16]
 	} else {
