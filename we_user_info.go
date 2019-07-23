@@ -10,6 +10,10 @@ type User interface {
 	Unionid() string
 }
 
+/*
+annotation
+*/
+
 type userInfo struct {
 	openId   string `json:"openid"`
 	nickName string `json:"nickname"`
