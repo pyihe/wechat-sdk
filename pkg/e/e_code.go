@@ -3,7 +3,9 @@ package e
 import "errors"
 
 var (
-	ErrorNilParam   = errors.New("check param")
+	ErrNilParam     = errors.New("check param")
+	ErrNilAppID     = errors.New("check param: appid")
+	ErrNilAppSecret = errors.New("check param: appSecret")
 	ErrorNoOpenId   = errors.New("check param: openid")
 	ErrorNoToken    = errors.New("check param: access_token")
 	ErrorInitClient = errors.New("call NewClientWithParam first")
