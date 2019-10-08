@@ -103,7 +103,13 @@ func (client *myWeClient) checkBaseParam() error {
 //code: 用户同意授权后，前端获取的code
 //后端可以校验微信后台设置的state
 func (client *myWeClient) GetWxOpenId(code string) (token Token, err error) {
-	if err = client.checkBaseParam(); err != nil {
+	if client.appId == ""  {
+		err = e.ErrNilAppID
+		return
+	}
+
+	if client.appSecret == "" {
+		err = e.ErrNilAppSecret
 		return
 	}
 	//拉取网页授权token的api
@@ -144,8 +150,12 @@ func (client *myWeClient) GetWxOpenId(code string) (token Token, err error) {
 //获取微信用户信息
 //lang: 返回国家地区版本, zh_CN 简体，zh_TW 繁体，en 英语
 func (client *myWeClient) GetWxUserInfo(lang string) (User, error) {
-	if client.params == nil {
-		return nil, e.ErrorNilParam
+	if client.appId == ""  {
+		return nil, e.ErrNilAppID
+	}
+
+	if client.appSecret == "" {
+		return nil, e.ErrNilAppSecret
 	}
 
 	openId, ok := client.params["openid"]
@@ -226,7 +236,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		return nil, err
 	}
 	if client.params == nil {
-		return nil, e.ErrorNilParam
+		return nil, e.ErrNilParam
 	}
 
 	//校验是否缺少必需的参数，以及将统一下单的参数放入params中
@@ -300,7 +310,7 @@ func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 	}
 
 	if client.params == nil {
-		return nil, e.ErrorNilParam
+		return nil, e.ErrNilParam
 	}
 
 	//接收参数

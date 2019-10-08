@@ -3,6 +3,7 @@ package wechat_sdk
 import (
 	"encoding/json"
 	"errors"
+	"github.com/hong008/wechat-sdk/pkg/e"
 	"io/ioutil"
 	"net/http"
 )
@@ -27,8 +28,12 @@ type H5Response struct {
 
 //从微信拉取基础支持的access_token
 func getTokenFromWX() (Token, error) {
-	if err := c.checkBaseParam(); err != nil {
-		return nil, err
+	if c.appId == "" {
+		return nil, e.ErrNilAppID
+	}
+
+	if c.appSecret == "" {
+		return nil, e.ErrNilAppSecret
 	}
 	tokenHost := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + c.appId + "&secret=" + c.appSecret
 	response, err := http.Get(tokenHost)
