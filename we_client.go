@@ -102,15 +102,13 @@ func (client *myWeClient) checkBaseParam() error {
 //获取微信openId
 //code: 用户同意授权后，前端获取的code
 //后端可以校验微信后台设置的state
-func (client *myWeClient) GetWxOpenId(code string) (token Token, err error) {
+func (client *myWeClient) GetWxOpenId(code string) (Token, error) {
 	if client.appId == ""  {
-		err = e.ErrNilAppID
-		return
+		return nil, e.ErrNilAppID
 	}
 
 	if client.appSecret == "" {
-		err = e.ErrNilAppSecret
-		return
+		return nil,e.ErrNilAppSecret
 	}
 	//拉取网页授权token的api
 	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%v&secret=%v&code=%v&grant_type=authorization_code", client.appId, client.appSecret, code)
@@ -133,13 +131,13 @@ func (client *myWeClient) GetWxOpenId(code string) (token Token, err error) {
 		return nil, err
 	}
 
-	if data.errMsg != "" || data.errCode != 0 {
-		return nil, errors.New(data.errMsg)
+	if data.ErrMsg != "" || data.ErrCode != 0 {
+		return nil, errors.New(data.ErrMsg)
 	}
 	//获取到openId后放入client中
 	params := map[string]interface{}{
-		"openid":       data.openId,
-		"access_token": data.authAccessToken,
+		"openid":       data.OpenId,
+		"access_token": data.AuthAccessToken,
 	}
 
 	client.AddParams(params)
@@ -187,8 +185,8 @@ func (client *myWeClient) GetWxUserInfo(lang string) (User, error) {
 		return nil, err
 	}
 	//校验是否正确返回了数据
-	if info.errMsg != "" || info.errCode != 0 {
-		return nil, errors.New(info.errMsg)
+	if info.ErrMsg != "" || info.ErrCode != 0 {
+		return nil, errors.New(info.ErrMsg)
 	}
 	return info, nil
 }
@@ -295,7 +293,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	if err != nil {
 		return nil, err
 	}
-	if result.sign != signValue {
+	if result.Sign != signValue {
 		return nil, errors.New("sign wrong")
 	}
 
@@ -379,7 +377,7 @@ func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 	if err != nil {
 		return nil, err
 	}
-	if result.sign != signStr {
+	if result.Sign != signStr {
 		return nil, errors.New("sign wrong")
 	}
 	return result, nil

@@ -51,8 +51,8 @@ func getTokenFromWX() (Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if info.errCode != 0 || info.errMsg != "" {
-		return nil, errors.New(info.errMsg)
+	if info.ErrCode != 0 || info.ErrMsg != "" {
+		return nil, errors.New(info.ErrMsg)
 	}
 	return info, nil
 }
@@ -63,7 +63,7 @@ func getTicketFromWx() (*jsApiTicketInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	apiUrl := "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=" + token.AuthAccessToken() + "&type=jsapi"
+	apiUrl := "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=" + token.GetAuthAccessToken() + "&type=jsapi"
 	response, err := http.Get(apiUrl)
 	if err != nil {
 		return nil, err

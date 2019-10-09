@@ -9,49 +9,49 @@ import (
 )
 
 type Token interface {
-	OpenId() string
-	AuthAccessToken() string
-	ExpiresIn() int64
-	Scope() string
+	GetOpenId() string
+	GetAuthAccessToken() string
+	GetExpiresIn() int64
+	GetScope() string
 	GetRefreshToken() string
 	RefreshAccessToken() error
 }
 
 type tokenInfo struct {
-	openId          string `json:"openid"`
-	authAccessToken string `json:"access_token"`
-	expiresIn       int64  `json:"expires_in"`
-	refreshToken    string `json:"refresh_token"`
-	scope           string `json:"scope"`
-	errCode         int    `json:"errcode"`
-	errMsg          string `json:"errmsg"`
+	OpenId          string `json:"openid"`
+	AuthAccessToken string `json:"access_token"`
+	ExpiresIn       int64  `json:"expires_in"`
+	RefreshToken    string `json:"refresh_token"`
+	Scope           string `json:"scope"`
+	ErrCode         int    `json:"errcode"`
+	ErrMsg          string `json:"errmsg"`
 }
 
-func (t *tokenInfo) OpenId() string {
-	return t.openId
+func (t *tokenInfo) GetOpenId() string {
+	return t.OpenId
 }
 
-func (t *tokenInfo) AuthAccessToken() string {
-	return t.authAccessToken
+func (t *tokenInfo) GetAuthAccessToken() string {
+	return t.AuthAccessToken
 }
 
-func (t *tokenInfo) ExpiresIn() int64 {
-	return t.expiresIn
+func (t *tokenInfo) GetExpiresIn() int64 {
+	return t.ExpiresIn
 }
 
 func (t *tokenInfo) GetRefreshToken() string {
-	return t.refreshToken
+	return t.RefreshToken
 }
 
-func (t *tokenInfo) Scope() string {
-	return t.scope
+func (t *tokenInfo) GetScope() string {
+	return t.Scope
 }
 
 func (t *tokenInfo) RefreshAccessToken() error {
 	if c == nil {
 		return errors.New("call NewClientWithParam first")
 	}
-	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%v&grant_type=refresh_token&refresh_token=%v", c.appId, t.refreshToken)
+	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%v&grant_type=refresh_token&refresh_token=%v", c.appId, t.GetRefreshToken())
 
 	response, err := http.Get(apiUrl)
 	if err != nil {
@@ -69,7 +69,7 @@ func (t *tokenInfo) RefreshAccessToken() error {
 		return err
 	}
 	//每刷新一次token，同时更新client中的openId
-	c.AddParam("openid", t.openId)
+	c.AddParam("openid", t.OpenId)
 
 	return nil
 }

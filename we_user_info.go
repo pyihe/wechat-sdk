@@ -1,13 +1,13 @@
 package wechat_sdk
 
 type User interface {
-	OpenId() string
-	NickName() string
-	Sex() int
-	City() string
-	Country() string
-	HeadUrl() string
-	Unionid() string
+	GetOpenId() string
+	GetNickName() string
+	GetSex() int
+	GetCity() string
+	GetCountry() string
+	GetHeadUrl() string
+	GetUnionid() string
 }
 
 /*
@@ -15,41 +15,41 @@ annotation
 */
 
 type userInfo struct {
-	openId   string `json:"openid"`
-	nickName string `json:"nickname"`
-	sex      int    `json:"sex"`
-	city     string `json:"CITY"`
-	country  string `json:"COUNTRY"`
-	headUrl  string `json:"headimgurl"`
-	unionid  string `json:"unionid"`
-	errMsg   string `json:"errmsg"`
-	errCode  int    `json:"errcode"`
+	OpenId   string `json:"openid"`
+	NickName string `json:"nickname"`
+	Sex      int    `json:"sex"`
+	City     string `json:"CITY"`
+	Country  string `json:"COUNTRY"`
+	HeadUrl  string `json:"headimgurl"`
+	Unionid  string `json:"unionid"`
+	ErrMsg   string `json:"errmsg"`
+	ErrCode  int    `json:"errcode"`
 }
 
-func (u *userInfo) OpenId() string {
-	return u.openId
+func (u *userInfo) GetOpenId() string {
+	return u.OpenId
 }
 
-func (u *userInfo) NickName() string {
-	return u.nickName
+func (u *userInfo) GetNickName() string {
+	return u.NickName
 }
 
-func (u *userInfo) Sex() int {
-	return u.sex
+func (u *userInfo) GetSex() int {
+	return u.Sex
 }
 
-func (u *userInfo) City() string {
-	return u.city
+func (u *userInfo) GetCity() string {
+	return u.City
 }
 
-func (u *userInfo) Country() string {
-	return u.country
+func (u *userInfo) GetCountry() string {
+	return u.Country
 }
 
-func (u *userInfo) HeadUrl() string {
-	return u.country
+func (u *userInfo) GetHeadUrl() string {
+	return u.HeadUrl
 }
 
-func (u *userInfo) Unionid() string {
-	return u.unionid
+func (u *userInfo) GetUnionid() string {
+	return u.Unionid
 }

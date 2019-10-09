@@ -77,47 +77,47 @@ func postUnifiedOrder(url string, contentType string, body io.Reader) (*unifiedo
 }
 
 type unifiedorderReply struct {
-	code       string `xml:"return_code"`
-	msg        string `xml:"return_msg"`
-	appId      string `xml:"appid"`
-	mchId      string `xml:"mch_id"`
-	deviceInfo string `xml:"device_info"`
-	nonceStr   string `xml:"nonce_str"`
-	sign       string `xml:"sign"`
-	resultCode string `xml:"result_code"`
-	errCode    string `xml:"err_code"`
-	errCodeDes string `xml:"err_code_des"`
-	tradeType  string `xml:"trade_type"`
-	prepayId   string `xml:"prepay_id"`
-	mwebUrl    string `xml:"mweb_url"`
+	Code       string `xml:"return_code"`
+	Msg        string `xml:"return_msg"`
+	AppId      string `xml:"appid"`
+	MchId      string `xml:"mch_id"`
+	DeviceInfo string `xml:"device_info"`
+	NonceStr   string `xml:"nonce_str"`
+	Sign       string `xml:"sign"`
+	ResultCode string `xml:"result_code"`
+	ErrCode    string `xml:"err_code"`
+	ErrCodeDes string `xml:"err_code_des"`
+	TradeType  string `xml:"trade_type"`
+	PrepayId   string `xml:"prepay_id"`
+	MwebUrl    string `xml:"mweb_url"`
 }
 
 func (u *unifiedorderReply) Param(p string) string {
 	switch p {
 	case "return_code":
-		return u.code
+		return u.Code
 	case "return_msg":
-		return u.msg
+		return u.Msg
 	case "appid":
-		return u.appId
+		return u.AppId
 	case "mch_id":
-		return u.mchId
+		return u.MchId
 	case "device_info":
-		return u.deviceInfo
+		return u.DeviceInfo
 	case "nonce_str":
-		return u.nonceStr
+		return u.NonceStr
 	case "sign":
-		return u.sign
+		return u.Sign
 	case "result_code":
-		return u.resultCode
+		return u.ResultCode
 	case "err_code":
-		return u.errCode
+		return u.ErrCode
 	case "err_code_des":
-		return u.errCodeDes
+		return u.ErrCodeDes
 	case "trade_type":
-		return u.tradeType
+		return u.TradeType
 	case "prepay_id":
-		return u.prepayId
+		return u.PrepayId
 	default:
 		return ""
 	}

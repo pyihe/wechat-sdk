@@ -10,18 +10,18 @@ import (
 )
 
 type myPayRe struct {
-	code       string `xml:"return_code"`
-	msg        string `xml:"return_msg"`
-	sign       string `xml:"sign"`
-	resultCode string `xml:"result_code"`
-	errCode    string `xml:"err_code"`
-	errMsg     string `xml:"err_code_desc"`
-	payer      string `xml:"openid"`
-	tradeType  string `xml:"trade_type"`
-	tradeState string `xml:"trade_state"`
-	totalFee   string `xml:"total_fee"`
-	endTime    string `xml:"time_end"`
-	tradeDesc  string `xml:"trade_state_desc"`
+	Code       string `xml:"return_code"`
+	Msg        string `xml:"return_msg"`
+	Sign       string `xml:"sign"`
+	ResultCode string `xml:"result_code"`
+	ErrCode    string `xml:"err_code"`
+	ErrMsg     string `xml:"err_code_desc"`
+	Payer      string `xml:"openid"`
+	TradeType  string `xml:"trade_type"`
+	TradeState string `xml:"trade_state"`
+	TotalFee   string `xml:"total_fee"`
+	EndTime    string `xml:"time_end"`
+	TradeDesc  string `xml:"trade_state_desc"`
 }
 
 func (this *myPayRe) Param(p string) string {
@@ -30,27 +30,27 @@ func (this *myPayRe) Param(p string) string {
 	}
 	switch p {
 	case "return_code":
-		return this.code
+		return this.Code
 	case "return_msg":
-		return this.msg
+		return this.Msg
 	case "result_code":
-		return this.resultCode
+		return this.ResultCode
 	case "err_code":
-		return this.errCode
+		return this.ErrCode
 	case "err_code_desc":
-		return this.errMsg
+		return this.ErrMsg
 	case "openid":
-		return this.payer
+		return this.Payer
 	case "trade_type":
-		return this.tradeType
+		return this.TradeType
 	case "trade_state":
-		return this.tradeState
+		return this.TradeState
 	case "total_fee":
-		return this.totalFee
+		return this.TotalFee
 	case "time_end":
-		return this.endTime
+		return this.EndTime
 	case "trade_state_desc":
-		return this.tradeDesc
+		return this.TradeDesc
 	default:
 		return ""
 	}
