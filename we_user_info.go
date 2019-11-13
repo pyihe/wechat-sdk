@@ -4,6 +4,7 @@ type User interface {
 	GetOpenId() string
 	GetNickName() string
 	GetSex() int
+	GetProvince() string
 	GetCity() string
 	GetCountry() string
 	GetHeadUrl() string
@@ -18,6 +19,7 @@ type userInfo struct {
 	OpenId   string `json:"openid"`
 	NickName string `json:"nickname"`
 	Sex      int    `json:"sex"`
+	Province string `json:"PROVINCE"`
 	City     string `json:"CITY"`
 	Country  string `json:"COUNTRY"`
 	HeadUrl  string `json:"headimgurl"`
@@ -36,6 +38,10 @@ func (u *userInfo) GetNickName() string {
 
 func (u *userInfo) GetSex() int {
 	return u.Sex
+}
+
+func (u *userInfo) GetProvince() string {
+	return u.Province
 }
 
 func (u *userInfo) GetCity() string {
