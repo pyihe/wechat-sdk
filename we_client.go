@@ -241,15 +241,19 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	params := make(map[string]interface{})
 	var paramNames []string
 	for _, k := range e.UnifiedOrderMustParam {
-		//sign不用传入
+		//sign不用传入,因为sign参数不参与签名
 		if k == "sign" {
 			continue
 		}
 		if k == "appid" {
 			params[k] = client.appId
+			paramNames = append(paramNames, k)
+			continue
 		}
 		if k == "mch_id" {
 			params[k] = client.mchId
+			paramNames = append(paramNames, k)
+			continue
 		}
 		if _, ok := client.params[k]; !ok {
 			return nil, errors.New(fmt.Sprintf("lack of param: %v", k))
@@ -266,7 +270,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		}
 	}
 
-	//参数名排序
+	//参数名排序，用于签名
 	sort.Strings(paramNames)
 	//参数拼接
 	toBeSignStr := ""
@@ -292,6 +296,9 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		//默认用MD5签名
 		signValue = strings.ToUpper(signMd5(toBeSignStr))
 	}
+
+	//签名结束后需要将签名加入writer
+	params["sign"] = signValue
 
 	writer := bytes.NewBuffer(make([]byte, 0))
 	maps(params).marshalXML(writer)
@@ -339,6 +346,19 @@ func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 	}
 
 	for _, k := range e.QueryOrderMustParam {
+		if k == "appid" {
+			params[k] = client.appId
+			paramNames = append(paramNames, k)
+			continue
+		}
+		if k == "mch_id" {
+			params[k] = client.mchId
+			paramNames = append(paramNames, k)
+			continue
+		}
+		if k == "sign" {
+			continue
+		}
 		if _, ok := client.params[k]; !ok {
 			return nil, errors.New(fmt.Sprintf("lack of param: %v", k))
 		}
@@ -376,6 +396,9 @@ func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 	} else {
 		signStr = strings.ToUpper(signMd5(toBeSignStr))
 	}
+
+	//签名结束后需要将签名加入writer
+	params["sign"] = signStr
 
 	writer := bytes.NewBuffer(make([]byte, 0))
 	maps(params).marshalXML(writer)
