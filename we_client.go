@@ -31,11 +31,11 @@ type WeClient interface {
 }
 
 type myWeClient struct {
-	sync.Mutex                       //params读写锁
-	params    map[string]interface{} //用于存放请求接口时需要传入的参数
-	appId     string                 //appId
-	appSecret string                 //app密钥
-	mchId     string                 //商户号
+	sync.Mutex                        //params读写锁
+	params     map[string]interface{} //用于存放请求接口时需要传入的参数
+	appId      string                 //appId
+	appSecret  string                 //app密钥
+	mchId      string                 //商户号
 }
 
 var (
@@ -103,12 +103,12 @@ func (client *myWeClient) checkBaseParam() error {
 //code: 用户同意授权后，前端获取的code
 //后端可以校验微信后台设置的state
 func (client *myWeClient) GetWxOpenId(code string) (Token, error) {
-	if client.appId == ""  {
+	if client.appId == "" {
 		return nil, e.ErrNilAppID
 	}
 
 	if client.appSecret == "" {
-		return nil,e.ErrNilAppSecret
+		return nil, e.ErrNilAppSecret
 	}
 	//拉取网页授权token的api
 	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%v&secret=%v&code=%v&grant_type=authorization_code", client.appId, client.appSecret, code)
@@ -148,7 +148,7 @@ func (client *myWeClient) GetWxOpenId(code string) (Token, error) {
 //获取微信用户信息
 //lang: 返回国家地区版本, zh_CN 简体，zh_TW 繁体，en 英语
 func (client *myWeClient) GetWxUserInfo(lang string) (User, error) {
-	if client.appId == ""  {
+	if client.appId == "" {
 		return nil, e.ErrNilAppID
 	}
 
@@ -244,6 +244,12 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		//sign不用传入
 		if k == "sign" {
 			continue
+		}
+		if k == "appid" {
+			params[k] = client.appId
+		}
+		if k == "mch_id" {
+			params[k] = client.mchId
 		}
 		if _, ok := client.params[k]; !ok {
 			return nil, errors.New(fmt.Sprintf("lack of param: %v", k))
