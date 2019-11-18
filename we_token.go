@@ -15,6 +15,7 @@ type Token interface {
 	GetScope() string
 	GetRefreshToken() string
 	RefreshAccessToken() error
+	Err() string
 }
 
 type tokenInfo struct {
@@ -25,6 +26,10 @@ type tokenInfo struct {
 	Scope           string `json:"scope"`
 	ErrCode         int    `json:"errcode"`
 	ErrMsg          string `json:"errmsg"`
+}
+
+func (t *tokenInfo) Err() string {
+	return fmt.Sprintf("code: %v msg: %v", t.ErrCode, t.ErrMsg)
 }
 
 func (t *tokenInfo) GetOpenId() string {
