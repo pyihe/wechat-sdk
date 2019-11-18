@@ -23,6 +23,7 @@ type WeClient interface {
 	AddParams(map[string]interface{})
 	DelParam(key string)
 
+	GetMiniOpenID(code string) (Token, error)
 	GetWxOpenId(code string) (Token, error)
 	GetWxUserInfo(lang string) (User, error)
 	ShareH5(string, ...string) (*H5Response, error)
@@ -410,4 +411,49 @@ func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 		return nil, errors.New("sign wrong")
 	}
 	return result, nil
+}
+
+//小程序获取微信信息
+func (client *myWeClient) GetMiniOpenID(code string) (Token, error) {
+	if client.appId == "" {
+		return nil, e.ErrNilAppID
+	}
+
+	if client.appSecret == "" {
+		return nil, e.ErrNilAppSecret
+	}
+	//拉取网页授权token的api
+	//https://api.weixin.qq.com/sns/jscode2session
+	apiUrl := fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%v&secret=%v&js_code=%v&grant_type=authorization_code", client.appId, client.appSecret, code)
+
+	response, err := http.Get(apiUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var data *tokenInfo
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.ErrMsg != "" || data.ErrCode != 0 {
+		return nil, errors.New(data.ErrMsg)
+	}
+	//获取到openId后放入client中
+	params := map[string]interface{}{
+		"openid":       data.OpenId,
+		"access_token": data.AuthAccessToken,
+	}
+
+	client.AddParams(params)
+
+	return data, nil
 }
