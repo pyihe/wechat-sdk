@@ -77,16 +77,16 @@ func postUnifiedOrder(url string, contentType string, body io.Reader) (*unifiedo
 }
 
 type unifiedorderReply struct {
-	Code       string `xml:"return_code"`
-	Msg        string `xml:"return_msg"`
+	Code       string `xml:"return_code"` //通信标示，为FAIL时表示下单请求发送失败
+	Msg        string `xml:"return_msg"`  //通信错误描述
 	AppId      string `xml:"appid"`
 	MchId      string `xml:"mch_id"`
 	DeviceInfo string `xml:"device_info"`
 	NonceStr   string `xml:"nonce_str"`
 	Sign       string `xml:"sign"`
-	ResultCode string `xml:"result_code"`
-	ErrCode    string `xml:"err_code"`
-	ErrCodeDes string `xml:"err_code_des"`
+	ResultCode string `xml:"result_code"`  //业务标示，为FAIL时标示请求下单发生错误，下单请求发送成功，但是下单失败
+	ErrCode    string `xml:"err_code"`     //业务错误代码
+	ErrCodeDes string `xml:"err_code_des"` //业务错误描述
 	TradeType  string `xml:"trade_type"`
 	PrepayId   string `xml:"prepay_id"`
 	MwebUrl    string `xml:"mweb_url"`

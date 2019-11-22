@@ -13,7 +13,7 @@ var (
 	//统一下单必须参数
 	UnifiedOrderMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
 	//统一下单可选参数
-	UnifiedOrderOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt"}
+	UnifiedOrderOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid"}
 
 	//订单查询必需参数
 	QueryOrderMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}

@@ -275,7 +275,6 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	sort.Strings(paramNames)
 	//参数拼接
 	toBeSignStr := ""
-
 	for i, n := range paramNames {
 		str := ""
 		if i == 0 {
@@ -297,20 +296,23 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 		//默认用MD5签名
 		signValue = strings.ToUpper(signMd5(toBeSignStr))
 	}
-
 	//签名结束后需要将签名加入writer
 	params["sign"] = signValue
-
 	writer := bytes.NewBuffer(make([]byte, 0))
 	maps(params).marshalXML(writer)
 	result, err := postUnifiedOrder(e.UnifiedOrderApiUrl, "application/xml;charset=utf-8", writer)
 	if err != nil {
 		return nil, err
 	}
-	if result.Sign != signValue {
-		return nil, errors.New("sign wrong")
+	//与微信服务器通信失败
+	if result.Code != "SUCCESS" {
+		return nil, errors.New(result.Msg)
 	}
-
+	//通信成功，但下单失败
+	if result.ResultCode != "SUCCESS" {
+		return nil, errors.New(result.ErrCodeDes)
+	}
+	//TODO 校验签名
 	return result, nil
 }
 
