@@ -37,18 +37,20 @@ type myWeClient struct {
 	appId      string                 //appId
 	appSecret  string                 //app密钥
 	mchId      string                 //商户号
+	mchKey     string                 //商户key
 }
 
 var (
 	c *myWeClient
 )
 
-func NewClientWithParam(appId, appSecret, mchId string) WeClient {
+func NewClientWithParam(appId, appSecret, mchId, mchKey string) WeClient {
 	c = &myWeClient{
 		params:    make(map[string]interface{}),
 		appId:     appId,
 		appSecret: appSecret,
 		mchId:     mchId,
+		mchKey:    mchKey,
 	}
 	return c
 }
@@ -92,9 +94,9 @@ func (client *myWeClient) DelParam(key string) {
 	client.Unlock()
 }
 
-func (client *myWeClient) checkBaseParam() error {
+func (client *myWeClient) checkBaseParamForPay() error {
 	//校验参数
-	if client.appId == "" || client.appSecret == "" || client.mchId == "" {
+	if client.appId == "" || client.mchKey == "" || client.mchId == "" {
 		return e.ErrorInitClient
 	}
 	return nil
@@ -231,7 +233,7 @@ func (client *myWeClient) ShareH5(url string, nonceStrs ...string) (*H5Response,
 //统一下单
 func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	//校验参数
-	if err := client.checkBaseParam(); err != nil {
+	if err := client.checkBaseParamForPay(); err != nil {
 		return nil, err
 	}
 	if client.params == nil {
@@ -286,7 +288,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	}
 
 	//在待签名的字符串后追加appSecret
-	toBeSignStr += fmt.Sprintf("&key=%v", client.appSecret)
+	toBeSignStr += fmt.Sprintf("&key=%v", client.mchKey)
 	signValue := ""
 	//根据签名方式签名
 	if signType, ok := params["sign_type"]; ok && signType.(string) == "HMAC-SHA256" {
@@ -319,7 +321,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 //查询订单
 func (client *myWeClient) DoQueryOrder() (ResultParam, error) {
 	//参数校验
-	if err := client.checkBaseParam(); err != nil {
+	if err := client.checkBaseParamForPay(); err != nil {
 		return nil, err
 	}
 
