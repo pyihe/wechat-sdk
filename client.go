@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hong008/wechat-sdk/pkg/e"
-	uuid "github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/hong008/wechat-sdk/pkg/e"
+	uuid "github.com/satori/go.uuid"
 )
 
 type WeClient interface {
@@ -290,13 +291,17 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	//在待签名的字符串后追加appSecret
 	toBeSignStr += fmt.Sprintf("&key=%v", client.mchKey)
 	signValue := ""
+	signType := ""
 	//根据签名方式签名
-	if signType, ok := params["sign_type"]; ok && signType.(string) == "HMAC-SHA256" {
+	sType, ok := params["sign_type"]
+	if ok && sType.(string) == "HMAC-SHA256" {
 		//HMAC-SHA256
 		signValue = strings.ToUpper(signHMACSHA256(toBeSignStr))
+		signType = "HMAC-SHA256"
 	} else {
 		//默认用MD5签名
 		signValue = strings.ToUpper(signMd5(toBeSignStr))
+		signType = "MD5"
 	}
 	//签名结束后需要将签名加入writer
 	params["sign"] = signValue
@@ -314,6 +319,26 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	if result.ResultCode != "SUCCESS" {
 		return nil, errors.New(result.ErrCodeDes)
 	}
+	//签名，返回给前端的签名
+	//时间戳
+	timeStamp, ok := client.params["timestamp"]
+	if !ok || timeStamp == nil {
+		return nil, errors.New("need timeStamp")
+	}
+	//随机字符串
+	nonceStr, ok := client.params["nonce_str"]
+	if !ok || nonceStr == nil {
+		return nil, errors.New("need nonce_str")
+	}
+	//package
+	packageStr := "prepay_id=" + result.PrepayId
+	toBeSignStr = fmt.Sprintf("appId=%v&nonceStr=%v&package=%v&signType=%v&timeStamp=%v&key=%v", client.appId, nonceStr, packageStr, signType, timeStamp, client.mchKey)
+	if signType == "HMAC-SHA256" {
+		signValue = strings.ToUpper(signHMACSHA256(toBeSignStr))
+	} else {
+		signValue = strings.ToUpper(signMd5(toBeSignStr))
+	}
+	result.Sign = signValue
 	//TODO 校验签名
 	return result, nil
 }
