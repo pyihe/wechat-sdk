@@ -314,6 +314,7 @@ func (client *myWeClient) DoUnifiedOrder() (ResultParam, error) {
 	if result.ResultCode != "SUCCESS" {
 		return nil, errors.New(result.ErrCodeDes)
 	}
+	result.Sign = signValue
 	//TODO 校验签名
 	return result, nil
 }
