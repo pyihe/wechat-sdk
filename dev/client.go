@@ -29,7 +29,7 @@ type WePayer interface {
 	//获取微信手机号码
 	GetUserPhoneForMini(code string, dataStr string, ivStr string) (ResultParam, error)
 	//获取session_key
-	GetSessionKey(code string) (ResultParam, error)
+	GetSessionKeyAndOpenId(code string) (ResultParam, error)
 }
 
 type option func(*myPayer)

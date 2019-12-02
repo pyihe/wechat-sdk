@@ -51,7 +51,7 @@ func (phone phoneInfo) ListParam() Params {
 }
 
 func (m *myPayer) GetUserPhoneForMini(code string, dataStr string, ivStr string) (ResultParam, error) {
-	session, err := m.GetSessionKey(code)
+	session, err := m.GetSessionKeyAndOpenId(code)
 	if err != nil {
 		return nil, err
 	}

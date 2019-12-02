@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"reflect"
 	"strings"
 
@@ -74,7 +73,7 @@ func (u user) ListParam() Params {
 
 //小程序获取用户信息
 func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) (ResultParam, error) {
-	session, err := m.GetSessionKey(code)
+	session, err := m.GetSessionKeyAndOpenId(code)
 	if err != nil {
 		return nil, err
 	}

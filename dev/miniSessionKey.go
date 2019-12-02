@@ -52,7 +52,7 @@ func (s sessionInfo) ListParam() Params {
 }
 
 //通过code获取session_key
-func (m *myPayer) GetSessionKey(code string) (ResultParam, error) {
+func (m *myPayer) GetSessionKeyAndOpenId(code string) (ResultParam, error) {
 	if err := m.checkForAccess(); err != nil {
 		return nil, err
 	}
