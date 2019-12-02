@@ -19,9 +19,17 @@ var (
 	QueryOrderMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
 	//订单查询可选参数
 	QueryOrderOptionalParam = []string{"sign_type"}
-)
 
-const (
-	UnifiedOrderApiUrl = "https://api.mch.weixin.qq.com/pay/unifiedorder"
-	QueryOrderApiUrl   = "https://api.mch.weixin.qq.com/pay/orderquery"
+	////
+	///
+	///
+	//
+	/*dev Branch*/
+	ErrSignType    = errors.New("unknown sign type")
+	ErrParams      = errors.New("param is empty")
+	ErrTradeType   = errors.New("need trade_type")
+	ErrOpenId      = errors.New("JSAPI need openid")
+	ErrNoSign      = errors.New("result not have sign")
+	ErrCheckSign   = errors.New("check sign fail")
+	ErrNoWatermark = errors.New("got no watermark")
 )
