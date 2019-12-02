@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/hong008/wechat-sdk/pkg/e"
@@ -162,44 +161,17 @@ func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
 			return nil, errors.New(fmt.Sprintf("need %s", v))
 		}
 	}
-	var paramNames []string //用于获取参数名
 	//这里校验是否包含不必要的参数
 	for key := range param {
 		if !util.HaveInArray(unifiedMustParam, key) && !util.HaveInArray(unifiedOptionalParam, key) {
 			return nil, errors.New(fmt.Sprintf("no need %s param", key))
 		}
-		paramNames = append(paramNames, key)
 	}
 
-	sort.Strings(paramNames)
-
-	//获取待签名的字符串
-	var signStr string
-	for i, name := range paramNames {
-		if name == "sign" {
-			continue
-		}
-		var str string
-		if i == 0 {
-			str = fmt.Sprintf("%v=%v", name, param[name])
-		} else {
-			str = fmt.Sprintf("&%v=%v", name, param[name])
-		}
-		signStr += str
+	sign, err := param.Sign(signType)
+	if err != nil {
+		return nil, err
 	}
-	//最后拼接mchKey
-	signStr += fmt.Sprintf("&key=%s", m.apiKey)
-	var sign string
-	//签名
-	switch signType {
-	case e.SignType256:
-		sign = strings.ToUpper(util.SignHMACSHA256(signStr, m.apiKey))
-	case e.SignTypeMD5:
-		sign = strings.ToUpper(util.SignMd5(signStr))
-	default:
-		return nil, e.ErrSignType
-	}
-
 	//将签名添加到需要发送的参数里
 	param.Add("sign", sign)
 	reader, err := param.MarshalXML()

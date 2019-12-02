@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/hong008/wechat-sdk/pkg/e"
@@ -188,7 +187,7 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var paramNames []string
+	//var paramNames []string
 	var signType = e.SignTypeMD5 //此处默认MD5
 
 	//校验订单号
@@ -215,35 +214,12 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) {
 			return nil, errors.New(fmt.Sprintf("no need %s param", k))
 		}
-		paramNames = append(paramNames, k)
 	}
-
-	sort.Strings(paramNames)
-
-	var signStr, sign string
-	for i, k := range paramNames {
-		var str string
-		if i == 0 {
-			str = fmt.Sprintf("%v=%v", k, param[k])
-		} else {
-			str = fmt.Sprintf("&%v=%v", k, param[k])
-		}
-		signStr += str
-	}
-	signStr += fmt.Sprintf("&key=%v", m.apiKey)
-	switch signType {
-	case e.SignTypeMD5:
-		sign = strings.ToUpper(util.SignMd5(signStr))
-	case e.SignType256:
-		sign = strings.ToUpper(util.SignHMACSHA256(signStr, m.apiKey))
-	default:
-		return nil, e.ErrSignType
+	sign, err := param.Sign(signType)
+	if err != nil {
+		return nil, err
 	}
 	param.Add("sign", sign)
-
-	fmt.Printf("\nsignStr = %v\n", signStr)
-	fmt.Printf("\nparam = %v\n", param)
-	fmt.Printf("\nsign = %v\n", sign)
 
 	reader, err := param.MarshalXML()
 	if err != nil {

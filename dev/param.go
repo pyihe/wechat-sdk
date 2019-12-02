@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/hong008/wechat-sdk/pkg/e"
+	"github.com/hong008/wechat-sdk/pkg/util"
 	"io"
 	"sort"
+	"strings"
 )
 
 type Params map[string]interface{}
@@ -59,4 +62,33 @@ func (m Params) SortKey() (keys []string) {
 	}
 	sort.Strings(keys)
 	return
+}
+
+func (m Params) Sign(signType string) (string, error) {
+	fmt.Printf("\nin sign, signType = %v\n", signType)
+	var result string
+	var err error
+	keys := m.SortKey()
+	var signStr string
+	for i, k := range keys {
+		str := ""
+		if i == 0 {
+			str = fmt.Sprintf("%v=%v", k, m[k])
+		} else {
+			str = fmt.Sprintf("&%v=%v", k, m[k])
+		}
+		signStr += str
+	}
+	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
+	fmt.Printf("\nin sign signStr = %v\n", signStr)
+
+	switch signType {
+	case e.SignType256:
+		result = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
+	case e.SignTypeMD5:
+		result = strings.ToUpper(util.SignMd5(signStr))
+	default:
+		err = e.ErrSignType
+	}
+	return result, err
 }
