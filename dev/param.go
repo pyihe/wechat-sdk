@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/hong008/wechat-sdk/pkg/e"
-	"github.com/hong008/wechat-sdk/pkg/util"
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/hong008/wechat-sdk/pkg/e"
+	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
 type Params map[string]interface{}
@@ -65,7 +66,6 @@ func (m Params) SortKey() (keys []string) {
 }
 
 func (m Params) Sign(signType string) (string, error) {
-	fmt.Printf("\nin sign, signType = %v\n", signType)
 	var result string
 	var err error
 	keys := m.SortKey()
@@ -80,7 +80,6 @@ func (m Params) Sign(signType string) (string, error) {
 		signStr += str
 	}
 	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
-	fmt.Printf("\nin sign signStr = %v\n", signStr)
 
 	switch signType {
 	case e.SignType256:

@@ -98,7 +98,6 @@ func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) 
 		return nil, err
 	}
 
-	fmt.Printf("\nreaData = %v\n", string(realData))
 	var info *user
 	err = json.Unmarshal(realData, &info)
 	if err != nil {

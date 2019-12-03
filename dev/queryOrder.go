@@ -232,12 +232,10 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 	}
 
 	if result.ReturnCode != "SUCCESS" {
-		fmt.Printf("21err\n")
 		return nil, errors.New(result.ReturnMsg)
 	}
 
 	if result.ResultCode != "SUCCESS" {
-		fmt.Printf("11err\n")
 		return nil, errors.New(result.ErrCodeDes)
 	}
 

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hong008/wechat-sdk/pkg/e"
-	"github.com/hong008/wechat-sdk/pkg/util"
 	"reflect"
 	"strings"
+
+	"github.com/hong008/wechat-sdk/pkg/e"
+	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
 type phoneInfo struct {
@@ -75,7 +76,6 @@ func (m *myPayer) GetUserPhoneForMini(code string, dataStr string, ivStr string)
 		return nil, err
 	}
 
-	fmt.Printf("\nreaData = %v\n", string(realData))
 	var info *phoneInfo
 	err = json.Unmarshal(realData, &info)
 	if err != nil {

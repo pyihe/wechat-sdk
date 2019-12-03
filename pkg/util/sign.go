@@ -32,11 +32,11 @@ func AES128CBCDecrypt(encryptData, key, iv []byte) ([]byte, error) {
 	blockMode := cipher.NewCBCDecrypter(block, iv)
 	origData := make([]byte, len(encryptData))
 	blockMode.CryptBlocks(origData, encryptData)
-	origData = pKCS7UnPadding(origData)
+	origData = PKCS7UnPadding(origData)
 	return origData, nil
 }
 
-func pKCS7UnPadding(origData []byte) []byte {
+func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
