@@ -13,7 +13,8 @@ import (
 
 var (
 	refundQueryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-	refundQueryOptionalParam = []string{"sign_type", "transaction_id", "out_trade_no", "out_refund_no", "refund_id", "offset"}
+	refundQueryOneParam      = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
+	refundQueryOptionalParam = []string{"sign_type", "offset"}
 )
 
 const queryRefundUrl = "https://api.mch.weixin.qq.com/pay/refundquery"

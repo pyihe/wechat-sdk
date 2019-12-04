@@ -186,7 +186,7 @@ func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
 		Url:         unifiedOrderUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
-	err = util.PostToWx(request, result)
+	err = util.PostToWx(request, &result)
 	if err != nil {
 		return nil, err
 	}

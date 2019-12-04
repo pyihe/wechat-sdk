@@ -15,8 +15,9 @@ import (
 */
 
 var (
-	queryMustParam     = []string{"appid", "mch_id", "nonce_str"}
-	queryOptionalParam = []string{"sign_type", "transaction_id", "out_trade_no"}
+	queryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
+	queryOneParam      = []string{"transaction_id", "out_trade_no"}
+	queryOptionalParam = []string{"sign_type"}
 )
 
 const queryApiUrl = "https://api.mch.weixin.qq.com/pay/orderquery"
@@ -153,14 +154,24 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 	var signType = e.SignTypeMD5 //此处默认MD5
 
 	//校验订单号
-	if _, ok := param["transaction_id"]; !ok {
-		if _, ok = param["out_trade_no"]; !ok {
-			return nil, errors.New("lack of order number")
+	var count = 0
+	for _, k := range queryOneParam {
+		if v := param.Get(k); v != nil {
+			count++
+			continue
 		}
+	}
+	if count == 0 {
+		return nil, errors.New("need order number: transaction_id or out_trade_no")
+	} else if count > 1 {
+		return nil, errors.New("just one order number: transaction_id or out_trade_no")
 	}
 
 	//校验其他参数
 	for _, k := range queryMustParam {
+		if k == "sign" {
+			continue
+		}
 		if param.Get(k) == nil {
 			return nil, errors.New(fmt.Sprintf("need %s", k))
 		}
@@ -173,7 +184,7 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) {
+		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) && !util.HaveInArray(queryOneParam, k) {
 			return nil, errors.New(fmt.Sprintf("no need %s param", k))
 		}
 	}
@@ -195,7 +206,7 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 		ContentType: "application/xml;charset=utf-8",
 	}
 
-	err = util.PostToWx(request, result)
+	err = util.PostToWx(request, &result)
 	if err != nil {
 		return nil, err
 	}

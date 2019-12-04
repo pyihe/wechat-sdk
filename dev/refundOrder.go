@@ -16,7 +16,8 @@ import (
 
 var (
 	refundMustParams     = []string{"appid", "mch_id", "nonce_str", "sign", "out_refund_no", "total_fee", "refund_fee"}
-	refundOptionalParams = []string{"transaction_id", "out_trade_no", "sign_type", "refund_fee_type", "refund_desc", "refund_account", "notify_url"}
+	refundOneParams      = []string{"transaction_id", "out_trade_no"}
+	refundOptionalParams = []string{"sign_type", "refund_fee_type", "refund_desc", "refund_account", "notify_url"}
 )
 
 const refundApiUrl = "https://api.mch.weixin.qq.com/secapi/pay/refund"
@@ -126,11 +127,16 @@ func (r refundResult) ListParam() Params {
 	return p
 }
 
-func (m *myPayer) RefundOrder(param Params) (ResultParam, error) {
+func (m *myPayer) RefundOrder(param Params, p12CertPath string) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
 	}
 	if err := m.checkForPay(); err != nil {
+		return nil, err
+	}
+	//读取证书
+	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	if err != nil {
 		return nil, err
 	}
 	param.Add("appid", m.appId)
@@ -139,25 +145,32 @@ func (m *myPayer) RefundOrder(param Params) (ResultParam, error) {
 	var signType = e.SignTypeMD5
 
 	//校验订单号
-	if _, ok := param["transaction_id"]; !ok {
-		if _, ok = param["out_trade_no"]; !ok {
-			return nil, errors.New("lack of order number")
+	var count = 0
+	for _, k := range queryOneParam {
+		if v := param.Get(k); v != nil {
+			count++
+			continue
 		}
 	}
+	if count == 0 {
+		return nil, errors.New("need order number: transaction_id or out_trade_no")
+	} else if count > 1 {
+		return nil, errors.New("just one order number: transaction_id or out_trade_no")
+	}
 	for _, k := range refundMustParams {
+		if k == "sign" {
+			continue
+		}
 		if param.Get(k) == nil {
 			return nil, errors.New(fmt.Sprintf("need %s", k))
 		}
 	}
 
 	for k := range param {
-		if k == "sign" {
-			continue
-		}
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(refundMustParams, k) && !util.HaveInArray(refundOptionalParams, k) {
+		if !util.HaveInArray(refundMustParams, k) && !util.HaveInArray(refundOptionalParams, k) && !util.HaveInArray(refundOneParams, k) {
 			return nil, errors.New(fmt.Sprintf("no need %s", k))
 		}
 	}
@@ -167,7 +180,7 @@ func (m *myPayer) RefundOrder(param Params) (ResultParam, error) {
 		return nil, err
 	}
 	param.Add("sign", sign)
-
+	fmt.Println(param)
 	reader, err := param.MarshalXML()
 	if err != nil {
 		return nil, err
@@ -180,7 +193,7 @@ func (m *myPayer) RefundOrder(param Params) (ResultParam, error) {
 		ContentType: "application/xml;charset=utf-8",
 	}
 
-	err = util.PostToWx(request, result)
+	err = util.PostToWxWithCert(request, cert, &result)
 	if err != nil {
 		return nil, err
 	}

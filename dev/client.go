@@ -20,6 +20,12 @@ type WePayer interface {
 	UnifiedOrder(param Params) (ResultParam, error) //统一下单
 	//查询订单
 	QueryOrder(param Params) (ResultParam, error) //查询订单
+	//关闭订单
+	CloseOrder(param Params) (ResultParam, error)
+	//退款
+	RefundOrder(param Params, cert string) (ResultParam, error)
+	//退款查询
+	QueryRefund(param Params) (ResultParam, error)
 
 	//小程序相关
 	//获取授权access_token
