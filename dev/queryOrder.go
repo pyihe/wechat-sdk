@@ -158,7 +158,6 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 	for _, k := range queryOneParam {
 		if v := param.Get(k); v != nil {
 			count++
-			continue
 		}
 	}
 	if count == 0 {

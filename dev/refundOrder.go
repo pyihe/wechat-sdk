@@ -149,7 +149,6 @@ func (m *myPayer) RefundOrder(param Params, p12CertPath string) (ResultParam, er
 	for _, k := range queryOneParam {
 		if v := param.Get(k); v != nil {
 			count++
-			continue
 		}
 	}
 	if count == 0 {
@@ -180,7 +179,6 @@ func (m *myPayer) RefundOrder(param Params, p12CertPath string) (ResultParam, er
 		return nil, err
 	}
 	param.Add("sign", sign)
-	fmt.Println(param)
 	reader, err := param.MarshalXML()
 	if err != nil {
 		return nil, err

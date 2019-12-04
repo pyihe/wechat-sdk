@@ -3,6 +3,8 @@ package dev
 import (
 	"errors"
 	"fmt"
+	"github.com/hong008/wechat-sdk/pkg/e"
+	"github.com/hong008/wechat-sdk/pkg/util"
 	"reflect"
 	"strings"
 )
@@ -148,6 +150,70 @@ func (m *myPayer) QueryRefund(param Params) (ResultParam, error) {
 	}
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
-	//TODO
-	return nil, nil
+
+	var signType = e.SignTypeMD5
+	var count = 0
+	for _, k := range refundQueryOneParam {
+		if v := param.Get(k); v != nil {
+			count++
+		}
+	}
+	if count == 0 {
+		return nil, errors.New("need one of refund_id/out_refund_no/transaction_id/out_trade_no")
+	} else if count > 1 {
+		return nil, errors.New("more than one with refund_id/out_refund_no/transaction_id/out_trade_no")
+	}
+
+	for _, k := range refundQueryMustParam {
+		if k == "sign" {
+			continue
+		}
+		if param.Get(k) == nil {
+			return nil, errors.New(fmt.Sprintf("need %s", k))
+		}
+	}
+
+	for k := range param {
+		if k == "sign_type" {
+			signType = param[k].(string)
+		}
+		if !util.HaveInArray(refundQueryMustParam, k) && !util.HaveInArray(refundQueryOptionalParam, k) && !util.HaveInArray(refundQueryOneParam, k) {
+			return nil, errors.New(fmt.Sprintf("no need %s", k))
+		}
+	}
+
+	sign, err := param.Sign(signType)
+	if err != nil {
+		return nil, err
+	}
+	param.Add("sign", sign)
+	reader, err := param.MarshalXML()
+	if err != nil {
+		return nil, err
+	}
+
+	var result *queryRefundResult
+	var request = &util.PostRequest{
+		Body:        reader,
+		Url:         queryRefundUrl,
+		ContentType: "application/xml;charset=utf-8",
+	}
+
+	err = util.PostToWx(request, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.ReturnCode != "SUCCESS" {
+		return nil, errors.New(result.ReturnMsg)
+	}
+
+	if result.ResultCode != "SUCCESS" {
+		return nil, errors.New(result.ErrCodeDes)
+	}
+	sign, err = result.ListParam().Sign(signType)
+	if sign != result.Sign || err != nil {
+		return nil, e.ErrCheckSign
+	}
+	return result, nil
 }

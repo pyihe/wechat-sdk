@@ -100,6 +100,10 @@ func (m *myPayer) RefundNotify(body io.ReadCloser) (ResultParam, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	//TODO
+	if result.ReqInfo != "" {
+		
+	}
 	return nil, nil
 }

@@ -81,7 +81,6 @@ func (m Params) Sign(signType string) (result string, err error) {
 		signStr += str
 	}
 	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
-
 	switch signType {
 	case e.SignType256:
 		result = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
