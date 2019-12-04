@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+/*
+	微信小程序根据code获取openId和session_key
+*/
+
 type sessionInfo struct {
 	Openid     string `json:"openid"`
 	SessionKey string `json:"session_key"`

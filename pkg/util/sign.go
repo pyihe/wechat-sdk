@@ -36,6 +36,7 @@ func AES128CBCDecrypt(encryptData, key, iv []byte) ([]byte, error) {
 	return origData, nil
 }
 
+//解填充
 func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])

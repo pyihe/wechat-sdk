@@ -1,18 +1,18 @@
 package dev
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"reflect"
 	"strings"
 
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
+
+/*
+	订单查询
+*/
 
 var (
 	queryMustParam     = []string{"appid", "mch_id", "nonce_str"}
@@ -37,16 +37,16 @@ type queryResult struct {
 	TradeType          string `xml:"trade_type"`
 	TradeState         string `xml:"trade_state"`
 	BankType           string `xml:"bank_type"`
-	TotalFee           int    `xml:"total_fee"`
+	TotalFee           int64  `xml:"total_fee"`
 	FeeType            string `xml:"fee_type"`
-	CashFee            int    `xml:"cash_fee"`
+	CashFee            int64  `xml:"cash_fee"`
 	CashFeeType        string `xml:"cash_fee_type"`
-	SettlementTotalFee int    `xml:"settlement_total_fee"`
-	CouponFee          int    `xml:"coupon_fee"`
-	CouponCount        int    `xml:"coupon_count"`
+	SettlementTotalFee int64  `xml:"settlement_total_fee"`
+	CouponFee          int64  `xml:"coupon_fee"`
+	CouponCount        int64  `xml:"coupon_count"`
 	CouponId           string `xml:"coupon_id_$n"`
 	CouponType         string `xml:"coupon_type_$n"`
-	CouponFeeN         int    `xml:"coupon_fee_$n"`
+	CouponFeeN         int64  `xml:"coupon_fee_$n"`
 	TransactionId      string `xml:"transaction_id"`
 	OutTradeNo         string `xml:"out_trade_no"`
 	Attach             string `xml:"attach"`
@@ -138,44 +138,6 @@ func (q queryResult) ListParam() Params {
 	return p
 }
 
-func (q *queryResult) checkWxSign(signType string) (bool, error) {
-	if signType == "" {
-		signType = e.SignTypeMD5
-	}
-	if signType != e.SignTypeMD5 && signType != e.SignType256 {
-		return false, e.ErrSignType
-	}
-
-	param := q.ListParam()
-	keys := param.SortKey()
-	signStr := ""
-	sign := ""
-
-	for i, k := range keys {
-		if k == "sign" {
-			continue
-		}
-		var str string
-		if i == 0 {
-			str = fmt.Sprintf("%v=%v", k, param.Get(k))
-		} else {
-			str = fmt.Sprintf("&%v=%v", k, param.Get(k))
-		}
-		signStr += str
-	}
-	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
-	switch signType {
-	case e.SignTypeMD5:
-		sign = strings.ToUpper(util.SignMd5(signStr))
-	case e.SignType256:
-		sign = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
-	}
-	if param.Get("sign") == nil {
-		return false, e.ErrNoSign
-	}
-	return sign == param.Get("sign").(string), nil
-}
-
 func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
@@ -226,7 +188,14 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 		return nil, err
 	}
 
-	result, err := postQueryOrder(queryApiUrl, "application/xml;charset=utf-8", reader)
+	var result *queryResult
+	var request = &util.PostRequest{
+		Body:        reader,
+		Url:         queryApiUrl,
+		ContentType: "application/xml;charset=utf-8",
+	}
+
+	err = util.PostToWx(request, result)
 	if err != nil {
 		return nil, err
 	}
@@ -239,38 +208,9 @@ func (m *myPayer) QueryOrder(param Params) (ResultParam, error) {
 		return nil, errors.New(result.ErrCodeDes)
 	}
 
-	if ok, err := result.checkWxSign(signType); !ok || err != nil {
+	sign, err = result.ListParam().Sign(signType)
+	if err != nil || sign != result.Sign {
 		return nil, e.ErrCheckSign
-	}
-
-	return result, nil
-}
-
-func postQueryOrder(url string, contentType string, body io.Reader) (*queryResult, error) {
-	if body == nil {
-		return nil, errors.New("body cannot be nil")
-	}
-
-	response, err := http.Post(url, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("http StatusCode: %v", response.StatusCode))
-	}
-
-	byteContent, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result *queryResult
-	err = xml.Unmarshal(byteContent, &result)
-	if err != nil {
-		return nil, err
 	}
 
 	return result, nil

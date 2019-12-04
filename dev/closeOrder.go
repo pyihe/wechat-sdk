@@ -11,72 +11,63 @@ import (
 )
 
 /*
-	统一下单
+	关闭订单
 */
 
 var (
-	unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
-	unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid"}
+	closeMustParam     = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
+	closeOptionalParam = []string{"sign_type"}
 )
 
-const unifiedOrderUrl = "https://api.mch.weixin.qq.com/pay/unifiedorder"
+const closeOrderUrl = "https://api.mch.weixin.qq.com/pay/closeorder"
 
-type unifiedResult struct {
+type closeResult struct {
 	ReturnCode string `xml:"return_code"`
 	ReturnMsg  string `xml:"return_msg"`
 	Appid      string `xml:"appid"`
 	MchId      string `xml:"mch_id"`
-	DeviceInfo string `xml:"device_info"`
 	NonceStr   string `xml:"nonce_str"`
 	Sign       string `xml:"sign"`
 	ResultCode string `xml:"result_code"`
+	ResultMsg  string `xml:"result_msg"`
 	ErrCode    string `xml:"err_code"`
 	ErrCodeDes string `xml:"err_code_des"`
-	TradeType  string `xml:"trade_type"`
-	PrepayId   string `xml:"prepay_id"`
-	CodeUrl    string `xml:"code_url"`
 }
 
-func (u *unifiedResult) Param(key string) (interface{}, error) {
+func (c *closeResult) Param(key string) (interface{}, error) {
 	var err error
 	switch key {
 	case "return_code":
-		return u.ReturnCode, err
+		return c.ReturnCode, err
 	case "return_msg":
-		return u.ReturnMsg, err
+		return c.ReturnMsg, err
 	case "appid":
-		return u.Appid, err
+		return c.Appid, err
 	case "mch_id":
-		return u.MchId, err
-	case "device_info":
-		return u.DeviceInfo, err
+		return c.MchId, err
 	case "nonce_str":
-		return u.NonceStr, err
+		return c.NonceStr, err
 	case "sign":
-		return u.Sign, err
+		return c.Sign, err
 	case "result_code":
-		return u.ResultCode, err
+		return c.ResultCode, err
+	case "result_msg":
+		return c.ResultMsg, err
 	case "err_code":
-		return u.ErrCode, err
+		return c.ErrCode, err
 	case "err_code_des":
-		return u.ErrCodeDes, err
-	case "trade_type":
-		return u.TradeType, err
-	case "prepay_id":
-		return u.PrepayId, err
-	case "code_url":
-		return u.CodeUrl, err
+		return c.ErrCodeDes, err
 	default:
 		err = errors.New(fmt.Sprintf("invalid key: %s", key))
 		return nil, err
 	}
 }
 
-func (u unifiedResult) ListParam() Params {
+func (c closeResult) ListParam() Params {
 	p := make(Params)
 
-	t := reflect.TypeOf(u)
-	v := reflect.ValueOf(u)
+	t := reflect.TypeOf(c)
+	v := reflect.ValueOf(c)
 
 	for i := 0; i < t.NumField(); i++ {
 		if !v.Field(i).IsZero() {
@@ -87,7 +78,7 @@ func (u unifiedResult) ListParam() Params {
 	return p
 }
 
-func (u *unifiedResult) checkWxSign(signType string) (bool, error) {
+func (c *closeResult) checkWxSign(signType string) (bool, error) {
 	if signType == "" {
 		signType = e.SignTypeMD5
 	}
@@ -95,7 +86,7 @@ func (u *unifiedResult) checkWxSign(signType string) (bool, error) {
 		return false, e.ErrSignType
 	}
 
-	param := u.ListParam()
+	param := c.ListParam()
 	keys := param.SortKey()
 	signStr := ""
 	sign := ""
@@ -125,8 +116,8 @@ func (u *unifiedResult) checkWxSign(signType string) (bool, error) {
 	return sign == param.Get("sign").(string), nil
 }
 
-//统一下单
-func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
+//关闭订单
+func (m *myPayer) CloseOrder(param Params) (ResultParam, error) {
 	if param == nil {
 		return nil, e.ErrParams
 	}
@@ -135,26 +126,13 @@ func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
 	}
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
-	//获取交易类型和签名类型
-	var tradeType string
-	var signType = e.SignTypeMD5 //默认MD5签名方式
-	if t, ok := param["trade_type"]; ok {
-		tradeType = t.(string)
-	} else {
-		return nil, e.ErrTradeType
-	}
+
+	var signType = e.SignTypeMD5
 	if t, ok := param["sign_type"]; ok {
 		signType = t.(string)
 	}
 
-	//校验参数是否传对了
-	if tradeType == "JSAPI" {
-		if _, ok := param["openid"]; !ok {
-			return nil, e.ErrOpenId
-		}
-	}
-	//这里校验是否包含必传的参数
-	for _, v := range unifiedMustParam {
+	for _, v := range closeMustParam {
 		if v == "sign" {
 			continue
 		}
@@ -162,45 +140,42 @@ func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
 			return nil, errors.New(fmt.Sprintf("need %s", v))
 		}
 	}
-	//这里校验是否包含不必要的参数
 	for key := range param {
-		if !util.HaveInArray(unifiedMustParam, key) && !util.HaveInArray(unifiedOptionalParam, key) {
-			return nil, errors.New(fmt.Sprintf("no need %s param", key))
+		if !util.HaveInArray(closeMustParam, key) && !util.HaveInArray(closeOptionalParam, key) {
+			return nil, errors.New(fmt.Sprintf("no need %s", key))
 		}
 	}
-
 	sign, err := param.Sign(signType)
 	if err != nil {
 		return nil, err
 	}
-	//将签名添加到需要发送的参数里
 	param.Add("sign", sign)
+
 	reader, err := param.MarshalXML()
 	if err != nil {
 		return nil, err
 	}
 
-	var result *unifiedResult
+	var result *closeResult
 	var request = &util.PostRequest{
 		Body:        reader,
-		Url:         unifiedOrderUrl,
+		Url:         closeOrderUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
 	err = util.PostToWx(request, result)
 	if err != nil {
 		return nil, err
 	}
-
 	if result.ReturnCode != "SUCCESS" {
 		return nil, errors.New(result.ReturnMsg)
 	}
+
 	if result.ResultCode != "SUCCESS" {
 		return nil, errors.New(result.ErrCodeDes)
 	}
-
 	sign, err = result.ListParam().Sign(signType)
-	if err != nil || sign != result.Sign {
+	if sign != result.Sign {
 		return nil, e.ErrCheckSign
 	}
-	return result, err
+	return result, nil
 }

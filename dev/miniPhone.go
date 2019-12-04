@@ -12,6 +12,10 @@ import (
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
+/*
+	微信小程序获取用户电话号码
+*/
+
 type phoneInfo struct {
 	PhoneNumber     string     `json:"phoneNumber"`
 	PurePhoneNumber string     `json:"purePhoneNumber"`

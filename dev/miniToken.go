@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+/*
+	微信小程序获取AccessToken
+*/
+
 type tokenResult struct {
 	AccessToken string `json:"access_token"`
 	ExpireIn    int    `json:"expire_in"`

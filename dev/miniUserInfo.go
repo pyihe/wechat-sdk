@@ -12,6 +12,10 @@ import (
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
+/*
+	微信小程序获取用户信息
+*/
+
 type user struct {
 	Gender    int        `json:"gender"`
 	OpenId    string     `json:"openId"`
@@ -111,5 +115,3 @@ func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) 
 	}
 	return info, nil
 }
-
-

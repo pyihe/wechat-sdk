@@ -65,12 +65,13 @@ func (m Params) SortKey() (keys []string) {
 	return
 }
 
-func (m Params) Sign(signType string) (string, error) {
-	var result string
-	var err error
+func (m Params) Sign(signType string) (result string, err error) {
 	keys := m.SortKey()
 	var signStr string
 	for i, k := range keys {
+		if k == "sign" {
+			continue
+		}
 		str := ""
 		if i == 0 {
 			str = fmt.Sprintf("%v=%v", k, m[k])
