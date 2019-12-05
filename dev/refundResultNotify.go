@@ -1,9 +1,11 @@
 package dev
 
 import (
+	"encoding/base64"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/hong008/wechat-sdk/pkg/util"
 	"io"
 	"reflect"
 	"strings"
@@ -93,7 +95,6 @@ func (m *myPayer) RefundNotify(body io.ReadCloser) (ResultParam, error) {
 	if body == nil {
 		return nil, errors.New("body is nil")
 	}
-	defer body.Close()
 
 	var result *refundNotifyResult
 	err := xml.NewDecoder(body).Decode(&result)
@@ -101,9 +102,23 @@ func (m *myPayer) RefundNotify(body io.ReadCloser) (ResultParam, error) {
 		return nil, err
 	}
 
-	//TODO
-	if result.ReqInfo != "" {
-		
+	//对结果中对req_info执行解密：
+	//1. 对加密串A做base64解码，得到加密串B
+	//2. 对商户key做md5，得到32位小写key*
+	//3. 用key*对加密串B做AES-256-ECB解密（PKCS7Padding）
+	if result.ReqInfo == "" {
+		return nil, errors.New("wx response without req_info")
 	}
-	return nil, nil
+	reqInfo := base64.StdEncoding.EncodeToString([]byte(result.ReqInfo))
+	md5Key := strings.ToLower(util.SignMd5(m.apiKey))
+	realData, err := util.AES256ECBDecrypt([]byte(reqInfo), []byte(md5Key))
+	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(realData, &result)
+	if err != nil {
+		fmt.Printf("\n1111 %v\n", err)
+		return nil, err
+	}
+	return result, nil
 }

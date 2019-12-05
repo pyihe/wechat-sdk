@@ -198,13 +198,14 @@ func (m *myPayer) RefundOrder(param Params, p12CertPath string) (ResultParam, er
 	if result.ReturnCode != "SUCCESS" {
 		return nil, errors.New(result.ReturnMsg)
 	}
-
 	if result.ResultCode != "SUCCESS" {
 		return nil, errors.New(result.ErrCodeDes)
 	}
-	sign, err = result.ListParam().Sign(signType)
-	if sign != result.Sign || err != nil {
-		return nil, e.ErrCheckSign
+	if result.Appid != m.appId {
+		return nil, errors.New(fmt.Sprintf("you got appid:%s from WeiXin", result.Appid))
+	}
+	if result.MchId != m.mchId {
+		return nil, errors.New(fmt.Sprintf("you got mch_id:%s from WeiXin", result.MchId))
 	}
 	return result, nil
 }

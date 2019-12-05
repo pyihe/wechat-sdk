@@ -141,7 +141,7 @@ func (q queryRefundResult) ListParam() Params {
 	return p
 }
 
-func (m *myPayer) QueryRefund(param Params) (ResultParam, error) {
+func (m *myPayer) RefundQuery(param Params) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
 	}
@@ -211,9 +211,11 @@ func (m *myPayer) QueryRefund(param Params) (ResultParam, error) {
 	if result.ResultCode != "SUCCESS" {
 		return nil, errors.New(result.ErrCodeDes)
 	}
-	sign, err = result.ListParam().Sign(signType)
-	if sign != result.Sign || err != nil {
-		return nil, e.ErrCheckSign
+	if result.Appid != m.appId {
+		return nil, errors.New(fmt.Sprintf("you got appid:%s from WeiXin", result.Appid))
+	}
+	if result.MchId != m.mchId {
+		return nil, errors.New(fmt.Sprintf("you got mch_id:%s from WeiXin", result.MchId))
 	}
 	return result, nil
 }

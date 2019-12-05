@@ -2,6 +2,7 @@ package dev
 
 import (
 	"errors"
+	"io"
 )
 
 var (
@@ -23,9 +24,11 @@ type WePayer interface {
 	//关闭订单
 	CloseOrder(param Params) (ResultParam, error)
 	//退款
-	RefundOrder(param Params, cert string) (ResultParam, error)
+	RefundOrder(param Params, certPath string) (ResultParam, error)
 	//退款查询
-	QueryRefund(param Params) (ResultParam, error)
+	RefundQuery(param Params) (ResultParam, error)
+	//解析退款通知
+	RefundNotify(body io.ReadCloser) (ResultParam, error)
 
 	//小程序相关
 	//获取授权access_token

@@ -22,7 +22,6 @@ func PostToWx(req *PostRequest, result interface{}) error {
 	if req == nil {
 		return errors.New("have no PostRequest")
 	}
-	fmt.Println(req.Body)
 	if req.Body == nil {
 		return errors.New("body cannot be nil")
 	}
