@@ -2,44 +2,50 @@ package dev
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
-type Params map[string]interface{}
+//用于装载外部传入的请求参数
+type Param map[string]interface{}
 
-func NewPayParam() Params {
-	return make(Params)
+func NewParam() Param {
+	return make(Param)
 }
 
-func (m Params) Get(key string) interface{} {
-	if m == nil {
+func (p Param) Get(key string) interface{} {
+	if p == nil {
 		return nil
 	}
-	return m[key]
+	return p[key]
 }
 
-func (m Params) Add(key string, value interface{}) {
-	if m == nil {
-		m = make(Params)
-	}
-	m[key] = value
+func (p Param) Add(key string, value interface{}) {
+	p[key] = value
 }
 
-func (m Params) MarshalXML() (reader io.Reader, err error) {
+func (p Param) Del(key string) {
+	delete(p, key)
+}
+
+func (p Param) MarshalXML() (reader io.Reader, err error) {
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
 	if _, err = io.WriteString(buffer, "<xml>"); err != nil {
 		return
 	}
 
-	for k, v := range m {
+	for k, v := range p {
 		if _, err = io.WriteString(buffer, "<"+k+">"); err != nil {
 			return
 		}
@@ -57,16 +63,17 @@ func (m Params) MarshalXML() (reader io.Reader, err error) {
 	return buffer, nil
 }
 
-func (m Params) SortKey() (keys []string) {
-	for k := range m {
+func (p Param) SortKey() (keys []string) {
+	for k := range p {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 	return
 }
 
-func (m Params) Sign(signType string) (result string, err error) {
-	keys := m.SortKey()
+func (p Param) Sign(signType string) string {
+	var result string
+	keys := p.SortKey()
 	var signStr string
 	for i, k := range keys {
 		if k == "sign" {
@@ -74,9 +81,9 @@ func (m Params) Sign(signType string) (result string, err error) {
 		}
 		str := ""
 		if i == 0 {
-			str = fmt.Sprintf("%v=%v", k, m[k])
+			str = fmt.Sprintf("%v=%v", k, p[k])
 		} else {
-			str = fmt.Sprintf("&%v=%v", k, m[k])
+			str = fmt.Sprintf("&%v=%v", k, p[k])
 		}
 		signStr += str
 	}
@@ -87,7 +94,141 @@ func (m Params) Sign(signType string) (result string, err error) {
 	case e.SignTypeMD5:
 		result = strings.ToUpper(util.SignMd5(signStr))
 	default:
-		err = e.ErrSignType
 	}
-	return result, err
+	return result
+}
+
+/*用于装载微信返回的数据*/
+type resultMap map[string]string
+
+func newResultMap() resultMap {
+	return make(resultMap)
+}
+
+func (r resultMap) Add(key, value string) {
+	r[key] = value
+}
+
+func (r resultMap) GetString(key string) (string, error) {
+	if _, ok := r[key]; ok {
+		return r[key], nil
+	}
+	return "", errors.New("not exist key: " + key)
+}
+
+func (r resultMap) GetInt64(key string, base int) (no int64, err error) {
+	if _, ok := r[key]; ok {
+		no, err = strconv.ParseInt(r[key], base, 64)
+		return
+	}
+	return 0, errors.New("not exist key: " + key)
+}
+
+func (r resultMap) Data() map[string]string {
+	return r
+}
+
+func (r resultMap) Sign(signType string) string {
+	p := NewParam()
+	for k, v := range r {
+		p[k] = v
+	}
+	return p.Sign(signType)
+}
+
+//XML to Param(遍历生成)
+func ParseXMLReader(reader io.Reader) resultMap {
+	result := newResultMap()
+	decoder := xml.NewDecoder(reader)
+
+	var (
+		t     xml.Token
+		err   error
+		key   string
+		value string
+	)
+
+	for t, err = decoder.Token(); err == nil; t, err = decoder.Token() {
+		switch token := t.(type) {
+		case xml.StartElement: // 处理元素开始（标签）
+			key = token.Name.Local
+		case xml.CharData: // 处理字符数据（这里就是元素的文本）
+			//这里需要注意，元素值可能包含换行符和空格，需要先去掉空格
+			value = string(token)
+			if newToken := strings.Replace(string(token.Copy()), " ", "", -1); newToken == "" || newToken == "\n" {
+				value = ""
+			}
+
+		default:
+		}
+		//获取到标签和元素后，像map中添加
+		if key != "xml" && key != "" && value != "" && value != "\n" {
+			result.Add(key, value)
+		}
+	}
+	return result
+}
+
+//用于像微信发送POST请求
+type postRequest struct {
+	Body io.Reader
+
+	Url         string
+	ContentType string
+}
+
+//向微信服务器发送POST请求
+func postToWx(req *postRequest) (resultMap, error) {
+	if req == nil {
+		return nil, errors.New("have no postRequest")
+	}
+
+	response, err := http.Post(req.Url, req.ContentType, req.Body)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, errors.New("http StatusCode: " + strconv.Itoa(response.StatusCode))
+	}
+
+	result := ParseXMLReader(response.Body)
+	return result, nil
+}
+
+//带证书的Post请求
+func postToWxWithCert(req *postRequest, p12Cert *tls.Certificate) (resultMap, error) {
+	if req == nil {
+		return nil, errors.New("have no postRequest")
+	}
+
+	if p12Cert == nil {
+		return nil, errors.New("need p12Cert")
+	}
+
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			Certificates: []tls.Certificate{*p12Cert},
+		},
+		DisableCompression: true,
+	}
+	httpClient := http.Client{
+		Transport: transport,
+	}
+	//发送请求
+	response, err := httpClient.Post(req.Url, req.ContentType, req.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, errors.New("http StatusCode: " + strconv.Itoa(response.StatusCode))
+	}
+
+	result := ParseXMLReader(response.Body)
+	return result, nil
 }
