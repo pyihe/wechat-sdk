@@ -15,3 +15,19 @@ func HaveInArray(array interface{}, value interface{}) bool {
 	}
 	return false
 }
+
+//将嵌套的map[string]interface全部转换成一层
+func Interface2Map(data interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range data.(map[string]interface{}) {
+		switch v := v.(type) {
+		case map[string]interface{}:
+			for i, u := range v {
+				result[i] = u
+			}
+		default:
+			result[k] = v
+		}
+	}
+	return result
+}

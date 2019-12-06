@@ -87,44 +87,6 @@ func (u unifiedResult) ListParam() Params {
 	return p
 }
 
-func (u *unifiedResult) checkWxSign(signType string) (bool, error) {
-	if signType == "" {
-		signType = e.SignTypeMD5
-	}
-	if signType != e.SignTypeMD5 && signType != e.SignType256 {
-		return false, e.ErrSignType
-	}
-
-	param := u.ListParam()
-	keys := param.SortKey()
-	signStr := ""
-	sign := ""
-
-	for i, k := range keys {
-		if k == "sign" {
-			continue
-		}
-		var str string
-		if i == 0 {
-			str = fmt.Sprintf("%v=%v", k, param.Get(k))
-		} else {
-			str = fmt.Sprintf("&%v=%v", k, param.Get(k))
-		}
-		signStr += str
-	}
-	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
-	switch signType {
-	case e.SignTypeMD5:
-		sign = strings.ToUpper(util.SignMd5(signStr))
-	case e.SignType256:
-		sign = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
-	}
-	if param.Get("sign") == nil {
-		return false, e.ErrNoSign
-	}
-	return sign == param.Get("sign").(string), nil
-}
-
 //统一下单
 func (m *myPayer) UnifiedOrder(param Params) (ResultParam, error) {
 	if param == nil {
