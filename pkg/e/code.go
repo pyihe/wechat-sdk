@@ -32,4 +32,6 @@ var (
 	ErrNoSign      = errors.New("result not have sign")
 	ErrCheckSign   = errors.New("check sign fail")
 	ErrNoWatermark = errors.New("got no watermark")
+	ErrAppId       = errors.New("different appid")
+	ErrMchId       = errors.New("different mch_id")
 )
