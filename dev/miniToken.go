@@ -2,57 +2,15 @@ package dev
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
-	"strings"
 )
 
 /*
 	微信小程序获取AccessToken
 */
 
-type tokenResult struct {
-	AccessToken string `json:"access_token"`
-	ExpireIn    int    `json:"expire_in"`
-	ErrCode     int    `json:"errcode"`
-	ErrMsg      string `json:"errmsg"`
-}
-
-func (token *tokenResult) Param(key string) (interface{}, error) {
-	var err error
-	switch key {
-	case "access_token":
-		return token.AccessToken, err
-	case "expire_in":
-		return token.ExpireIn, err
-	case "errcode":
-		return token.ErrCode, err
-	case "errmsg":
-		return token.ErrMsg, err
-	default:
-		err = errors.New(fmt.Sprintf("invalid key: %s", key))
-		return nil, err
-	}
-}
-
-func (token tokenResult) ListParam() Params {
-	p := make(Params)
-
-	t := reflect.TypeOf(token)
-	v := reflect.ValueOf(t)
-
-	for i := 0; i < t.NumField(); i++ {
-		if !v.Field(i).IsZero() {
-			tagName := strings.Split(string(t.Field(i).Tag), "\"")[1]
-			p[tagName] = v.Field(i).Interface()
-		}
-	}
-	return p
-}
-
-func (m *myPayer) GetAccessTokenForMini() (ResultParam, error) {
+func (m *myPayer) GetAccessTokenForMini() (Param, error) {
 	if err := m.checkForAccess(); err != nil {
 		return nil, err
 	}
@@ -65,11 +23,10 @@ func (m *myPayer) GetAccessTokenForMini() (ResultParam, error) {
 
 	defer response.Body.Close()
 
-	var result *tokenResult
+	var result Param
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }

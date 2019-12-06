@@ -10,35 +10,38 @@ var (
 )
 
 type ResultParam interface {
-	Param(key string) (interface{}, error) //根据key获取微信返回的对应的value
-	ListParam() Params                     //将微信返回的参数转换为PayParams
-	//checkWxSign(signType string) (bool, error) //校验微信返回的签名，签名方式默认MD5
+	//获取整型数据, 如支付/退款金额
+	GetInt64(key string, base int) (value int64, err error)
+	//获取字符串数据, 如订单号
+	GetString(key string) (value string, err error)
+	//
+	Data() map[string]string
 }
 
 type WePayer interface {
 	//支付相关
 	//统一下单
-	UnifiedOrder(param Params) (ResultParam, error) //统一下单
+	UnifiedOrder(param Param) (ResultParam, error) //统一下单
 	//查询订单
-	QueryOrder(param Params) (ResultParam, error) //查询订单
+	UnifiedQuery(param Param) (ResultParam, error) //查询订单
 	//关闭订单
-	CloseOrder(param Params) (ResultParam, error)
+	CloseOrder(param Param) (ResultParam, error)
 	//退款
-	RefundOrder(param Params, certPath string) (ResultParam, error)
+	RefundOrder(param Param, certPath string) (ResultParam, error)
 	//退款查询
-	RefundQuery(param Params) (ResultParam, error)
-	//解析退款通知
-	RefundNotify(body io.ReadCloser) (ResultParam, error)
+	RefundQuery(param Param) (ResultParam, error)
+	//解析退款通知, 结果将不会返回req_info
+	RefundNotify(body io.Reader) (ResultParam, error)
 
 	//小程序相关
 	//获取授权access_token
-	GetAccessTokenForMini() (ResultParam, error) //获取小程序接口凭证，使用者自己保存token，过期重新获取
+	GetAccessTokenForMini() (Param, error) //获取小程序接口凭证，使用者自己保存token，过期重新获取
 	//获取微信信息
-	GetUserInfoForMini(code, dataStr, ivStr string) (ResultParam, error)
+	GetUserInfoForMini(code, dataStr, ivStr string) (Param, error)
 	//获取微信手机号码
-	GetUserPhoneForMini(code string, dataStr string, ivStr string) (ResultParam, error)
+	GetUserPhoneForMini(code string, dataStr string, ivStr string) (Param, error)
 	//获取session_key
-	GetSessionKeyAndOpenId(code string) (ResultParam, error)
+	GetSessionKeyAndOpenId(code string) (Param, error)
 }
 
 type option func(*myPayer)
