@@ -2,8 +2,6 @@ package dev
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -52,7 +50,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 			continue
 		}
 		if param.Get(k) == nil {
-			return nil, errors.New(fmt.Sprintf("need %s", k))
+			return nil, errors.New("need param: " + k)
 		}
 	}
 
@@ -64,7 +62,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 			signType = param[k].(string)
 		}
 		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) && !util.HaveInArray(queryOneParam, k) {
-			return nil, errors.New(fmt.Sprintf("no need %s param", k))
+			return nil, errors.New("no need param: " + k)
 		}
 	}
 	sign := param.Sign(signType)
@@ -81,11 +79,13 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 		ContentType: "application/xml;charset=utf-8",
 	}
 
-	result, err := postToWx(request)
+	response, err := postToWx(request)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
+	result := ParseXMLReader(response.Body)
 	if returnCode, _ := result.GetString("return_code"); returnCode != "SUCCESS" {
 		returnMsg, _ := result.GetString("return_msg")
 		return nil, errors.New(returnMsg)

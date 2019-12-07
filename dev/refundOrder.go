@@ -2,8 +2,6 @@ package dev
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -54,7 +52,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 			continue
 		}
 		if param.Get(k) == nil {
-			return nil, errors.New(fmt.Sprintf("need %s", k))
+			return nil, errors.New("need param: " + k)
 		}
 	}
 
@@ -63,7 +61,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 			signType = param[k].(string)
 		}
 		if !util.HaveInArray(refundMustParams, k) && !util.HaveInArray(refundOptionalParams, k) && !util.HaveInArray(refundOneParams, k) {
-			return nil, errors.New(fmt.Sprintf("no need %s", k))
+			return nil, errors.New("no need param: " + k)
 		}
 	}
 
@@ -81,10 +79,12 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 		ContentType: "application/xml;charset=utf-8",
 	}
 
-	result, err := postToWxWithCert(request, cert)
+	response, err := postToWxWithCert(request, cert)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+	result := ParseXMLReader(response.Body)
 	if returnCode, _ := result.GetString("return_code"); returnCode != "SUCCESS" {
 		returnMsg, _ := result.GetString("return_msg")
 		return nil, errors.New(returnMsg)

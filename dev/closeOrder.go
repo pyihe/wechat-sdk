@@ -2,8 +2,6 @@ package dev
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -40,12 +38,12 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 			continue
 		}
 		if _, ok := param[v]; !ok {
-			return nil, errors.New(fmt.Sprintf("need %s", v))
+			return nil, errors.New("need param: " + v)
 		}
 	}
 	for key := range param {
 		if !util.HaveInArray(closeMustParam, key) && !util.HaveInArray(closeOptionalParam, key) {
-			return nil, errors.New(fmt.Sprintf("no need %s", key))
+			return nil, errors.New("no need param: " + key)
 		}
 	}
 	sign := param.Sign(signType)
@@ -61,10 +59,13 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 		Url:         closeOrderUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
-	result, err := postToWx(request)
+	response, err := postToWx(request)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
+	result := ParseXMLReader(response.Body)
 	if returnCode, _ := result.GetString("return_code"); returnCode != "SUCCESS" {
 		returnMsg, _ := result.GetString("return_msg")
 		return nil, errors.New(returnMsg)

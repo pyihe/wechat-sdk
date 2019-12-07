@@ -32,6 +32,8 @@ type WePayer interface {
 	RefundQuery(param Param) (ResultParam, error)
 	//解析退款通知, 结果将不会返回req_info
 	RefundNotify(body io.Reader) (ResultParam, error)
+	//下单对账单
+	DownloadBill(param Param, fileSavePath string) error
 
 	//小程序相关
 	//获取授权access_token

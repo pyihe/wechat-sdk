@@ -158,7 +158,6 @@ func ParseXMLReader(reader io.Reader) resultMap {
 			if newToken := strings.Replace(string(token.Copy()), " ", "", -1); newToken == "" || newToken == "\n" {
 				value = ""
 			}
-
 		default:
 		}
 		//获取到标签和元素后，像map中添加
@@ -178,29 +177,25 @@ type postRequest struct {
 }
 
 //向微信服务器发送POST请求
-func postToWx(req *postRequest) (resultMap, error) {
+func postToWx(req *postRequest) (*http.Response, error) {
 	if req == nil {
 		return nil, errors.New("have no postRequest")
 	}
 
 	response, err := http.Post(req.Url, req.ContentType, req.Body)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-
-	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("http StatusCode: " + strconv.Itoa(response.StatusCode))
 	}
 
-	result := ParseXMLReader(response.Body)
-	return result, nil
+	return response, nil
 }
 
 //带证书的Post请求
-func postToWxWithCert(req *postRequest, p12Cert *tls.Certificate) (resultMap, error) {
+func postToWxWithCert(req *postRequest, p12Cert *tls.Certificate) (*http.Response, error) {
 	if req == nil {
 		return nil, errors.New("have no postRequest")
 	}
@@ -223,12 +218,10 @@ func postToWxWithCert(req *postRequest, p12Cert *tls.Certificate) (resultMap, er
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New("http StatusCode: " + strconv.Itoa(response.StatusCode))
 	}
 
-	result := ParseXMLReader(response.Body)
-	return result, nil
+	return response, err
 }

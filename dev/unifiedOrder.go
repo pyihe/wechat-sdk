@@ -2,8 +2,6 @@ package dev
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -53,13 +51,13 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 			continue
 		}
 		if _, ok := param[v]; !ok {
-			return nil, errors.New(fmt.Sprintf("need %s", v))
+			return nil, errors.New("need " + v)
 		}
 	}
 	//这里校验是否包含不必要的参数
 	for key := range param {
 		if !util.HaveInArray(unifiedMustParam, key) && !util.HaveInArray(unifiedOptionalParam, key) {
-			return nil, errors.New(fmt.Sprintf("no need %s param", key))
+			return nil, errors.New("no need param: " + key)
 		}
 	}
 
@@ -77,11 +75,13 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 		Url:         unifiedOrderUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
-	result, err := postToWx(request)
+	response, err := postToWx(request)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
+	result := ParseXMLReader(response.Body)
 	if returnCode, _ := result.GetString("return_code"); returnCode != "SUCCESS" {
 		returnMsg, _ := result.GetString("return_msg")
 		return nil, errors.New(returnMsg)
