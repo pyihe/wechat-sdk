@@ -11,8 +11,8 @@ import (
 */
 
 var (
-	unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
-	unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid"}
+	unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
+	unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info"}
 )
 
 const unifiedOrderUrl = "https://api.mch.weixin.qq.com/pay/unifiedorder"
@@ -39,12 +39,33 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 		signType = t.(string)
 	}
 
-	//校验参数是否传对了
-	if tradeType == "JSAPI" {
-		if _, ok := param["openid"]; !ok {
+	switch tradeType {
+	case e.H5:
+		//H5支付必须要传scene_info参数
+		if sceneInfo := param.Get("scene_info"); sceneInfo == nil || sceneInfo.(string) == "" {
+			return nil, errors.New("H5 pay need param scene_info")
+		}
+	case e.App:
+		//App支付不需要product_id, openid, scene_info参数
+		if _, ok := param["product_id"]; ok {
+			return nil, errors.New("APP pay no need product_id")
+		}
+		if _, ok := param["openid"]; ok {
+			return nil, errors.New("APP pay no need openid")
+		}
+		if _, ok := param["scene_info"]; ok {
+			return nil, errors.New("APP pay no need scene_info")
+		}
+	case e.JSAPI:
+		//JSAPI支付必须传openid参数
+		if openId, ok := param["openid"]; !ok || openId.(string) == "" {
 			return nil, e.ErrOpenId
 		}
+	case e.Native:
+	default:
+		return nil, errors.New("invalid trade_type")
 	}
+
 	//这里校验是否包含必传的参数
 	for _, v := range unifiedMustParam {
 		if v == "sign" {
