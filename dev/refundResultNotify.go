@@ -13,6 +13,9 @@ import (
 //对结果中对req_info执行解密：
 func (m *myPayer) RefundNotify(body io.Reader) (ResultParam, error) {
 	result := ParseXMLReader(body)
+	if len(result) == 0 {
+		return nil, errors.New("reader has nothing")
+	}
 
 	var reqInfoStr string
 	if reqInfoStr, _ = result.GetString("req_info"); reqInfoStr == "" {

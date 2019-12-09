@@ -21,13 +21,17 @@ type ResultParam interface {
 type WePayer interface {
 	//支付相关
 	//统一下单
-	UnifiedOrder(param Param) (ResultParam, error) //统一下单
+	UnifiedOrder(param Param) (ResultParam, error)
+	//扫码下单
+	UnifiedMicro(param Param) (ResultParam, error)
+	//撤销订单
+	ReverseOrder(param Param, p12CertPath string) (ResultParam, error)
 	//查询订单
-	UnifiedQuery(param Param) (ResultParam, error) //查询订单
+	UnifiedQuery(param Param) (ResultParam, error)
 	//关闭订单
 	CloseOrder(param Param) (ResultParam, error)
 	//退款
-	RefundOrder(param Param, certPath string) (ResultParam, error)
+	RefundOrder(param Param, p12CertPath string) (ResultParam, error)
 	//退款查询
 	RefundQuery(param Param) (ResultParam, error)
 	//解析退款通知, 结果将不会返回req_info
