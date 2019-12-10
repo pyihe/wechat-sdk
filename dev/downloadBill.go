@@ -2,16 +2,15 @@ package dev
 
 import (
 	"bytes"
-	"compress/gzip"
-	"encoding/binary"
 	"errors"
-	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/hong008/wechat-sdk/pkg/e"
-	"github.com/hong008/wechat-sdk/pkg/util"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/hong008/wechat-sdk/pkg/e"
+	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
 /*
@@ -23,7 +22,7 @@ var (
 	downloadOptionalParam = []string{"bill_type", "tar_type"}
 )
 
-const downloadApiUrl = "https://api.mch.weixin.qq.com/pay/downloadbill"
+const downloadBillApiUrl = "https://api.mch.weixin.qq.com/pay/downloadbill"
 
 func (m *myPayer) DownloadBill(param Param, path string) error {
 	if param == nil {
@@ -68,7 +67,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         downloadApiUrl,
+		Url:         downloadBillApiUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
 
@@ -91,20 +90,21 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 
 	if tarType != "" {
 		//微信传过来的为gzip压缩了的内容，需要解压
-		buffer := new(bytes.Buffer)
-		err = binary.Write(buffer, binary.LittleEndian, content)
+		content, err = util.UnGZIP(content)
 		if err != nil {
 			return err
 		}
-		zipReader, err := gzip.NewReader(buffer)
-		if err != nil {
-			return err
+	}
+
+	if !strings.HasSuffix(path, "/") {
+		if path == "" {
+			path = "./"
+		} else {
+			path += "/"
 		}
-		defer zipReader.Close()
-		content, err = ioutil.ReadAll(zipReader)
-		if err != nil {
-			return err
-		}
+	}
+	if err = util.MakeNewPath(path); err != nil {
+		return err
 	}
 
 	//将结果转换为excel文件
@@ -114,8 +114,15 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 		sheetName = t.(string)
 	}
 
-	billFile := excelize.NewFile()
-	billFile.NewSheet(sheetName)
+	var billFile *excelize.File
+	billFile, _ = excelize.OpenFile(path + fileName)
+	if billFile == nil {
+		billFile = excelize.NewFile()
+		billFile.SetSheetName("Sheet1", sheetName)
+	} else {
+		billFile.NewSheet(sheetName)
+	}
+
 	allData := strings.Replace(string(content), "`", "", -1) //替换掉所有掉参数值前的`符号
 
 	//取订单数据:根据微信返回的结果进行字符串分割操作
@@ -136,19 +143,9 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 		titles := strings.Split(s, ",")
 		billFile.SetSheetRow(sheetName, axis, &titles)
 	}
-	billFile.DeleteSheet("sheet1")
+
 	err = billFile.SaveAs(fileName)
 	if err != nil {
-		return err
-	}
-	if !strings.HasSuffix(path, "/") {
-		if path == "" {
-			path = "./"
-		} else {
-			path += "/"
-		}
-	}
-	if err = util.MakeNewPath(path); err != nil {
 		return err
 	}
 	return os.Rename("./"+fileName, path+fileName)
