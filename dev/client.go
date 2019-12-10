@@ -38,6 +38,8 @@ type WePayer interface {
 	RefundNotify(body io.Reader) (ResultParam, error)
 	//下单对账单
 	DownloadBill(param Param, fileSavePath string) error
+	//下载资金账单
+	DownloadFundFlow(param Param, p12CertPath string, fileSavePath string) error
 
 	//小程序相关
 	//获取授权access_token
