@@ -1,6 +1,10 @@
 package util
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/binary"
+	"io/ioutil"
 	"os"
 	"reflect"
 )
@@ -46,4 +50,23 @@ func MakeNewPath(targetPath string) error {
 		}
 	}
 	return nil
+}
+
+//gzip解压
+func UnGZIP(content []byte) ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	err := binary.Write(buffer, binary.BigEndian, content)
+	if err != nil {
+		return nil, err
+	}
+	zipReader, err := gzip.NewReader(buffer)
+	if err != nil {
+		return nil, err
+	}
+	defer zipReader.Close()
+	result, err := ioutil.ReadAll(zipReader)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
