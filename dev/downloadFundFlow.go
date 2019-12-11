@@ -141,7 +141,6 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 		billFile.NewSheet(sheetName)
 	}
 
-	billFile.NewSheet(sheetName)
 	allData := strings.Replace(string(content), "`", "", -1) //替换掉所有掉参数值前的`符号
 
 	//取订单数据:根据微信返回的结果进行字符串分割操作
