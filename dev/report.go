@@ -78,7 +78,7 @@ func (m *myPayer) Report(param Param) error {
 		Url:         reportApiUrl,
 		ContentType: "application/xml;charset=utf-8",
 	}
-	response, _, err := postToWx(request)
+	response, err := postToWx(request)
 	if err != nil {
 		return err
 	}
