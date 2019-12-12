@@ -40,6 +40,10 @@ type WePayer interface {
 	DownloadBill(param Param, fileSavePath string) error
 	//下载资金账单
 	DownloadFundFlow(param Param, p12CertPath string, fileSavePath string) error
+	//拉取订单评论数据
+	DownloadComment(param Param, p12CertPath string, path string) (offset uint64, err error)
+	//交易保障
+	Report(param Param) error
 
 	//小程序相关
 	//获取授权access_token
@@ -55,12 +59,13 @@ type WePayer interface {
 type option func(*myPayer)
 
 type myPayer struct {
-	appId  string //appid
-	mchId  string //mchid
-	secret string //secret用于获取token
-	apiKey string //用于支付
+	appId     string        //appid
+	mchId     string        //mchid
+	secret    string        //secret用于获取token
+	apiKey    string        //用于支付
 }
 
+//不向微信发送接口请求report
 func NewPayer(options ...option) WePayer {
 	defaultPayer = &myPayer{}
 	for _, option := range options {
