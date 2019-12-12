@@ -41,7 +41,7 @@ type WePayer interface {
 	//下载资金账单
 	DownloadFundFlow(param Param, p12CertPath string, fileSavePath string) error
 	//拉取订单评论数据
-	DownloadComment(param Param, p12CertPath string, path string) (offset uint64, err error)
+	DownloadComment(param Param, p12CertPath string, fileSavePath string) (offset uint64, err error)
 	//交易保障
 	Report(param Param) error
 
@@ -49,9 +49,9 @@ type WePayer interface {
 	//获取授权access_token
 	GetAccessTokenForMini() (Param, error) //获取小程序接口凭证，使用者自己保存token，过期重新获取
 	//获取微信信息
-	GetUserInfoForMini(code, dataStr, ivStr string) (Param, error)
+	GetUserInfoForMini(code, encryptedData, ivData string) (Param, error)
 	//获取微信手机号码
-	GetUserPhoneForMini(code string, dataStr string, ivStr string) (Param, error)
+	GetUserPhoneForMini(code string, encryptedData string, ivData string) (Param, error)
 	//获取session_key
 	GetSessionKeyAndOpenId(code string) (Param, error)
 }
@@ -59,10 +59,10 @@ type WePayer interface {
 type option func(*myPayer)
 
 type myPayer struct {
-	appId     string        //appid
-	mchId     string        //mchid
-	secret    string        //secret用于获取token
-	apiKey    string        //用于支付
+	appId  string //appid
+	mchId  string //mchid
+	secret string //secret用于获取token
+	apiKey string //用于支付
 }
 
 //不向微信发送接口请求report
