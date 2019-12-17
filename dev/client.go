@@ -45,6 +45,19 @@ type WePayer interface {
 	//交易保障
 	Report(param Param) error
 
+	//
+	//企业付款
+	//付款到零钱
+	Transfers(param Param, p12CertPath string) (ResultParam, error)
+	//查询企业付款到零钱
+	TransfersQuery(param Param, p12CertPath string) (ResultParam, error)
+	//从微信获取RSA加密的公钥
+	GetPublicKey(p12CertPath string, targetPath string) error
+	//TODO 待验证 企业付款到银行卡
+	TransferBank(param Param, p12CertPath string, publicKeyPath string) (ResultParam, error)
+	////TODO 待验证 查询企业付款到银行卡
+	TransferBankQuery(param Param, p12CertPath string) (ResultParam, error)
+
 	//小程序相关
 	//获取授权access_token
 	GetAccessTokenForMini() (Param, error) //获取小程序接口凭证，使用者自己保存token，过期重新获取
