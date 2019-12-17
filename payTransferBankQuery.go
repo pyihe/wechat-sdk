@@ -1,28 +1,21 @@
-package dev
+package wechat_sdk
 
 import (
-	"encoding/base64"
 	"errors"
-	"io/ioutil"
 
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
 /*
-	企业付款到银行卡
+	查询企业付款到银行卡
 */
 
-func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath string) (ResultParam, error) {
+func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
 		return nil, e.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
-		return nil, err
-	}
-
-	publicKey, err := ioutil.ReadFile(publicKeyPath)
-	if err != nil {
 		return nil, err
 	}
 
@@ -33,8 +26,8 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 
 	param.Add("mch_id", m.mchId)
 
-	var bankMustParam = []string{"mch_id", "partner_trade_no", "nonce_str", "sign", "enc_bank_no", "enc_true_name", "bank_code", "amount"}
-	for _, k := range bankMustParam {
+	var mustParam = []string{"mch_id", "partner_trade_no", "nonce_str", "sign"}
+	for _, k := range mustParam {
 		if k == "sign" {
 			continue
 		}
@@ -43,25 +36,11 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 		}
 	}
 
-	var bankOptionalParam = []string{"desc"}
 	for k := range param {
-		if !util.HaveInArray(bankMustParam, k) && !util.HaveInArray(bankOptionalParam, k) {
-			return nil, errors.New("no need param: " + k)
+		if !util.HaveInArray(mustParam, k) {
+			return nil, errors.New("no need param " + k)
 		}
 	}
-
-	bankCard := param.Get("enc_bank_no").(string)
-	bankName := param.Get("enc_true_name").(string)
-	encryptBankCard, err := util.RsaEncrypt([]byte(bankCard), publicKey)
-	if err != nil {
-		return nil, err
-	}
-	encryptBankName, err := util.RsaEncrypt([]byte(bankName), publicKey)
-	if err != nil {
-		return nil, err
-	}
-	param.Add("enc_bank_no", base64.StdEncoding.EncodeToString(encryptBankCard))
-	param.Add("enc_true_name", base64.StdEncoding.EncodeToString(encryptBankName))
 
 	sign := param.Sign(e.SignTypeMD5)
 	param.Add("sign", sign)
@@ -72,7 +51,7 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 	}
 	var request = &postRequest{
 		Body:        reader,
-		Url:         "https://api.mch.weixin.qq.com/mmpaysptrans/pay_bank",
+		Url:         "https://api.mch.weixin.qq.com/mmpaysptrans/query_bank",
 		ContentType: e.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)

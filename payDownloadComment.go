@@ -1,4 +1,4 @@
-package dev
+package wechat_sdk
 
 import (
 	"bytes"

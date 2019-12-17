@@ -1,4 +1,4 @@
-package dev
+package wechat_sdk
 
 import (
 	"errors"
@@ -7,46 +7,39 @@ import (
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
-/*撤销订单*/
+/*
+	查询退款
+*/
 
-func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error) {
+func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
-
-	//读取证书
-	cert, err := util.P12ToPem(certPath, m.mchId)
-	if err != nil {
-		return nil, err
-	}
-
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	//校验订单号
 	var (
-		signType             = e.SignTypeMD5 //此处默认MD5
-		reverseMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-		reverseOneParam      = []string{"transaction_id", "out_trade_no"}
-		reverseOptionalParam = []string{"sign_type"}
+		signType             = e.SignTypeMD5
+		count                = 0
+		refundQueryOneParam  = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
+		refundQueryMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
 	)
-	var count = 0
-	for _, k := range reverseOneParam {
+
+	for _, k := range refundQueryOneParam {
 		if v := param.Get(k); v != nil {
 			count++
 		}
 	}
 	if count == 0 {
-		return nil, errors.New("need order number: transaction_id or out_trade_no")
+		return nil, errors.New("need one param of refund_id/out_refund_no/transaction_id/out_trade_no")
 	} else if count > 1 {
-		return nil, errors.New("just one order number: transaction_id or out_trade_no")
+		return nil, errors.New("more than one param refund_id/out_refund_no/transaction_id/out_trade_no")
 	}
 
-	//校验其他参数
-	for _, k := range reverseMustParam {
+	for _, k := range refundQueryMustParam {
 		if k == "sign" {
 			continue
 		}
@@ -55,14 +48,12 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 		}
 	}
 
+	var refundQueryOptionalParam = []string{"sign_type", "offset"}
 	for k := range param {
-		if k == "sign" {
-			continue
-		}
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(reverseMustParam, k) && !util.HaveInArray(reverseOptionalParam, k) && !util.HaveInArray(reverseOneParam, k) {
+		if !util.HaveInArray(refundQueryMustParam, k) && !util.HaveInArray(refundQueryOptionalParam, k) && !util.HaveInArray(refundQueryOneParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
@@ -77,11 +68,11 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         "https://api.mch.weixin.qq.com/secapi/pay/reverse",
+		Url:         "https://api.mch.weixin.qq.com/pay/refundquery",
 		ContentType: e.PostContentType,
 	}
 
-	response, err := postToWxWithCert(request, cert)
+	response, err := postToWx(request)
 	if err != nil {
 		return nil, err
 	}
@@ -92,15 +83,13 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 		returnMsg, _ := result.GetString("return_msg")
 		return nil, errors.New(returnMsg)
 	}
-
 	if resultCode, _ := result.GetString("result_code"); resultCode != "SUCCESS" {
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
 	sign = result.Sign(signType)
-	if wxSign, _ := result.GetString("sign"); sign != wxSign {
+	if resultSign, _ := result.GetString("sign"); resultSign != sign {
 		return nil, e.ErrCheckSign
 	}
-
 	return result, nil
 }

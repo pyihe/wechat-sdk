@@ -1,4 +1,4 @@
-package dev
+package wechat_sdk
 
 import (
 	"errors"
@@ -8,10 +8,10 @@ import (
 )
 
 /*
-	查询企业付款到银行卡
+	查询转账到零钱
 */
 
-func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultParam, error) {
+func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
 		return nil, e.ErrParams
 	}
@@ -24,10 +24,11 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 		return nil, err
 	}
 
+	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var mustParam = []string{"mch_id", "partner_trade_no", "nonce_str", "sign"}
-	for _, k := range mustParam {
+	var queryTransferMustParam = []string{"nonce_str", "sign", "partner_trade_no", "mch_id", "appid"}
+	for _, k := range queryTransferMustParam {
 		if k == "sign" {
 			continue
 		}
@@ -37,11 +38,10 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 	}
 
 	for k := range param {
-		if !util.HaveInArray(mustParam, k) {
-			return nil, errors.New("no need param " + k)
+		if !util.HaveInArray(queryTransferMustParam, k) {
+			return nil, errors.New("no need param: " + k)
 		}
 	}
-
 	sign := param.Sign(e.SignTypeMD5)
 	param.Add("sign", sign)
 
@@ -51,7 +51,7 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 	}
 	var request = &postRequest{
 		Body:        reader,
-		Url:         "https://api.mch.weixin.qq.com/mmpaysptrans/query_bank",
+		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/gettransferinfo",
 		ContentType: e.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
@@ -68,10 +68,6 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 	if resultCode, _ := result.GetString("result_code"); resultCode != "SUCCESS" {
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
-	}
-	sign = result.Sign(e.SignTypeMD5)
-	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
 	}
 	return result, nil
 }

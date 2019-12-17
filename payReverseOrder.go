@@ -1,16 +1,15 @@
-package dev
+package wechat_sdk
 
 import (
 	"errors"
+
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
-/*
-	订单查询
-*/
+/*撤销订单*/
 
-func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
+func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
 	}
@@ -18,18 +17,24 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 		return nil, err
 	}
 
+	//读取证书
+	cert, err := util.P12ToPem(certPath, m.mchId)
+	if err != nil {
+		return nil, err
+	}
+
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var (
-		signType           = e.SignTypeMD5 //此处默认MD5
-		queryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-		queryOneParam      = []string{"transaction_id", "out_trade_no"}
-		queryOptionalParam = []string{"sign_type"}
-	)
 	//校验订单号
+	var (
+		signType             = e.SignTypeMD5 //此处默认MD5
+		reverseMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
+		reverseOneParam      = []string{"transaction_id", "out_trade_no"}
+		reverseOptionalParam = []string{"sign_type"}
+	)
 	var count = 0
-	for _, k := range queryOneParam {
+	for _, k := range reverseOneParam {
 		if v := param.Get(k); v != nil {
 			count++
 		}
@@ -41,7 +46,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	}
 
 	//校验其他参数
-	for _, k := range queryMustParam {
+	for _, k := range reverseMustParam {
 		if k == "sign" {
 			continue
 		}
@@ -57,10 +62,11 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) && !util.HaveInArray(queryOneParam, k) {
+		if !util.HaveInArray(reverseMustParam, k) && !util.HaveInArray(reverseOptionalParam, k) && !util.HaveInArray(reverseOneParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
+
 	sign := param.Sign(signType)
 	param.Add("sign", sign)
 
@@ -71,11 +77,11 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         "https://api.mch.weixin.qq.com/pay/orderquery",
+		Url:         "https://api.mch.weixin.qq.com/secapi/pay/reverse",
 		ContentType: e.PostContentType,
 	}
 
-	response, err := postToWx(request)
+	response, err := postToWxWithCert(request, cert)
 	if err != nil {
 		return nil, err
 	}
