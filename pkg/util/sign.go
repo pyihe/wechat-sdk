@@ -5,8 +5,12 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/md5"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
+	"encoding/pem"
 	"errors"
 )
 
@@ -75,4 +79,18 @@ func AES256ECBDecrypt(data, key []byte) (realData []byte, err error) {
 	}
 	realData = PKCS7UnPadding(realData)
 	return realData, nil
+}
+
+//RSA加密: RSA_PKCS1_OAEP_PADDING
+func RsaEncrypt(data []byte, pubKey []byte) (encryptData []byte, err error) {
+	block, _ := pem.Decode(pubKey)
+	if block == nil {
+		return
+	}
+
+	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		return
+	}
+	return rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey, data, nil)
 }
