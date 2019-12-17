@@ -1,6 +1,8 @@
 package e
 
 const (
+	PostContentType    = "application/xml;charset=utf-8"
+	PublicKey          = "public.pem" //企业转账到银行卡的AES公钥保存文件名
 	SignTypeMD5        = "MD5"
 	SignType256        = "HMAC-SHA256"
 	UnifiedOrderApiUrl = "https://api.mch.weixin.qq.com/pay/unifiedorder"
