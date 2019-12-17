@@ -2,6 +2,7 @@ package dev
 
 import (
 	"errors"
+
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -9,14 +10,6 @@ import (
 /*
 	查询退款
 */
-
-var (
-	refundQueryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-	refundQueryOneParam      = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
-	refundQueryOptionalParam = []string{"sign_type", "offset"}
-)
-
-const queryRefundUrl = "https://api.mch.weixin.qq.com/pay/refundquery"
 
 func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	if param == nil {
@@ -30,6 +23,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 
 	var signType = e.SignTypeMD5
 	var count = 0
+	var refundQueryOneParam = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
 	for _, k := range refundQueryOneParam {
 		if v := param.Get(k); v != nil {
 			count++
@@ -41,6 +35,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		return nil, errors.New("more than one param refund_id/out_refund_no/transaction_id/out_trade_no")
 	}
 
+	var refundQueryMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
 	for _, k := range refundQueryMustParam {
 		if k == "sign" {
 			continue
@@ -50,6 +45,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		}
 	}
 
+	var refundQueryOptionalParam = []string{"sign_type", "offset"}
 	for k := range param {
 		if k == "sign_type" {
 			signType = param[k].(string)
@@ -69,8 +65,8 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         queryRefundUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/refundquery",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWx(request)

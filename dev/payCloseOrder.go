@@ -2,6 +2,7 @@ package dev
 
 import (
 	"errors"
+
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -9,13 +10,6 @@ import (
 /*
 	关闭订单
 */
-
-var (
-	closeMustParam     = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
-	closeOptionalParam = []string{"sign_type"}
-)
-
-const closeOrderUrl = "https://api.mch.weixin.qq.com/pay/closeorder"
 
 //关闭订单
 func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
@@ -33,6 +27,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 		signType = t.(string)
 	}
 
+	var closeMustParam = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
 	for _, v := range closeMustParam {
 		if v == "sign" {
 			continue
@@ -41,6 +36,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 			return nil, errors.New("need param: " + v)
 		}
 	}
+	var closeOptionalParam = []string{"sign_type"}
 	for key := range param {
 		if !util.HaveInArray(closeMustParam, key) && !util.HaveInArray(closeOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)
@@ -56,8 +52,8 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         closeOrderUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/closeorder",
+		ContentType: e.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {

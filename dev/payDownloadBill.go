@@ -17,13 +17,6 @@ import (
 	下载对账单
 */
 
-var (
-	downloadMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "bill_date"}
-	downloadOptionalParam = []string{"bill_type", "tar_type"}
-)
-
-const downloadBillApiUrl = "https://api.mch.weixin.qq.com/pay/downloadbill"
-
 func (m *myPayer) DownloadBill(param Param, path string) error {
 	if param == nil {
 		return e.ErrParams
@@ -36,6 +29,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	param.Add("mch_id", m.mchId)
 
 	//校验参数
+	var downloadMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "bill_date"}
 	for _, k := range downloadMustParam {
 		if k == "sign" {
 			continue
@@ -46,6 +40,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	}
 
 	//校验多余的参数
+	var downloadOptionalParam = []string{"bill_type", "tar_type"}
 	var tarType string
 	for k := range param {
 		if !util.HaveInArray(downloadMustParam, k) && !util.HaveInArray(downloadOptionalParam, k) {
@@ -67,8 +62,8 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         downloadBillApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/downloadbill",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWx(request)

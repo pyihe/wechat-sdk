@@ -14,13 +14,6 @@ import (
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
-var (
-	downCommentMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "begin_time", "end_time", "offset"}
-	downCommentOptionalParam = []string{"sign_type", "limit"}
-)
-
-const downCommentApiUrl = "https://api.mch.weixin.qq.com/billcommentsp/batchquerycomment"
-
 func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) (offset uint64, err error) {
 	if param == nil {
 		return 0, e.ErrParams
@@ -48,6 +41,7 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	}
 	param.Add("sign_type", signType)
 
+	var downCommentMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "begin_time", "end_time", "offset"}
 	for _, k := range downCommentMustParam {
 		if k == "sign" {
 			continue
@@ -58,6 +52,7 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	}
 
 	//校验不必要的参数
+	var downCommentOptionalParam = []string{"sign_type", "limit"}
 	for k := range param {
 		if !util.HaveInArray(downCommentMustParam, k) && !util.HaveInArray(downCommentOptionalParam, k) {
 			return 0, errors.New("no need param: " + k)
@@ -74,8 +69,8 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         downCommentApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/billcommentsp/batchquerycomment",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)

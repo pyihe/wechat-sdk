@@ -17,13 +17,6 @@ import (
 	下载资金账单
 */
 
-var (
-	fundFlowMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "bill_date", "account_type"}
-	fundFlowOptionalParam = []string{"sign_type", "tar_type"}
-)
-
-const fundFlowApiUrl = "https://api.mch.weixin.qq.com/pay/downloadfundflow"
-
 func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string) error {
 	if param == nil {
 		return errors.New("param is empty")
@@ -49,6 +42,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 	}
 
 	//校验必须的参数
+	var fundFlowMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "bill_date", "account_type"}
 	for _, k := range fundFlowMustParam {
 		if k == "sign" {
 			continue
@@ -58,6 +52,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 		}
 	}
 
+	var fundFlowOptionalParam = []string{"sign_type", "tar_type"}
 	var tarType string
 	//校验是否有不必要的参数
 	for k := range param {
@@ -79,8 +74,8 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         fundFlowApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/downloadfundflow",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)
