@@ -24,6 +24,8 @@
 | UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
 | UnifiedQuery | 下单结果查询 |  |
 
+**Notice: 所有请求接口都不需要加入appid/mch_id/key/secret/sign参数**
+
 ##### 如何使用: 
 ```
 package main
