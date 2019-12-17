@@ -21,12 +21,128 @@
 | TransferBank | 企业付款到银行卡 | 未测试 |
 | TransferBankQuery | 查询企业付款到银行卡的结果 | 未测试 |
 | UnifiedMicro | 扫码下单 |  |
-| UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE |  |
+| UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
 | UnifiedQuery | 下单结果查询 |  |
 
 ##### 如何使用: 
 ```
+package main
 
+import (
+	"fmt"
+	dev "github.com/hong008/wechat-sdk"
+)
 
+func main() {
+	var appId, mchId, apiKey, apiSecret string
+
+	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+
+	//unified order
+	param := dev.NewParam()
+	param.Add("nonce_str", "yourNonceStr")
+	param.Add("body", "yourBody")
+	param.Add("out_trade_no", "yourOutTradeNo")
+	param.Add("total_fee", 1)
+	param.Add("spbill_create_ip", "yourIp")
+	param.Add("notify_url", "yourUrl")
+	param.Add("trade_type", "JSAPI")
+	result, err := client.UnifiedOrder(param)
+	if err != nil {
+		handleErr(err)
+	}
+	//do what you want with result
+	fmt.Printf("result = %v\n", result.Data())
+}
+
+```
+
+```
+package main
+
+import (
+	"fmt"
+	"net/http"
+	
+	dev "github.com/hong008/wechat-sdk"
+)
+
+func main() {
+	var appId, mchId, apiKey, apiSecret string
+
+	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+
+	//handle refund notify
+	http.HandleFunc("/refund_notify", func(writer http.ResponseWriter, request *http.Request) {
+		defer request.Body.Close()
+		result, err := client.RefundNotify(request.Body)
+		if err != nil {
+			handleErr(err)
+		}
+		fmt.Printf("RefundNotify Result = %v\n", result.Data())
+	})
+	http.ListenAndServe(":8810", nil)
+}
+
+```
+
+```
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	dev "github.com/hong008/wechat-sdk"
+)
+
+func main() {
+	var appId, mchId, apiKey, apiSecret string
+
+	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+
+	//download bill
+	param := dev.NewParam()
+	param.Add("nonce_str", "yourNonceStr")
+	param.Add("bill_date", "yourDate")
+	param.Add("bill_type", "ALL")
+	param.Add("tar_type", "GZIP")
+	err := client.DownloadBill(param, "./bill")
+	if err != nil {
+		handleErr(err)
+	}
+}
+```
+
+```
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	dev "github.com/hong008/wechat-sdk"
+)
+
+func main() {
+	var appId, mchId, apiKey, apiSecret string
+
+	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+
+	//get phone for mini program user
+	result, err := client.GetUserPhoneForMini("code", "encryptedData", "iv")
+	if err != nil {
+		handleErr(err)
+	}
+	var phone string
+	if countryCode := result.Get("countryCode"); countryCode != nil && countryCode.(string) == "86" {
+		purePhone := result.Get("purePhoneNumber")
+		phone = purePhone.(string)
+	} else {
+		phoneNumber := result.Get("phoneNumber")
+		phone = phoneNumber.(string)
+	}
+	fmt.Printf("user phone is %s\n", phone)
+}
 ```
 
