@@ -10,13 +10,6 @@ import (
 	统一下单
 */
 
-var (
-	unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
-	unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info"}
-)
-
-const unifiedOrderUrl = "https://api.mch.weixin.qq.com/pay/unifiedorder"
-
 //统一下单
 func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	if param == nil {
@@ -27,9 +20,15 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	}
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
+
 	//获取交易类型和签名类型
-	var tradeType string
-	var signType = e.SignTypeMD5 //默认MD5签名方式
+	var (
+		unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
+		unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info"}
+		tradeType            string
+		signType             = e.SignTypeMD5 //默认MD5签名方式
+	)
+
 	if t, ok := param["trade_type"]; ok {
 		tradeType = t.(string)
 	} else {
@@ -65,7 +64,6 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	default:
 		return nil, errors.New("invalid trade_type")
 	}
-
 	//这里校验是否包含必传的参数
 	for _, v := range unifiedMustParam {
 		if v == "sign" {
@@ -93,8 +91,8 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         unifiedOrderUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/unifiedorder",
+		ContentType: e.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {

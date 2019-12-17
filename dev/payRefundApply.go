@@ -26,10 +26,13 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5
+	var (
+		signType         = e.SignTypeMD5
+		refundOneParams  = []string{"transaction_id", "out_trade_no"}
+		refundMustParams = []string{"appid", "mch_id", "nonce_str", "sign", "out_refund_no", "total_fee", "refund_fee"}
+	)
 
 	//校验订单号
-	var refundOneParams = []string{"transaction_id", "out_trade_no"}
 	var count = 0
 	for _, k := range refundOneParams {
 		if v := param.Get(k); v != nil {
@@ -42,7 +45,6 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 		return nil, errors.New("just one order number: transaction_id or out_trade_no")
 	}
 
-	var refundMustParams = []string{"appid", "mch_id", "nonce_str", "sign", "out_refund_no", "total_fee", "refund_fee"}
 	for _, k := range refundMustParams {
 		if k == "sign" {
 			continue

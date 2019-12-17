@@ -22,17 +22,16 @@ func (m *myPayer) Report(param Param) error {
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5
-	if t, ok := param["sign_type"]; ok {
-		signType = t.(string)
-	}
-
 	var (
+		signType            = e.SignTypeMD5
 		reportMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "interface_url", "execute_time", "return_code", "return_msg", "result_code", "user_ip"}
 		reportOptionalParam = []string{"device_info", "sign_type", "err_code", "err_code_des", "out_trade_no", "time"}
 		reportMicroParam    = []string{"appid", "mch_id", "nonce_str", "sign", "interface_url", "trades", "user_ip"}
 		reportMicroOptional = []string{"device_info"}
 	)
+	if t, ok := param["sign_type"]; ok {
+		signType = t.(string)
+	}
 
 	if v := param.Get("trade"); v != nil {
 		for _, k := range reportMicroParam {

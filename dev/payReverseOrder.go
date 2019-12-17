@@ -2,19 +2,12 @@ package dev
 
 import (
 	"errors"
+
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
 /*撤销订单*/
-
-var (
-	reverseMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-	reverseOneParam      = []string{"transaction_id", "out_trade_no"}
-	reverseOptionalParam = []string{"sign_type"}
-)
-
-const reverseApiUrl = "https://api.mch.weixin.qq.com/secapi/pay/reverse"
 
 func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error) {
 	if param == nil {
@@ -33,9 +26,13 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5 //此处默认MD5
-
 	//校验订单号
+	var (
+		signType             = e.SignTypeMD5 //此处默认MD5
+		reverseMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
+		reverseOneParam      = []string{"transaction_id", "out_trade_no"}
+		reverseOptionalParam = []string{"sign_type"}
+	)
 	var count = 0
 	for _, k := range reverseOneParam {
 		if v := param.Get(k); v != nil {
@@ -80,8 +77,8 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         reverseApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/secapi/pay/reverse",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)

@@ -32,7 +32,12 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	param.Add("mch_id", m.mchId)
 
 	//校验签名方式
-	var signType = e.SignType256
+	var (
+		signType                 = e.SignType256
+		downCommentMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "begin_time", "end_time", "offset"}
+		downCommentOptionalParam = []string{"sign_type", "limit"}
+	)
+
 	if _, ok := param["sign_type"]; ok {
 		signType = param["sign_type"].(string)
 		if signType != e.SignType256 {
@@ -41,7 +46,6 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	}
 	param.Add("sign_type", signType)
 
-	var downCommentMustParam = []string{"appid", "mch_id", "nonce_str", "sign", "begin_time", "end_time", "offset"}
 	for _, k := range downCommentMustParam {
 		if k == "sign" {
 			continue
@@ -52,7 +56,6 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	}
 
 	//校验不必要的参数
-	var downCommentOptionalParam = []string{"sign_type", "limit"}
 	for k := range param {
 		if !util.HaveInArray(downCommentMustParam, k) && !util.HaveInArray(downCommentOptionalParam, k) {
 			return 0, errors.New("no need param: " + k)

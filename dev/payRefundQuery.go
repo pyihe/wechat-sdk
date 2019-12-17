@@ -21,9 +21,13 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5
-	var count = 0
-	var refundQueryOneParam = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
+	var (
+		signType             = e.SignTypeMD5
+		count                = 0
+		refundQueryOneParam  = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
+		refundQueryMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
+	)
+
 	for _, k := range refundQueryOneParam {
 		if v := param.Get(k); v != nil {
 			count++
@@ -35,7 +39,6 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		return nil, errors.New("more than one param refund_id/out_refund_no/transaction_id/out_trade_no")
 	}
 
-	var refundQueryMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
 	for _, k := range refundQueryMustParam {
 		if k == "sign" {
 			continue

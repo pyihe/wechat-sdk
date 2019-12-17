@@ -22,12 +22,16 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5
+	var (
+		signType           = e.SignTypeMD5
+		closeMustParam     = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
+		closeOptionalParam = []string{"sign_type"}
+	)
+
 	if t, ok := param["sign_type"]; ok {
 		signType = t.(string)
 	}
 
-	var closeMustParam = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
 	for _, v := range closeMustParam {
 		if v == "sign" {
 			continue
@@ -36,7 +40,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 			return nil, errors.New("need param: " + v)
 		}
 	}
-	var closeOptionalParam = []string{"sign_type"}
+
 	for key := range param {
 		if !util.HaveInArray(closeMustParam, key) && !util.HaveInArray(closeOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)

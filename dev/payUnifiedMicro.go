@@ -7,13 +7,6 @@ import (
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
 
-var (
-	microMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "auth_code"}
-	microOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "goods_tag", "limit_pay", "time_start", "time_expire", "receipt", "scene_info"}
-)
-
-const microApiUrl = "https://api.mch.weixin.qq.com/pay/micropay"
-
 func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	if param == nil {
 		return nil, e.ErrParams
@@ -25,7 +18,12 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	param.Add("mch_id", m.mchId)
 
 	//获取交易类型和签名类型
-	var signType = e.SignTypeMD5 //默认MD5签名方式
+	var (
+		microMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "auth_code"}
+		microOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "goods_tag", "limit_pay", "time_start", "time_expire", "receipt", "scene_info"}
+		signType           = e.SignTypeMD5 //默认MD5签名方式
+	)
+
 	if t, ok := param["sign_type"]; ok {
 		signType = t.(string)
 	}
@@ -55,8 +53,8 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         microApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/micropay",
+		ContentType: e.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {

@@ -10,14 +10,6 @@ import (
 	订单查询
 */
 
-var (
-	queryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
-	queryOneParam      = []string{"transaction_id", "out_trade_no"}
-	queryOptionalParam = []string{"sign_type"}
-)
-
-const queryApiUrl = "https://api.mch.weixin.qq.com/pay/orderquery"
-
 func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	if param == nil {
 		return nil, errors.New("param is empty")
@@ -29,8 +21,12 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	param.Add("appid", m.appId)
 	param.Add("mch_id", m.mchId)
 
-	var signType = e.SignTypeMD5 //此处默认MD5
-
+	var (
+		signType           = e.SignTypeMD5 //此处默认MD5
+		queryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
+		queryOneParam      = []string{"transaction_id", "out_trade_no"}
+		queryOptionalParam = []string{"sign_type"}
+	)
 	//校验订单号
 	var count = 0
 	for _, k := range queryOneParam {
@@ -75,8 +71,8 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 
 	var request = &postRequest{
 		Body:        reader,
-		Url:         queryApiUrl,
-		ContentType: "application/xml;charset=utf-8",
+		Url:         "https://api.mch.weixin.qq.com/pay/orderquery",
+		ContentType: e.PostContentType,
 	}
 
 	response, err := postToWx(request)
