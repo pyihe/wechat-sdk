@@ -53,8 +53,44 @@ func main() {
 	if err != nil {
 		handleErr(err)
 	}
-	//do what you want with result
-	fmt.Printf("result = %v\n", result.Data())
+    appId, _ := result.GetString("apppid")
+    prepayId, _ := result.GetString("prepay_id")
+    param = dev.NewParam()
+    param.Add("appId", appId)
+    param.Add("timeStamp", time.Now().Unix())
+    param.Add("nonceStr", "nonceStr")
+    param.Add("package", "prepay_id="+prepayId)
+    param.Add("signType", "MD5")
+    //use to evoke wechat pay 
+    sign := param.Sign("MD5")
+
+
+    //download bill
+	param = dev.NewParam()
+	param.Add("nonce_str", "yourNonceStr")
+	param.Add("bill_date", "yourDate")
+	param.Add("bill_type", "ALL")
+	param.Add("tar_type", "GZIP")
+	err := client.DownloadBill(param, "./bill")
+	if err != nil {
+		handleErr(err)
+	}
+    
+
+    //get phone for mini program user
+    result, err := client.GetUserPhoneForMini("code", "encryptedData", "iv")
+    if err != nil {
+    	handleErr(err)
+    }
+    var phone string
+    if countryCode := result.Get("countryCode"); countryCode != nil && countryCode.(string) == "86" {
+    	purePhone := result.Get("purePhoneNumber")
+    	phone = purePhone.(string)
+    } else {
+    	phoneNumber := result.Get("phoneNumber")
+    	phone = phoneNumber.(string)
+    }
+    fmt.Printf("user phone is %s\n", phone)
 }
 
 ```
@@ -87,64 +123,3 @@ func main() {
 }
 
 ```
-
-```
-package main
-
-import (
-	"fmt"
-	"net/http"
-
-	dev "github.com/hong008/wechat-sdk"
-)
-
-func main() {
-	var appId, mchId, apiKey, apiSecret string
-
-	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-
-	//download bill
-	param := dev.NewParam()
-	param.Add("nonce_str", "yourNonceStr")
-	param.Add("bill_date", "yourDate")
-	param.Add("bill_type", "ALL")
-	param.Add("tar_type", "GZIP")
-	err := client.DownloadBill(param, "./bill")
-	if err != nil {
-		handleErr(err)
-	}
-}
-```
-
-```
-package main
-
-import (
-	"fmt"
-	"net/http"
-
-	dev "github.com/hong008/wechat-sdk"
-)
-
-func main() {
-	var appId, mchId, apiKey, apiSecret string
-
-	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-
-	//get phone for mini program user
-	result, err := client.GetUserPhoneForMini("code", "encryptedData", "iv")
-	if err != nil {
-		handleErr(err)
-	}
-	var phone string
-	if countryCode := result.Get("countryCode"); countryCode != nil && countryCode.(string) == "86" {
-		purePhone := result.Get("purePhoneNumber")
-		phone = purePhone.(string)
-	} else {
-		phoneNumber := result.Get("phoneNumber")
-		phone = phoneNumber.(string)
-	}
-	fmt.Printf("user phone is %s\n", phone)
-}
-```
-
