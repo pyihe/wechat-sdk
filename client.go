@@ -67,6 +67,13 @@ type WePayer interface {
 	GetUserPhoneForMini(code string, encryptedData string, ivData string) (Param, error)
 	//获取session_key
 	GetSessionKeyAndOpenId(code string) (Param, error)
+
+	//公众号相关
+	GetAppBaseAccessToken() (Param, error)
+	GetAppOauthAccessToken(code string) (Param, error)
+	RefreshOauthToken(refreshToken string) (Param, error)
+	GetAppUserInfo(oauthToken, openId, lang string) (Param, error)
+	CheckOauthToken(oauthToken, openId string) (bool, error)
 }
 
 type option func(*myPayer)
