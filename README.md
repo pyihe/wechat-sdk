@@ -23,6 +23,11 @@
 | UnifiedMicro | 扫码下单 |  |
 | UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
 | UnifiedQuery | 下单结果查询 |  |
+| GetAppBaseAccessToken | 公众号开发获取基础接口调用Access_Token | 用于调用其他接口 |
+| GetAppOauthAccessToken | 公众号开发通过code获取网页授权Access_Token | 此Access_Token用于拉取用户信息, code只能用一次 |
+| RefreshOauthToken | 公众号开发刷新网页授权Access_Token ||
+| GetAppUserInfo | 公众号开发拉取用户信息 | 返回结果参考[微信文档](https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html) |
+| CheckOauthToken | 公众号开发校验网页授权Access_Token是否有效 ||
 
 **Notice: 所有请求接口都不需要加入appid/mch_id/key/secret/sign参数**
 
