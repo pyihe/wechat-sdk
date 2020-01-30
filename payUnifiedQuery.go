@@ -61,7 +61,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
-	sign := param.Sign(signType)
+	sign := param.Sign(m.apiKey, signType)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -91,7 +91,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(signType)
+	sign = result.Sign(m.apiKey, signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
 		return nil, e.ErrCheckSign
 	}

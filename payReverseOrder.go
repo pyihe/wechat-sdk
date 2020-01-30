@@ -67,7 +67,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 		}
 	}
 
-	sign := param.Sign(signType)
+	sign := param.Sign(m.apiKey, signType)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -97,7 +97,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(signType)
+	sign = result.Sign(m.apiKey, signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
 		return nil, e.ErrCheckSign
 	}

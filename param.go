@@ -71,7 +71,10 @@ func (p Param) SortKey() (keys []string) {
 	return
 }
 
-func (p Param) Sign(signType string) string {
+func (p Param) Sign(apiKey string, signType string) string {
+	if apiKey == "" {
+		return ""
+	}
 	var result string
 	keys := p.SortKey()
 	var signStr string
@@ -87,10 +90,10 @@ func (p Param) Sign(signType string) string {
 		}
 		signStr += str
 	}
-	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
+	signStr += fmt.Sprintf("&key=%v", apiKey)
 	switch signType {
 	case e.SignType256:
-		result = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
+		result = strings.ToUpper(util.SignHMACSHA256(signStr, apiKey))
 	case e.SignTypeMD5:
 		result = strings.ToUpper(util.SignMd5(signStr))
 	default:
@@ -128,12 +131,12 @@ func (r resultMap) Data() map[string]string {
 	return r
 }
 
-func (r resultMap) Sign(signType string) string {
+func (r resultMap) Sign(apiKey string, signType string) string {
 	p := NewParam()
 	for k, v := range r {
 		p[k] = v
 	}
-	return p.Sign(signType)
+	return p.Sign(apiKey, signType)
 }
 
 //XML to Param(遍历生成)

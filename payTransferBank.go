@@ -63,7 +63,7 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 	param.Add("enc_bank_no", base64.StdEncoding.EncodeToString(encryptBankCard))
 	param.Add("enc_true_name", base64.StdEncoding.EncodeToString(encryptBankName))
 
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(m.apiKey, e.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -90,7 +90,7 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(e.SignTypeMD5)
+	sign = result.Sign(m.apiKey, e.SignTypeMD5)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
 		return nil, e.ErrCheckSign
 	}

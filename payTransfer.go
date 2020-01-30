@@ -44,7 +44,7 @@ func (m *myPayer) Transfers(param Param, p12CertPath string) (ResultParam, error
 		}
 	}
 
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(m.apiKey, e.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()

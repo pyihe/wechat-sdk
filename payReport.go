@@ -63,7 +63,7 @@ func (m *myPayer) Report(param Param) error {
 		}
 	}
 
-	sign := param.Sign(signType)
+	sign := param.Sign(m.apiKey, signType)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
