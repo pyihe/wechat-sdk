@@ -5,10 +5,6 @@ import (
 	"io"
 )
 
-var (
-	defaultPayer *myPayer
-)
-
 type ResultParam interface {
 	//获取整型数据, 如支付/退款金额
 	GetInt64(key string, base int) (value int64, err error)
@@ -87,7 +83,7 @@ type myPayer struct {
 
 //不向微信发送接口请求report
 func NewPayer(options ...option) WePayer {
-	defaultPayer = &myPayer{}
+	defaultPayer := &myPayer{}
 	for _, option := range options {
 		option(defaultPayer)
 	}
