@@ -52,7 +52,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	}
 
 	//签名
-	sign := param.Sign(m.apiKey, e.SignTypeMD5)
+	sign := param.Sign(e.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()

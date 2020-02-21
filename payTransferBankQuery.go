@@ -42,7 +42,7 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 		}
 	}
 
-	sign := param.Sign(m.apiKey, e.SignTypeMD5)
+	sign := param.Sign(e.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -69,7 +69,7 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(m.apiKey, e.SignTypeMD5)
+	sign = result.Sign(e.SignTypeMD5)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
 		return nil, e.ErrCheckSign
 	}

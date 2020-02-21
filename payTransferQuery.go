@@ -42,7 +42,7 @@ func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, 
 			return nil, errors.New("no need param: " + k)
 		}
 	}
-	sign := param.Sign(m.apiKey, e.SignTypeMD5)
+	sign := param.Sign(e.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()

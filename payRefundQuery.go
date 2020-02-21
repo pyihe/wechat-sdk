@@ -58,7 +58,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		}
 	}
 
-	sign := param.Sign(m.apiKey, signType)
+	sign := param.Sign(signType)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -87,7 +87,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(m.apiKey, signType)
+	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
 		return nil, e.ErrCheckSign
 	}

@@ -33,7 +33,7 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 	param.Add("mch_id", m.mchId)
 	param.Add("nonce_str", nonceStr)
 	param.Add("sign_type", e.SignTypeMD5)
-	param.Add("sign", param.Sign(m.apiKey, e.SignTypeMD5))
+	param.Add("sign", param.Sign(e.SignTypeMD5))
 
 	reader, err := param.MarshalXML()
 	if err != nil {

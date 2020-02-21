@@ -66,7 +66,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 		}
 	}
 
-	sign := param.Sign(m.apiKey, signType)
+	sign := param.Sign(signType)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()

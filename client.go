@@ -3,6 +3,7 @@ package wechat_sdk
 import (
 	"errors"
 	"io"
+	"sync"
 )
 
 type ResultParam interface {
@@ -74,7 +75,12 @@ type WePayer interface {
 
 type option func(*myPayer)
 
+var (
+	defaultPayer *myPayer
+)
+
 type myPayer struct {
+	once   sync.Once
 	appId  string //appid
 	mchId  string //mchid
 	secret string //secret用于获取token
@@ -83,10 +89,12 @@ type myPayer struct {
 
 //不向微信发送接口请求report
 func NewPayer(options ...option) WePayer {
-	defaultPayer := &myPayer{}
-	for _, option := range options {
-		option(defaultPayer)
-	}
+	defaultPayer = &myPayer{}
+	defaultPayer.once.Do(func() {
+		for _, option := range options {
+			option(defaultPayer)
+		}
+	})
 	return defaultPayer
 }
 
