@@ -76,7 +76,7 @@ func (m *myPayer) RefreshOauthToken(refreshToken string) (Param, error) {
 	return result, nil
 }
 
-//公众号拉取用户信息
+//公众号拉取用户信息, lang值: zh_CN(简体中文) zh_TW(繁体中文) en(英语)
 func (m *myPayer) GetAppUserInfo(oauthToken, openId, lang string) (Param, error) {
 	if oauthToken == "" {
 		return nil, errors.New("empty access_token")
