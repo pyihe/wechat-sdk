@@ -20,7 +20,7 @@
 | TransfersQuery | 查询企业付款到用户零钱的结果 |  |
 | TransferBank | 企业付款到银行卡 | 未测试 |
 | TransferBankQuery | 查询企业付款到银行卡的结果 | 未测试 |
-| UnifiedMicro | 扫码下单 |  |
+| UnifiedMicro | 扫码下单 | 如果需要传detail参数, 参数格式参照[单品优惠活动detail字段列表说明](https://pay.weixin.qq.com/wiki/doc/api/danpin.php?chapter=9_102&index=2) |
 | UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
 | UnifiedQuery | 下单结果查询 |  |
 | GetAppBaseAccessToken | 公众号开发获取基础接口调用Access_Token | 用于调用其他接口 |
