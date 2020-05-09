@@ -41,23 +41,36 @@ func (p Param) Del(key string) {
 func (p Param) MarshalXML() (reader io.Reader, err error) {
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
-	if _, err = io.WriteString(buffer, "<xml>"); err != nil {
+	if _, err = buffer.WriteString("<xml>"); err != nil {
 		return
 	}
 
 	for k, v := range p {
-		if _, err = io.WriteString(buffer, "<"+k+">"); err != nil {
-			return
-		}
-		if err = xml.EscapeText(buffer, []byte(fmt.Sprintf("%v", v))); err != nil {
-			return
-		}
-		if _, err = io.WriteString(buffer, "</"+k+">"); err != nil {
-			return
+		switch {
+		case k == "detail":
+			if _, err = buffer.WriteString("<detail><![CDATA["); err != nil {
+				return
+			}
+			if _, err = buffer.WriteString(fmt.Sprintf("%v", v)); err != nil {
+				return
+			}
+			if _, err = buffer.WriteString("]]></detail>"); err != nil {
+				return
+			}
+		default:
+			if _, err = buffer.WriteString("<" + k + ">"); err != nil {
+				return
+			}
+			if _, err = buffer.WriteString(fmt.Sprintf("%v", v)); err != nil {
+				return
+			}
+			if _, err = buffer.WriteString("</" + k + ">"); err != nil {
+				return
+			}
 		}
 	}
 
-	if _, err = io.WriteString(buffer, "</xml>"); err != nil {
+	if _, err = buffer.WriteString("</xml>"); err != nil {
 		return
 	}
 	return buffer, nil
