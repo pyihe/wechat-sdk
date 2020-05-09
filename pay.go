@@ -5,14 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/360EntSecGroup-Skylar/excelize"
-	uuid "github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/hong008/wechat-sdk/pkg/e"
 	"github.com/hong008/wechat-sdk/pkg/util"
 )
@@ -1447,9 +1447,9 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 	}
 
 	param := NewParam()
-	u4 := uuid.NewV4()
-	s := strings.Replace(fmt.Sprintf("%s", u4), "-", "", -1)
-	nonceStr := s[:16]
+	//u4 := uuid.NewV4()
+	//s := strings.Replace(fmt.Sprintf("%s", u4), "-", "", -1)
+	nonceStr := fmt.Sprintf("%d", time.Now().UnixNano())
 
 	param.Add("mch_id", m.mchId)
 	param.Add("nonce_str", nonceStr)
