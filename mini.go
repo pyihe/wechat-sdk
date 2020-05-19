@@ -70,7 +70,7 @@ func (m *myPayer) GetSessionKeyAndOpenId(code string) (Param, error) {
 		return nil, err
 	}
 
-	if errCode := result.Get("errcode"); errCode != nil && errCode.(int) != 0 {
+	if errCode := result.Get("errcode"); errCode != nil && errCode.(float64) != 0 {
 		return nil, errors.New(result.Get("errmsg").(string))
 	}
 	return result, nil
