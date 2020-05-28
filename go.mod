@@ -1,4 +1,4 @@
-module github.com/hong008/wechat-sdk
+module github.com/pyihe/wechat-sdk
 
 go 1.13
 
