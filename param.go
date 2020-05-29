@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hong008/wechat-sdk/pkg/e"
-	"github.com/hong008/wechat-sdk/pkg/util"
+	"github.com/pyihe/wechat-sdk/pkg/e"
+	"github.com/pyihe/wechat-sdk/pkg/util"
 )
 
 //用于装载外部传入的请求参数
