@@ -73,6 +73,14 @@ type WePayer interface {
 	//分账动帐通知(此处无视返回结果的层级关系，对需要的字段直接使用Get方法获取对应的结果)
 	ProfitSharingNotify(body io.Reader) (ResultParam, error)
 
+	//红包相关
+	//发放红包
+	SendRedPack(param Param, p12CertPath string) (ResultParam, error)
+	//发放裂变红包
+	SendGroupRedPack(param Param, p12CertPath string) (ResultParam, error)
+	//查询红包发放记录
+	GetRedPackRecords(param Param, p12CertPath string) (ResultParam, error)
+
 	//小程序相关
 	//获取授权access_token
 	GetAccessTokenForMini() (Param, error) //获取小程序接口凭证，使用者自己保存token，过期重新获取
