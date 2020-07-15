@@ -31,7 +31,7 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	//获取交易类型和签名类型
 	var (
 		unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
-		unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info"}
+		unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info", "profit_sharing"}
 		tradeType            string
 		signType             = e.SignTypeMD5 //默认MD5签名方式
 	)
@@ -228,7 +228,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	//获取交易类型和签名类型
 	var (
 		microMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "auth_code"}
-		microOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "goods_tag", "limit_pay", "time_start", "time_expire", "receipt", "scene_info"}
+		microOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "goods_tag", "limit_pay", "time_start", "time_expire", "receipt", "scene_info", "profit_sharing"}
 		signType           = e.SignTypeMD5 //默认MD5签名方式
 	)
 

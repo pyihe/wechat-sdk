@@ -52,8 +52,26 @@ type WePayer interface {
 	GetPublicKey(p12CertPath string, targetPath string) error
 	//TODO 待验证 企业付款到银行卡
 	TransferBank(param Param, p12CertPath string, publicKeyPath string) (ResultParam, error)
-	////TODO 待验证 查询企业付款到银行卡
+	//TODO 待验证 查询企业付款到银行卡
 	TransferBankQuery(param Param, p12CertPath string) (ResultParam, error)
+
+	//分账相关
+	//申请单次分账or多次分账
+	ProfitSharing(param Param, p12CertPath string, multiTag bool) (ResultParam, error)
+	//查询申请分账的结果
+	QueryProfitSharing(param Param, p12CertPath string) (ResultParam, error)
+	//添加分账接收方
+	AddProfitSharingReceiver(param Param) (ResultParam, error)
+	//删除分账接收方
+	RemoveProfitSharingReceiver(param Param) (ResultParam, error)
+	//完结分账
+	FinishProfitSharing(param Param, p12CertPath string) (ResultParam, error)
+	//分账回退
+	ReturnProfitSharing(param Param, p12CertPath string) (ResultParam, error)
+	//回退结果查询
+	QueryProfitSharingReturn(param Param) (ResultParam, error)
+	//分账动帐通知(此处无视返回结果的层级关系，对需要的字段直接使用Get方法获取对应的结果)
+	ProfitSharingNotify(body io.Reader) (ResultParam, error)
 
 	//小程序相关
 	//获取授权access_token
@@ -80,11 +98,12 @@ var (
 )
 
 type myPayer struct {
-	once   sync.Once
-	appId  string //appid
-	mchId  string //mchid
-	secret string //secret用于获取token
-	apiKey string //用于支付
+	once     sync.Once
+	appId    string //appid
+	mchId    string //mchid
+	secret   string //secret用于获取token
+	apiKey   string //用于支付
+	apiV3Key string //api v3 key
 }
 
 //不向微信发送接口请求report
@@ -119,6 +138,12 @@ func WithSecret(secret string) option {
 func WithApiKey(key string) option {
 	return func(payer *myPayer) {
 		payer.apiKey = key
+	}
+}
+
+func WithApiV3Key(v3Key string) option {
+	return func(payer *myPayer) {
+		payer.apiV3Key = v3Key
 	}
 }
 
