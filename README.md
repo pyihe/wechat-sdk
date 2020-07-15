@@ -44,7 +44,7 @@
 
 ##### ProfitSharing(商户分账)
 | Name  |  Explain |  comment |
-| :---- | :----| :----|
+| :---- | :---- | :---- |
 |ProfitSharing|申请分账(单次或多次)|multiTag标志是否是多次分账|
 |QueryProfitSharing|查询分账请求的结果|非分账的结果，而是分账申请的结果|
 |AddProfitSharingReceiver|添加分账接收方||
@@ -54,36 +54,43 @@
 |QueryProfitSharingReturn|回退结果查询|用于核实回退结果|
 |ProfitSharingNotify|分账动帐通知|分账或分账回退成功后, 微信会将结果发送给商户, 通知结果包含加密信息, **此处解密密钥为ApiV3密钥**。接口返回结果中忽略层级关系，对于需要的字段直接使用Get方法获取值。通知url在商户平台配置，详情参加[分账动帐通知](https://pay.weixin.qq.com/wiki/doc/api/allocation.php?chapter=27_9&index=9)|
 
+##### RedPack(现金红包)
+| Name  |  Explain |  comment |
+| :---- | :---- | :---- |
+|SendRedPack|发放现金红包||
+|SendGroupRedPack|发放裂变红包||
+|GetRedPackRecords|查询红包记录||
+
 **Notice: NewPayer()必须传入所有需要使用的微信参数, 使用过程中所有请求接口都不需要加入appid/mch_id/ApiKey/secret/sign/ApiV3Key参数**
 
 ### Usage Example: 
-```
+```go
 package main
 
 import (
-	"fmt"
-	dev "github.com/hong008/wechat-sdk"
+    "fmt"
+    dev "github.com/pyihe/wechat-sdk"
 )
 
 func main() {
-	var appId, mchId, apiKey, apiSecret string
-
-	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-
-	//unified order
-	param := dev.NewParam()
-	param.Add("nonce_str", "yourNonceStr")
-	param.Add("body", "yourBody")
-	param.Add("out_trade_no", "yourOutTradeNo")
-	param.Add("total_fee", 1)
-	param.Add("spbill_create_ip", "yourIp")
-	param.Add("notify_url", "yourUrl")
-	param.Add("trade_type", "JSAPI")
-	result, err := client.UnifiedOrder(param)
-	if err != nil {
-		handleErr(err)
-	}
-    appId, _ := result.GetString("apppid")
+    var appId, mchId, apiKey, apiSecret string
+    
+    client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+    
+    //unified order
+    param := dev.NewParam()
+    param.Add("nonce_str", "yourNonceStr")
+    param.Add("body", "yourBody")
+    param.Add("out_trade_no", "yourOutTradeNo")
+    param.Add("total_fee", 1)
+    param.Add("spbill_create_ip", "yourIp")
+    param.Add("notify_url", "yourUrl")
+    param.Add("trade_type", "JSAPI")
+    result, err := client.UnifiedOrder(param)
+    if err != nil {
+        handleErr(err)
+    }
+    appId, _ = result.GetString("apppid")
     prepayId, _ := result.GetString("prepay_id")
     param = dev.NewParam()
     param.Add("appId", appId)
@@ -125,31 +132,30 @@ func main() {
 
 ```
 
-```
+```go
 package main
 
 import (
-	"fmt"
-	"net/http"
-	
-	dev "github.com/hong008/wechat-sdk"
+    "fmt"
+    "net/http"
+    
+    dev "github.com/hong008/wechat-sdk"
 )
 
 func main() {
-	var appId, mchId, apiKey, apiSecret string
-
-	client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-
-	//handle refund notify
-	http.HandleFunc("/refund_notify", func(writer http.ResponseWriter, request *http.Request) {
-		defer request.Body.Close()
-		result, err := client.RefundNotify(request.Body)
-		if err != nil {
-			handleErr(err)
-		}
-		fmt.Printf("RefundNotify Result = %v\n", result.Data())
-	})
-	http.ListenAndServe(":8810", nil)
+    var appId, mchId, apiKey, apiSecret string
+    
+    client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
+    
+    //handle refund notify
+    http.HandleFunc("/refund_notify", func(writer http.ResponseWriter, request *http.Request) {
+        defer request.Body.Close()
+        result, err := client.RefundNotify(request.Body)
+        if err != nil {
+            handleErr(err)
+        }
+        fmt.Printf("RefundNotify Result = %v\n", result.Data())
+    })
+    http.ListenAndServe(":8810", nil)
 }
-
 ```
