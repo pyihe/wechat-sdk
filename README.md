@@ -1,4 +1,9 @@
 # wechat-sdk
+
+### Most Important Thing
+
+如果在使用过程中存在任何bug，还请指出，受教了！
+
 ### Function List
 
 ##### Mini Program(小程序)
