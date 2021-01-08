@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/wechat-sdk/pkg/e"
-	"github.com/pyihe/wechat-sdk/pkg/util"
+	"github.com/pyihe/secret"
+	"github.com/pyihe/util/utils"
+	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 //微信小程序获取用户电话号码
@@ -23,17 +24,20 @@ func (m *myPayer) GetUserPhoneForMini(code string, dataStr string, ivStr string)
 		return nil, err
 	}
 
-	encryptedData, err := base64.StdEncoding.DecodeString(dataStr)
-	if err != nil {
-		return nil, err
-	}
-
 	iv, err := base64.StdEncoding.DecodeString(ivStr)
 	if err != nil {
 		return nil, err
 	}
 
-	realData, err := util.AES128CBCDecrypt(encryptedData, key, iv)
+	decryptRequest := &secret.SymRequest{
+		CipherData:  dataStr,
+		Key:         key,
+		Type:        secret.SymTypeAES,
+		ModeType:    secret.BlockModeCBC,
+		PaddingType: secret.PaddingTypePKCS7,
+		Iv:          iv,
+	}
+	realData, err := secret.NewCipher().SymDecrypt(decryptRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +47,9 @@ func (m *myPayer) GetUserPhoneForMini(code string, dataStr string, ivStr string)
 	if err != nil {
 		return nil, err
 	}
-	result := util.Interface2Map(info)
+	result := utils.Interface2Map(info)
 	if appId := result["appid"]; appId == nil || appId.(string) != m.appId {
-		return nil, e.ErrAppId
+		return nil, pkg.ErrAppId
 	}
 	return result, nil
 }
@@ -110,17 +114,21 @@ func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) 
 		return nil, err
 	}
 
-	encryptedData, err := base64.StdEncoding.DecodeString(dataStr)
-	if err != nil {
-		return nil, err
-	}
-
 	iv, err := base64.StdEncoding.DecodeString(ivStr)
 	if err != nil {
 		return nil, err
 	}
 
-	realData, err := util.AES128CBCDecrypt(encryptedData, key, iv)
+	var decryptRequest = &secret.SymRequest{
+		CipherData:  dataStr,
+		Key:         key,
+		Type:        secret.SymTypeAES,
+		ModeType:    secret.BlockModeCBC,
+		PaddingType: secret.PaddingTypePKCS7,
+		Iv:          iv,
+	}
+
+	realData, err := secret.NewCipher().SymDecrypt(decryptRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +138,9 @@ func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) 
 	if err != nil {
 		return nil, err
 	}
-	result := util.Interface2Map(info)
+	result := utils.Interface2Map(info)
 	if appId := result["appid"]; appId == nil || appId.(string) != m.appId {
-		return nil, e.ErrAppId
+		return nil, pkg.ErrAppId
 	}
 	return result, nil
 }

@@ -8,20 +8,21 @@ import (
 	"io/ioutil"
 
 	"github.com/pyihe/secret"
-	"github.com/pyihe/wechat-sdk/pkg/e"
-	"github.com/pyihe/wechat-sdk/pkg/util"
+	"github.com/pyihe/util/certs"
+	"github.com/pyihe/util/utils"
+	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 func (m *myPayer) ProfitSharing(param Param, p12CertPath string, multiTag bool) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -32,11 +33,11 @@ func (m *myPayer) ProfitSharing(param Param, p12CertPath string, multiTag bool) 
 	var (
 		shareMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "transaction_id", "out_order_no", "receivers"}
 		shareOptionalParam = []string{"sign_type"}
-		signType           = e.SignType256
+		signType           = pkg.SignType256
 	)
 
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -50,7 +51,7 @@ func (m *myPayer) ProfitSharing(param Param, p12CertPath string, multiTag bool) 
 		}
 	}
 	for key := range param {
-		if !util.HaveInArray(shareMustParam, key) && !util.HaveInArray(shareOptionalParam, key) {
+		if !utils.Contain(shareMustParam, key) && !utils.Contain(shareOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -69,7 +70,7 @@ func (m *myPayer) ProfitSharing(param Param, p12CertPath string, multiTag bool) 
 	var request = &postRequest{
 		Body:        reader,
 		Url:         url,
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -87,14 +88,14 @@ func (m *myPayer) ProfitSharing(param Param, p12CertPath string, multiTag bool) 
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) QueryProfitSharing(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -105,10 +106,10 @@ func (m *myPayer) QueryProfitSharing(param Param, p12CertPath string) (ResultPar
 	var (
 		mustParam     = []string{"mch_id", "nonce_str", "sign", "transaction_id", "out_order_no"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -122,7 +123,7 @@ func (m *myPayer) QueryProfitSharing(param Param, p12CertPath string) (ResultPar
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -137,7 +138,7 @@ func (m *myPayer) QueryProfitSharing(param Param, p12CertPath string) (ResultPar
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/profitsharingquery",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -157,14 +158,14 @@ func (m *myPayer) QueryProfitSharing(param Param, p12CertPath string) (ResultPar
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) AddProfitSharingReceiver(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -176,10 +177,10 @@ func (m *myPayer) AddProfitSharingReceiver(param Param) (ResultParam, error) {
 	var (
 		mustParam     = []string{"mch_id", "appid", "nonce_str", "sign", "receiver"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -193,7 +194,7 @@ func (m *myPayer) AddProfitSharingReceiver(param Param) (ResultParam, error) {
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -208,7 +209,7 @@ func (m *myPayer) AddProfitSharingReceiver(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/profitsharingaddreceiver",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -228,14 +229,14 @@ func (m *myPayer) AddProfitSharingReceiver(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) RemoveProfitSharingReceiver(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -247,10 +248,10 @@ func (m *myPayer) RemoveProfitSharingReceiver(param Param) (ResultParam, error) 
 	var (
 		mustParam     = []string{"mch_id", "appid", "nonce_str", "sign", "receiver"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -264,7 +265,7 @@ func (m *myPayer) RemoveProfitSharingReceiver(param Param) (ResultParam, error) 
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -279,7 +280,7 @@ func (m *myPayer) RemoveProfitSharingReceiver(param Param) (ResultParam, error) 
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/profitsharingremovereceiver",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -299,21 +300,21 @@ func (m *myPayer) RemoveProfitSharingReceiver(param Param) (ResultParam, error) 
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) FinishProfitSharing(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -324,11 +325,11 @@ func (m *myPayer) FinishProfitSharing(param Param, p12CertPath string) (ResultPa
 	var (
 		mustParam     = []string{"mch_id", "appid", "nonce_str", "sign", "transaction_id", "out_order_no", "description"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -342,7 +343,7 @@ func (m *myPayer) FinishProfitSharing(param Param, p12CertPath string) (ResultPa
 		}
 	}
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -358,7 +359,7 @@ func (m *myPayer) FinishProfitSharing(param Param, p12CertPath string) (ResultPa
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/secapi/pay/profitsharingfinish",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -376,21 +377,21 @@ func (m *myPayer) FinishProfitSharing(param Param, p12CertPath string) (ResultPa
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) ReturnProfitSharing(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -402,11 +403,11 @@ func (m *myPayer) ReturnProfitSharing(param Param, p12CertPath string) (ResultPa
 		mustParam     = []string{"mch_id", "appid", "nonce_str", "sign", "out_return_no", "return_account_type", "return_account", "return_amount", "description"}
 		oneParam      = []string{"order_id", "out_order_no"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -432,7 +433,7 @@ func (m *myPayer) ReturnProfitSharing(param Param, p12CertPath string) (ResultPa
 		}
 	}
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) && !util.HaveInArray(oneParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) && !utils.Contain(oneParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -448,7 +449,7 @@ func (m *myPayer) ReturnProfitSharing(param Param, p12CertPath string) (ResultPa
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/secapi/pay/profitsharingreturn",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -466,14 +467,14 @@ func (m *myPayer) ReturnProfitSharing(param Param, p12CertPath string) (ResultPa
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) QueryProfitSharingReturn(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -486,10 +487,10 @@ func (m *myPayer) QueryProfitSharingReturn(param Param) (ResultParam, error) {
 		mustParam     = []string{"mch_id", "appid", "nonce_str", "sign", "out_return_no"}
 		oneParam      = []string{"order_id", "out_order_no"}
 		optionalParam = []string{"sign_type"}
-		signType      = e.SignType256
+		signType      = pkg.SignType256
 	)
 	if t, ok := param["sign_type"]; ok {
-		if t.(string) != e.SignType256 {
+		if t.(string) != pkg.SignType256 {
 			return nil, errors.New("only support HMAC-SHA256")
 		}
 	}
@@ -516,7 +517,7 @@ func (m *myPayer) QueryProfitSharingReturn(param Param) (ResultParam, error) {
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) && !util.HaveInArray(oneParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) && !utils.Contain(oneParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -531,7 +532,7 @@ func (m *myPayer) QueryProfitSharingReturn(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/profitsharingreturnquery",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -551,7 +552,7 @@ func (m *myPayer) QueryProfitSharingReturn(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }

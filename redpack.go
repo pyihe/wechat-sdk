@@ -2,20 +2,22 @@ package wechat_sdk
 
 import (
 	"errors"
-	"github.com/pyihe/wechat-sdk/pkg/e"
-	"github.com/pyihe/wechat-sdk/pkg/util"
+
+	"github.com/pyihe/util/certs"
+	"github.com/pyihe/util/utils"
+	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +28,7 @@ func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, err
 	var (
 		mustParam     = []string{"nonce_str", "sign", "mch_billno", "mch_id", "wxappid", "send_name", "re_openid", "total_amount", "total_num", "wishing", "client_ip", "act_name", "remark"}
 		optionalParam = []string{"scene_id", "risk_info"}
-		signType      = e.SignTypeMD5
+		signType      = pkg.SignTypeMD5
 	)
 
 	for _, v := range mustParam {
@@ -39,7 +41,7 @@ func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, err
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -54,7 +56,7 @@ func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, err
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/sendredpack",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -72,21 +74,21 @@ func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, err
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) SendGroupRedPack(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +99,7 @@ func (m *myPayer) SendGroupRedPack(param Param, p12CertPath string) (ResultParam
 	var (
 		mustParam     = []string{"nonce_str", "sign", "mch_billno", "mch_id", "wxappid", "send_name", "re_openid", "total_amount", "total_num", "amt_type", "wishing", "act_name", "remark"}
 		optionalParam = []string{"scene_id", "risk_info"}
-		signType      = e.SignTypeMD5
+		signType      = pkg.SignTypeMD5
 	)
 
 	for _, v := range mustParam {
@@ -110,7 +112,7 @@ func (m *myPayer) SendGroupRedPack(param Param, p12CertPath string) (ResultParam
 	}
 
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) && !util.HaveInArray(optionalParam, key) {
+		if !utils.Contain(mustParam, key) && !utils.Contain(optionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -125,7 +127,7 @@ func (m *myPayer) SendGroupRedPack(param Param, p12CertPath string) (ResultParam
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/sendgroupredpack",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -143,21 +145,21 @@ func (m *myPayer) SendGroupRedPack(param Param, p12CertPath string) (ResultParam
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
 
 func (m *myPayer) GetRedPackRecords(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +168,8 @@ func (m *myPayer) GetRedPackRecords(param Param, p12CertPath string) (ResultPara
 	param.Add("mch_id", m.mchId)
 
 	var (
-		mustParam     = []string{"nonce_str", "sign", "mch_billno", "mch_id", "appid", "bill_type"}
-		signType      = e.SignTypeMD5
+		mustParam = []string{"nonce_str", "sign", "mch_billno", "mch_id", "appid", "bill_type"}
+		signType  = pkg.SignTypeMD5
 	)
 	for _, v := range mustParam {
 		if v == "sign" {
@@ -178,7 +180,7 @@ func (m *myPayer) GetRedPackRecords(param Param, p12CertPath string) (ResultPara
 		}
 	}
 	for key := range param {
-		if !util.HaveInArray(mustParam, key) {
+		if !utils.Contain(mustParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -193,7 +195,7 @@ func (m *myPayer) GetRedPackRecords(param Param, p12CertPath string) (ResultPara
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/gethbinfo",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -211,7 +213,7 @@ func (m *myPayer) GetRedPackRecords(param Param, p12CertPath string) (ResultPara
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
