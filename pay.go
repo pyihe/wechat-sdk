@@ -2,9 +2,10 @@ package wechat_sdk
 
 import (
 	"bytes"
-	"encoding/base64"
+	"crypto"
 	"errors"
 	"fmt"
+
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,14 +14,17 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/pyihe/wechat-sdk/pkg/e"
-	"github.com/pyihe/wechat-sdk/pkg/util"
+	"github.com/pyihe/secret"
+	"github.com/pyihe/util/certs"
+	"github.com/pyihe/util/files"
+	"github.com/pyihe/util/utils"
+	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 //统一下单
 func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -33,25 +37,25 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 		unifiedMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "notify_url", "trade_type"}
 		unifiedOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "time_start", "time_expire", "goods_tag", "limit_pay", "receipt", "openid", "product_id", "scene_info", "profit_sharing"}
 		tradeType            string
-		signType             = e.SignTypeMD5 //默认MD5签名方式
+		signType             = pkg.SignTypeMD5 //默认MD5签名方式
 	)
 
 	if t, ok := param["trade_type"]; ok {
 		tradeType = t.(string)
 	} else {
-		return nil, e.ErrTradeType
+		return nil, pkg.ErrTradeType
 	}
 	if t, ok := param["sign_type"]; ok {
 		signType = t.(string)
 	}
 
 	switch tradeType {
-	case e.H5:
+	case pkg.H5:
 		//H5支付必须要传scene_info参数
 		if sceneInfo := param.Get("scene_info"); sceneInfo == nil || sceneInfo.(string) == "" {
 			return nil, errors.New("H5 pay need param scene_info")
 		}
-	case e.App:
+	case pkg.App:
 		//App支付不需要product_id, openid, scene_info参数
 		if _, ok := param["product_id"]; ok {
 			return nil, errors.New("APP pay no need product_id")
@@ -62,12 +66,12 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 		if _, ok := param["scene_info"]; ok {
 			return nil, errors.New("APP pay no need scene_info")
 		}
-	case e.JSAPI:
+	case pkg.JSAPI:
 		//JSAPI支付必须传openid参数
 		if openId, ok := param["openid"]; !ok || openId.(string) == "" {
-			return nil, e.ErrOpenId
+			return nil, pkg.ErrOpenId
 		}
-	case e.Native:
+	case pkg.Native:
 	default:
 		return nil, errors.New("invalid trade_type")
 	}
@@ -82,7 +86,7 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	}
 	//这里校验是否包含不必要的参数
 	for key := range param {
-		if !util.HaveInArray(unifiedMustParam, key) && !util.HaveInArray(unifiedOptionalParam, key) {
+		if !utils.Contain(unifiedMustParam, key) && !utils.Contain(unifiedOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -99,7 +103,7 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/unifiedorder",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -119,7 +123,7 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, err
 }
@@ -137,7 +141,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	param.Add("mch_id", m.mchId)
 
 	var (
-		signType           = e.SignTypeMD5 //此处默认MD5
+		signType           = pkg.SignTypeMD5 //此处默认MD5
 		queryMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
 		queryOneParam      = []string{"transaction_id", "out_trade_no"}
 		queryOptionalParam = []string{"sign_type"}
@@ -172,7 +176,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(queryMustParam, k) && !util.HaveInArray(queryOptionalParam, k) && !util.HaveInArray(queryOneParam, k) {
+		if !utils.Contain(queryMustParam, k) && !utils.Contain(queryOptionalParam, k) && !utils.Contain(queryOneParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
@@ -187,7 +191,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/orderquery",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWx(request)
@@ -208,7 +212,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 
 	return result, nil
@@ -217,7 +221,7 @@ func (m *myPayer) UnifiedQuery(param Param) (ResultParam, error) {
 //扫码下单
 func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -229,7 +233,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	var (
 		microMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "body", "out_trade_no", "total_fee", "spbill_create_ip", "auth_code"}
 		microOptionalParam = []string{"device_info", "sign_type", "detail", "attach", "fee_type", "goods_tag", "limit_pay", "time_start", "time_expire", "receipt", "scene_info", "profit_sharing"}
-		signType           = e.SignTypeMD5 //默认MD5签名方式
+		signType           = pkg.SignTypeMD5 //默认MD5签名方式
 	)
 
 	if t, ok := param["sign_type"]; ok {
@@ -246,7 +250,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	}
 
 	for key := range param {
-		if !util.HaveInArray(microMustParam, key) && !util.HaveInArray(microOptionalParam, key) {
+		if !utils.Contain(microMustParam, key) && !utils.Contain(microOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -262,7 +266,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/micropay",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -282,7 +286,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -290,7 +294,7 @@ func (m *myPayer) UnifiedMicro(param Param) (ResultParam, error) {
 //关闭订单
 func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
@@ -299,7 +303,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	param.Add("mch_id", m.mchId)
 
 	var (
-		signType           = e.SignTypeMD5
+		signType           = pkg.SignTypeMD5
 		closeMustParam     = []string{"appid", "mch_id", "out_trade_no", "nonce_str", "sign"}
 		closeOptionalParam = []string{"sign_type"}
 	)
@@ -318,7 +322,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	}
 
 	for key := range param {
-		if !util.HaveInArray(closeMustParam, key) && !util.HaveInArray(closeOptionalParam, key) {
+		if !utils.Contain(closeMustParam, key) && !utils.Contain(closeOptionalParam, key) {
 			return nil, errors.New("no need param: " + key)
 		}
 	}
@@ -333,7 +337,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/closeorder",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -353,7 +357,7 @@ func (m *myPayer) CloseOrder(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -367,7 +371,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 		return nil, err
 	}
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +379,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 	param.Add("mch_id", m.mchId)
 
 	var (
-		signType         = e.SignTypeMD5
+		signType         = pkg.SignTypeMD5
 		refundOneParams  = []string{"transaction_id", "out_trade_no"}
 		refundMustParams = []string{"appid", "mch_id", "nonce_str", "sign", "out_refund_no", "total_fee", "refund_fee"}
 	)
@@ -407,7 +411,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(refundMustParams, k) && !util.HaveInArray(refundOptionalParams, k) && !util.HaveInArray(refundOneParams, k) {
+		if !utils.Contain(refundMustParams, k) && !utils.Contain(refundOptionalParams, k) && !utils.Contain(refundOneParams, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
@@ -423,7 +427,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/secapi/pay/refund",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)
@@ -442,7 +446,7 @@ func (m *myPayer) RefundOrder(param Param, p12CertPath string) (ResultParam, err
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -459,7 +463,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	param.Add("mch_id", m.mchId)
 
 	var (
-		signType             = e.SignTypeMD5
+		signType             = pkg.SignTypeMD5
 		count                = 0
 		refundQueryOneParam  = []string{"transaction_id", "out_trade_no", "out_refund_no", "refund_id"}
 		refundQueryMustParam = []string{"appid", "mch_id", "nonce_str", "sign"}
@@ -490,7 +494,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(refundQueryMustParam, k) && !util.HaveInArray(refundQueryOptionalParam, k) && !util.HaveInArray(refundQueryOneParam, k) {
+		if !utils.Contain(refundQueryMustParam, k) && !utils.Contain(refundQueryOptionalParam, k) && !utils.Contain(refundQueryOneParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
@@ -506,7 +510,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/refundquery",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWx(request)
@@ -526,7 +530,7 @@ func (m *myPayer) RefundQuery(param Param) (ResultParam, error) {
 	}
 	sign = result.Sign(signType)
 	if resultSign, _ := result.GetString("sign"); resultSign != sign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -545,15 +549,21 @@ func (m *myPayer) RefundNotify(body io.Reader) (ResultParam, error) {
 	}
 
 	//1. 对加密串A做base64解码，得到加密串B
-	reqInfo, err := base64.StdEncoding.DecodeString(reqInfoStr)
-	if err != nil {
-		return nil, err
-	}
-
 	//2. 对商户key做md5，得到32位小写key*
-	md5Key := strings.ToLower(util.SignMd5(m.apiKey))
+	keyStr, _ := secret.NewHasher().HashToString(m.apiKey, crypto.MD5)
+	md5Key := strings.ToLower(keyStr)
 	//3. 用key*对加密串B做AES-256-ECB解密（PKCS7Padding）
-	realData, err := util.AES256ECBDecrypt(reqInfo, []byte(md5Key))
+	cipher := secret.NewCipher()
+	decryptRequest := &secret.SymRequest{
+		PlainData:   nil,
+		CipherData:  reqInfoStr,
+		Key:         []byte(md5Key),
+		Type:        secret.SymTypeAES,
+		ModeType:    secret.BlockModeECB,
+		PaddingType: secret.PaddingTypePKCS7,
+		AddData:     nil,
+	}
+	realData, err := cipher.SymDecrypt(decryptRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -576,7 +586,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(certPath, m.mchId)
+	cert, err := certs.P12ToPem(certPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -586,7 +596,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 
 	//校验订单号
 	var (
-		signType             = e.SignTypeMD5 //此处默认MD5
+		signType             = pkg.SignTypeMD5 //此处默认MD5
 		reverseMustParam     = []string{"appid", "mch_id", "nonce_str", "sign"}
 		reverseOneParam      = []string{"transaction_id", "out_trade_no"}
 		reverseOptionalParam = []string{"sign_type"}
@@ -620,7 +630,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 		if k == "sign_type" {
 			signType = param[k].(string)
 		}
-		if !util.HaveInArray(reverseMustParam, k) && !util.HaveInArray(reverseOptionalParam, k) && !util.HaveInArray(reverseOneParam, k) {
+		if !utils.Contain(reverseMustParam, k) && !utils.Contain(reverseOptionalParam, k) && !utils.Contain(reverseOneParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
@@ -636,7 +646,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/secapi/pay/reverse",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)
@@ -657,7 +667,7 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 	}
 	sign = result.Sign(signType)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 
 	return result, nil
@@ -666,13 +676,13 @@ func (m *myPayer) ReverseOrder(param Param, certPath string) (ResultParam, error
 //企业支付,包括企业付款到零钱、查询企业付款到零钱、企业付款到银行卡
 func (m *myPayer) Transfers(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -692,12 +702,12 @@ func (m *myPayer) Transfers(param Param, p12CertPath string) (ResultParam, error
 
 	var transOptionalParam = []string{"device_info", "re_user_name"}
 	for k := range param {
-		if !util.HaveInArray(transMustParam, k) && !util.HaveInArray(transOptionalParam, k) {
+		if !utils.Contain(transMustParam, k) && !utils.Contain(transOptionalParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
 
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(pkg.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -707,7 +717,7 @@ func (m *myPayer) Transfers(param Param, p12CertPath string) (ResultParam, error
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -729,18 +739,13 @@ func (m *myPayer) Transfers(param Param, p12CertPath string) (ResultParam, error
 //企业付款到银行卡
 func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
-	publicKey, err := ioutil.ReadFile(publicKeyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -759,25 +764,30 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 
 	var bankOptionalParam = []string{"desc"}
 	for k := range param {
-		if !util.HaveInArray(bankMustParam, k) && !util.HaveInArray(bankOptionalParam, k) {
+		if !utils.Contain(bankMustParam, k) && !utils.Contain(bankOptionalParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
 
 	bankCard := param.Get("enc_bank_no").(string)
 	bankName := param.Get("enc_true_name").(string)
-	encryptBankCard, err := util.RsaEncrypt([]byte(bankCard), publicKey)
-	if err != nil {
-		return nil, err
-	}
-	encryptBankName, err := util.RsaEncrypt([]byte(bankName), publicKey)
-	if err != nil {
-		return nil, err
-	}
-	param.Add("enc_bank_no", base64.StdEncoding.EncodeToString(encryptBankCard))
-	param.Add("enc_true_name", base64.StdEncoding.EncodeToString(encryptBankName))
 
-	sign := param.Sign(e.SignTypeMD5)
+	cipher := secret.NewCipher()
+	if err = cipher.SetRSAPublicKey(publicKeyPath, secret.PKCSLevel1); err != nil {
+		return nil, err
+	}
+	encryptBankCard, err := cipher.RSAEncryptToString(bankCard, secret.RSAEncryptTypeOAEP, nil)
+	if err != nil {
+		return nil, err
+	}
+	encryptBankName, err := cipher.RSAEncryptToString(bankName, secret.RSAEncryptTypeOAEP, nil)
+	if err != nil {
+		return nil, err
+	}
+	param.Add("enc_bank_no", encryptBankCard)
+	param.Add("enc_true_name", encryptBankName)
+
+	sign := param.Sign(pkg.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -787,7 +797,7 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaysptrans/pay_bank",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -804,9 +814,9 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(e.SignTypeMD5)
+	sign = result.Sign(pkg.SignTypeMD5)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -814,13 +824,13 @@ func (m *myPayer) TransferBank(param Param, p12CertPath string, publicKeyPath st
 //查询转账到零钱
 func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -839,11 +849,11 @@ func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, 
 	}
 
 	for k := range param {
-		if !util.HaveInArray(queryTransferMustParam, k) {
+		if !utils.Contain(queryTransferMustParam, k) {
 			return nil, errors.New("no need param: " + k)
 		}
 	}
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(pkg.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -853,7 +863,7 @@ func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, 
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaymkttransfers/gettransferinfo",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -876,13 +886,13 @@ func (m *myPayer) TransfersQuery(param Param, p12CertPath string) (ResultParam, 
 //查询企业付款到银行卡
 func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultParam, error) {
 	if param == nil {
-		return nil, e.ErrParams
+		return nil, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return nil, err
 	}
 
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return nil, err
 	}
@@ -900,12 +910,12 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 	}
 
 	for k := range param {
-		if !util.HaveInArray(mustParam, k) {
+		if !utils.Contain(mustParam, k) {
 			return nil, errors.New("no need param " + k)
 		}
 	}
 
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(pkg.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -915,7 +925,7 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/mmpaysptrans/query_bank",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -932,9 +942,9 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 		errDes, _ := result.GetString("err_code_des")
 		return nil, errors.New(errDes)
 	}
-	sign = result.Sign(e.SignTypeMD5)
+	sign = result.Sign(pkg.SignTypeMD5)
 	if wxSign, _ := result.GetString("sign"); sign != wxSign {
-		return nil, e.ErrCheckSign
+		return nil, pkg.ErrCheckSign
 	}
 	return result, nil
 }
@@ -942,7 +952,7 @@ func (m *myPayer) TransferBankQuery(param Param, p12CertPath string) (ResultPara
 //交易保障
 func (m *myPayer) Report(param Param) error {
 	if param == nil {
-		return e.ErrParams
+		return pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return err
@@ -952,7 +962,7 @@ func (m *myPayer) Report(param Param) error {
 	param.Add("mch_id", m.mchId)
 
 	var (
-		signType            = e.SignTypeMD5
+		signType            = pkg.SignTypeMD5
 		reportMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "interface_url", "execute_time", "return_code", "return_msg", "result_code", "user_ip"}
 		reportOptionalParam = []string{"device_info", "sign_type", "err_code", "err_code_des", "out_trade_no", "time"}
 		reportMicroParam    = []string{"appid", "mch_id", "nonce_str", "sign", "interface_url", "trades", "user_ip"}
@@ -972,7 +982,7 @@ func (m *myPayer) Report(param Param) error {
 			}
 		}
 		for key := range param {
-			if !util.HaveInArray(reportMicroParam, key) && !util.HaveInArray(reportMicroOptional, key) {
+			if !utils.Contain(reportMicroParam, key) && !utils.Contain(reportMicroOptional, key) {
 				return errors.New("no need param: " + key)
 			}
 		}
@@ -986,7 +996,7 @@ func (m *myPayer) Report(param Param) error {
 			}
 		}
 		for key := range param {
-			if !util.HaveInArray(reportMustParam, key) && !util.HaveInArray(reportOptionalParam, key) {
+			if !utils.Contain(reportMustParam, key) && !utils.Contain(reportOptionalParam, key) {
 				return errors.New("no need param: " + key)
 			}
 		}
@@ -1003,7 +1013,7 @@ func (m *myPayer) Report(param Param) error {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/payitil/report",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWx(request)
 	if err != nil {
@@ -1026,7 +1036,7 @@ func (m *myPayer) Report(param Param) error {
 //下载对账单
 func (m *myPayer) DownloadBill(param Param, path string) error {
 	if param == nil {
-		return e.ErrParams
+		return pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return err
@@ -1050,7 +1060,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	var downloadOptionalParam = []string{"bill_type", "tar_type"}
 	var tarType string
 	for k := range param {
-		if !util.HaveInArray(downloadMustParam, k) && !util.HaveInArray(downloadOptionalParam, k) {
+		if !utils.Contain(downloadMustParam, k) && !utils.Contain(downloadOptionalParam, k) {
 			return errors.New("no need param: " + k)
 		}
 		if k == "tar_type" {
@@ -1059,7 +1069,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	}
 
 	//签名
-	sign := param.Sign(e.SignTypeMD5)
+	sign := param.Sign(pkg.SignTypeMD5)
 	param.Add("sign", sign)
 
 	reader, err := param.MarshalXML()
@@ -1070,7 +1080,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/downloadbill",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWx(request)
@@ -1092,7 +1102,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 
 	if tarType != "" {
 		//微信传过来的为gzip压缩了的内容，需要解压
-		content, err = util.UnGZIP(content)
+		content, err = utils.UnGZIP(content)
 		if err != nil {
 			return err
 		}
@@ -1105,7 +1115,7 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 			path += "/"
 		}
 	}
-	if err = util.MakeNewPath(path); err != nil {
+	if err = files.MakeNewPath(path); err != nil {
 		return err
 	}
 
@@ -1156,14 +1166,14 @@ func (m *myPayer) DownloadBill(param Param, path string) error {
 //下载评论
 func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) (offset uint64, err error) {
 	if param == nil {
-		return 0, e.ErrParams
+		return 0, pkg.ErrParams
 	}
 	if err := m.checkForPay(); err != nil {
 		return 0, err
 	}
 
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return 0, err
 	}
@@ -1173,14 +1183,14 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 
 	//校验签名方式
 	var (
-		signType                 = e.SignType256
+		signType                 = pkg.SignType256
 		downCommentMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "begin_time", "end_time", "offset"}
 		downCommentOptionalParam = []string{"sign_type", "limit"}
 	)
 
 	if _, ok := param["sign_type"]; ok {
 		signType = param["sign_type"].(string)
-		if signType != e.SignType256 {
+		if signType != pkg.SignType256 {
 			return 0, errors.New("download comment only support HMAC-SHA256")
 		}
 	}
@@ -1197,7 +1207,7 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 
 	//校验不必要的参数
 	for k := range param {
-		if !util.HaveInArray(downCommentMustParam, k) && !util.HaveInArray(downCommentOptionalParam, k) {
+		if !utils.Contain(downCommentMustParam, k) && !utils.Contain(downCommentOptionalParam, k) {
 			return 0, errors.New("no need param: " + k)
 		}
 	}
@@ -1213,7 +1223,7 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/billcommentsp/batchquerycomment",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)
@@ -1244,7 +1254,7 @@ func (m *myPayer) DownloadComment(param Param, p12CertPath string, path string) 
 			path += "/"
 		}
 	}
-	if err = util.MakeNewPath(path); err != nil {
+	if err = files.MakeNewPath(path); err != nil {
 		return 0, err
 	}
 
@@ -1294,7 +1304,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 		return err
 	}
 	//读取证书
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return err
 	}
@@ -1303,13 +1313,13 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 
 	//校验签名方式
 	var (
-		signType              = e.SignType256
+		signType              = pkg.SignType256
 		fundFlowMustParam     = []string{"appid", "mch_id", "nonce_str", "sign", "bill_date", "account_type"}
 		fundFlowOptionalParam = []string{"sign_type", "tar_type"}
 	)
 	if _, ok := param["sign_type"]; ok {
 		signType = param["sign_type"].(string)
-		if signType != e.SignType256 {
+		if signType != pkg.SignType256 {
 			return errors.New("download fund flow only support HMAC-SHA256")
 		}
 	}
@@ -1327,7 +1337,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 	var tarType string
 	//校验是否有不必要的参数
 	for k := range param {
-		if !util.HaveInArray(fundFlowMustParam, k) && !util.HaveInArray(fundFlowOptionalParam, k) {
+		if !utils.Contain(fundFlowMustParam, k) && !utils.Contain(fundFlowOptionalParam, k) {
 			return errors.New("no need param: " + k)
 		}
 		if k == "tar_type" {
@@ -1346,7 +1356,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://api.mch.weixin.qq.com/pay/downloadfundflow",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 
 	response, err := postToWxWithCert(request, cert)
@@ -1372,7 +1382,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 
 	if tarType != "" {
 		//需要解压
-		content, err = util.UnGZIP(content)
+		content, err = utils.UnGZIP(content)
 		if err != nil {
 			return err
 		}
@@ -1386,7 +1396,7 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 			path += "/"
 		}
 	}
-	if err = util.MakeNewPath(path); err != nil {
+	if err = files.MakeNewPath(path); err != nil {
 		return err
 	}
 
@@ -1438,10 +1448,10 @@ func (m *myPayer) DownloadFundFlow(param Param, p12CertPath string, path string)
 //获取RSA加密公钥
 func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 	if m.mchId == "" {
-		return e.ErrParams
+		return pkg.ErrParams
 	}
 
-	cert, err := util.P12ToPem(p12CertPath, m.mchId)
+	cert, err := certs.P12ToPem(p12CertPath, m.mchId)
 	if err != nil {
 		return err
 	}
@@ -1453,8 +1463,8 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 
 	param.Add("mch_id", m.mchId)
 	param.Add("nonce_str", nonceStr)
-	param.Add("sign_type", e.SignTypeMD5)
-	param.Add("sign", param.Sign(e.SignTypeMD5))
+	param.Add("sign_type", pkg.SignTypeMD5)
+	param.Add("sign", param.Sign(pkg.SignTypeMD5))
 
 	reader, err := param.MarshalXML()
 	if err != nil {
@@ -1463,7 +1473,7 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 	var request = &postRequest{
 		Body:        reader,
 		Url:         "https://fraud.mch.weixin.qq.com/risk/getpublickey",
-		ContentType: e.PostContentType,
+		ContentType: pkg.PostContentType,
 	}
 	response, err := postToWxWithCert(request, cert)
 	if err != nil {
@@ -1492,11 +1502,11 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 			targetPath += "/"
 		}
 	}
-	if err = util.MakeNewPath(targetPath); err != nil {
+	if err = files.MakeNewPath(targetPath); err != nil {
 		return err
 	}
 
-	f, err := os.Create(targetPath + e.PublicKey)
+	f, err := os.Create(targetPath + pkg.PublicKey)
 	if err != nil {
 		return err
 	}

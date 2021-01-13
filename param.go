@@ -2,6 +2,7 @@ package wechat_sdk
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/tls"
 	"encoding/xml"
 	"errors"
@@ -12,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pyihe/wechat-sdk/pkg/e"
-	"github.com/pyihe/wechat-sdk/pkg/util"
+	"github.com/pyihe/secret"
+	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 //用于装载外部传入的请求参数
@@ -102,12 +103,16 @@ func (p Param) Sign(signType string) string {
 	}
 	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
 	switch signType {
-	case e.SignType256:
-		result = strings.ToUpper(util.SignHMACSHA256(signStr, defaultPayer.apiKey))
-	case e.SignTypeMD5:
-		result = strings.ToUpper(util.SignMd5(signStr))
+	case pkg.SignType256:
+		result = secret.NewHasher().MacToString(crypto.SHA256, []byte(signStr), []byte(defaultPayer.apiKey))
+
+	case pkg.SignTypeMD5:
+		result, _ = secret.NewHasher().HashToString(signStr, crypto.MD5)
+
 	default:
+
 	}
+	result = strings.ToUpper(result)
 	return result
 }
 
