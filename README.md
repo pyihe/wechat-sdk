@@ -4,6 +4,12 @@
 
 如果在使用过程中存在任何bug，还请指出，受教了！
 
+### Thanks
+
+![](jetbrains.png)
+
+[Jetbrains Tools](https://www.jetbrains.com/?from=wechat-sdk)
+
 ### Function List
 
 ##### Mini Program(小程序)
