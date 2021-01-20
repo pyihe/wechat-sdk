@@ -6,9 +6,9 @@
 
 ### Thanks
 
-![](jetbrains.png)
-
 [Jetbrains Tools](https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png)
+
+<img src="https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png" width="50" height="50"/>
 
 ### Function List
 
