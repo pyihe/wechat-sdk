@@ -8,7 +8,7 @@
 
 ![](jetbrains.png)
 
-[Jetbrains Tools](https://www.jetbrains.com/?from=wechat-sdk)
+[Jetbrains Tools](https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png)
 
 ### Function List
 
