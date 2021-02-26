@@ -1,18 +1,18 @@
 # wechat-sdk
 
-### Most Important Thing
+### 最重要的事
 
-如果在使用过程中存在任何bug，还请指出，受教了！
+如果在使用过程中存在任何bug，还请指出，非常感谢！
 
-### Thanks
+### 致谢
 
 [Jetbrains Tools](https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png)
 
 <img src="https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png" width="50" height="50"/>
 
-### Function List
+### 功能列表
 
-##### Mini Program(小程序)
+##### 小程序
 
 | Name  |  Explain |  comment |
 | :---- | :----| :----|
@@ -21,7 +21,7 @@
 | GetAccessTokenForMini | 小程序获取AccessToken | |
 | GetUserInfoForMini | 小程序获取用户基本信息 | |
 
-##### Official Accounts(公众号)
+##### 公众号
 
 | Name  |  Explain |  comment |
 | :---- | :----| :----|
@@ -31,7 +31,7 @@
 | GetAppUserInfo | 公众号开发拉取用户信息 | 返回结果参考[微信文档](https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html) |
 | CheckOauthToken | 公众号开发校验网页授权Access_Token是否有效 ||
 
-##### WeChat Pay(微信支付)
+##### 微信支付
 
 | Name  |  Explain |  comment |
 | :---- | :----| :----|
@@ -53,7 +53,7 @@
 | UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
 | UnifiedQuery | 下单结果查询 |  |
 
-##### ProfitSharing(商户分账)
+##### 商户分账
 | Name  |  Explain |  comment |
 | :---- | :---- | :---- |
 |ProfitSharing|申请分账(单次或多次)|multiTag标志是否是多次分账|
@@ -65,7 +65,7 @@
 |QueryProfitSharingReturn|回退结果查询|用于核实回退结果|
 |ProfitSharingNotify|分账动帐通知|分账或分账回退成功后, 微信会将结果发送给商户, 通知结果包含加密信息, **此处解密密钥为ApiV3密钥**。接口返回结果中忽略层级关系，对于需要的字段直接使用Get方法获取值。通知url在商户平台配置，详情参加[分账动帐通知](https://pay.weixin.qq.com/wiki/doc/api/allocation.php?chapter=27_9&index=9)|
 
-##### RedPack(现金红包)
+##### 现金红包
 | Name  |  Explain |  comment |
 | :---- | :---- | :---- |
 |SendRedPack|发放现金红包||
@@ -114,15 +114,15 @@ func main() {
 
 
     //download bill
-	param = dev.NewParam()
-	param.Add("nonce_str", "yourNonceStr")
-	param.Add("bill_date", "yourDate")
-	param.Add("bill_type", "ALL")
-	param.Add("tar_type", "GZIP")
-	err := client.DownloadBill(param, "./bill")
-	if err != nil {
-		handleErr(err)
-	}
+    param = dev.NewParam()
+    param.Add("nonce_str", "yourNonceStr")
+    param.Add("bill_date", "yourDate")
+    param.Add("bill_type", "ALL")
+    param.Add("tar_type", "GZIP")
+    err := client.DownloadBill(param, "./bill")
+    if err != nil {
+        handleErr(err)
+    }
     
 
     //get phone for mini program user
@@ -150,7 +150,7 @@ import (
     "fmt"
     "net/http"
     
-    dev "github.com/hong008/wechat-sdk"
+    dev "github.com/pyihe/wechat-sdk"
 )
 
 func main() {
