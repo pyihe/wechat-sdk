@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/pyihe/secret"
-	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 //用于装载外部传入的请求参数
@@ -37,6 +36,15 @@ func (p Param) Add(key string, value interface{}) {
 
 func (p Param) Del(key string) {
 	delete(p, key)
+}
+
+func (p Param) RangeIn(fn func(key string) bool) error {
+	for k := range p {
+		if !fn(k) {
+			return fmt.Errorf("invalid param: %s", k)
+		}
+	}
+	return nil
 }
 
 func (p Param) MarshalXML() (reader io.Reader, err error) {
@@ -103,10 +111,10 @@ func (p Param) Sign(signType string) string {
 	}
 	signStr += fmt.Sprintf("&key=%v", defaultPayer.apiKey)
 	switch signType {
-	case pkg.SignType256:
+	case signType256:
 		result = secret.NewHasher().MacToString(crypto.SHA256, []byte(signStr), []byte(defaultPayer.apiKey))
 
-	case pkg.SignTypeMD5:
+	case signTypeMD5:
 		result, _ = secret.NewHasher().HashToString(signStr, crypto.MD5)
 
 	default:

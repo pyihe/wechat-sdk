@@ -9,7 +9,6 @@ import (
 
 	"github.com/pyihe/secret"
 	"github.com/pyihe/util/utils"
-	"github.com/pyihe/wechat-sdk/pkg"
 )
 
 //微信小程序获取用户电话号码
@@ -49,7 +48,7 @@ func (m *myPayer) GetUserPhoneForMini(code string, dataStr string, ivStr string)
 	}
 	result := utils.Interface2Map(info)
 	if appId := result["appid"]; appId == nil || appId.(string) != m.appId {
-		return nil, pkg.ErrAppId
+		return nil, ErrAppId
 	}
 	return result, nil
 }
@@ -140,7 +139,7 @@ func (m *myPayer) GetUserInfoForMini(code string, dataStr string, ivStr string) 
 	}
 	result := utils.Interface2Map(info)
 	if appId := result["appid"]; appId == nil || appId.(string) != m.appId {
-		return nil, pkg.ErrAppId
+		return nil, ErrAppId
 	}
 	return result, nil
 }
