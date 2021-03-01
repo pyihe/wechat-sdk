@@ -75,12 +75,12 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 	}
 
 	switch tradeType {
-	case h5:
+	case "MWEB":
 		//H5支付必须要传scene_info参数
 		if sceneInfo := param.Get("scene_info"); sceneInfo == nil || sceneInfo.(string) == "" {
 			return nil, errors.New("H5 pay need param scene_info")
 		}
-	case app:
+	case "APP":
 		//App支付不需要product_id, openid, scene_info参数
 		if _, ok := param["product_id"]; ok {
 			return nil, errors.New("APP pay no need product_id")
@@ -91,12 +91,12 @@ func (m *myPayer) UnifiedOrder(param Param) (ResultParam, error) {
 		if _, ok := param["scene_info"]; ok {
 			return nil, errors.New("APP pay no need scene_info")
 		}
-	case jsApi:
+	case "JSAPI":
 		//JSAPI支付必须传openid参数
 		if openId, ok := param["openid"]; !ok || openId.(string) == "" {
 			return nil, ErrOpenId
 		}
-	case native:
+	case "NATIVE":
 	default:
 		return nil, errors.New("invalid trade_type")
 	}
@@ -1715,7 +1715,7 @@ func (m *myPayer) GetPublicKey(p12CertPath string, targetPath string) error {
 		return err
 	}
 
-	f, err := os.Create(targetPath + publicKey)
+	f, err := os.Create(targetPath + "public.pem")
 	if err != nil {
 		return err
 	}
