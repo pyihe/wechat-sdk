@@ -3,7 +3,9 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/vars"
 )
 
 // GetBaseAccessTokenByOfficialAccounts 公众号和小程序获取全局唯一接口调用凭证access_token
@@ -12,30 +14,27 @@ import (
 // expire_in: 凭证有效时长, 单位: s(秒)
 // 返回成功实例: {"access_token": "ACCESS_TOKEN", "expire_in": 7200}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
-func (we *weChatClient) GetBaseAccessTokenByOfficialAccounts() (Param, error) {
+func (we *WeChatClient) GetBaseAccessTokenByOfficialAccounts() (vars.Kvs, error) {
 	if we.secret == "" {
-		return nil, ErrNoSecret
+		return nil, vars.ErrNoSecret
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%v&secret=%v", we.appId, we.secret)
 
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgFace, ok := result.Get("errmsg"); ok {
-		errMsg = msgFace.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -59,30 +58,27 @@ func (we *weChatClient) GetBaseAccessTokenByOfficialAccounts() (Param, error) {
 //  "scope":"SCOPE"
 //}
 // 接口详情介绍页面：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *weChatClient) GetOpenIdByOfficialAccounts(grantCode string) (Param, error) {
+func (we *WeChatClient) GetOpenIdByOfficialAccounts(grantCode string) (vars.Kvs, error) {
 	if we.secret == "" {
-		return nil, ErrNoSecret
+		return nil, vars.ErrNoSecret
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code", we.appId, we.secret, grantCode)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -106,26 +102,23 @@ func (we *weChatClient) GetOpenIdByOfficialAccounts(grantCode string) (Param, er
 //  "scope":"SCOPE"
 //}
 // 接口详情介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *weChatClient) RefreshOauthAccessToken(refreshToken string) (Param, error) {
+func (we *WeChatClient) RefreshOauthAccessToken(refreshToken string) (vars.Kvs, error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%s&grant_type=refresh_token&refresh_token=%s", we.appId, refreshToken)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -148,26 +141,23 @@ func (we *weChatClient) RefreshOauthAccessToken(refreshToken string) (Param, err
 //  "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL" // 用户在同一商户不同公众号的唯一标示
 //}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *weChatClient) GetUserInfoByOfficialAccounts(accessToken, openId, lang string) (Param, error) {
+func (we *WeChatClient) GetUserInfoByOfficialAccounts(accessToken, openId, lang string) (vars.Kvs, error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s&lang=%s", accessToken, openId, lang)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -179,27 +169,21 @@ func (we *weChatClient) GetUserInfoByOfficialAccounts(accessToken, openId, lang 
 // 返回成功实例如下:
 // { "errcode":0,"errmsg":"ok"}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *weChatClient) CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
+func (we *WeChatClient) CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/auth?access_token=%s&openid=%s", accessToken, openId)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return false, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return false, err
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
-	}
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
 	if errMsg == "ok" {
 		return true, nil
 	}

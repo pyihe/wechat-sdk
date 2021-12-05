@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/go-pkg/utils"
 	"github.com/pyihe/secret"
+	"github.com/pyihe/wechat-sdk/v3/vars"
 )
 
 // GetBaseAccessTokenByMiniProgram 微信小程序获取全局唯一的后台接口调用凭证(access_token)
@@ -15,29 +17,26 @@ import (
 // 返回成功实例:
 // {"access_token":"ACCESS_TOKEN","expires_in":7200}
 // 接口详细描述: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-func (we *weChatClient) GetBaseAccessTokenByMiniProgram() (Param, error) {
+func (we *WeChatClient) GetBaseAccessTokenByMiniProgram() (vars.Kvs, error) {
 	if we.secret == "" {
-		return nil, ErrNoSecret
+		return nil, vars.ErrNoSecret
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s", we.appId, we.secret)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -50,29 +49,26 @@ func (we *weChatClient) GetBaseAccessTokenByMiniProgram() (Param, error) {
 // session_key: 会话密钥, 用于解密用户数据信息
 // unionid: 用户在开放平台的唯一标示
 // 接口详细介绍页面: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
-func (we *weChatClient) GetOpenIdByMiniProgram(jsCode string) (Param, error) {
+func (we *WeChatClient) GetOpenIdByMiniProgram(jsCode string) (vars.Kvs, error) {
 	if we.secret == "" {
-		return nil, ErrNoSecret
+		return nil, vars.ErrNoSecret
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code", we.appId, we.secret, jsCode)
-	response, err := we.httpClient.Get(url)
+	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
 	}
-	var errCode int64
-	var errMsg string
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
-	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return result, nil
 	}
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
@@ -82,39 +78,33 @@ func (we *weChatClient) GetOpenIdByMiniProgram(jsCode string) (Param, error) {
 // accessToken: 小程序全局唯一的后台接口调用凭证
 // encryptedMsgHash: 加密数据的sha256，通过Hex（Base16）编码后的字符串
 // 接口详细介绍页面: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/user-info/auth.checkEncryptedData.html
-func (we *weChatClient) CheckMiniProgramEncryptedData(accessToken, encryptedMsgHash string) (bool, error) {
+func (we *WeChatClient) CheckMiniProgramEncryptedData(accessToken, encryptedMsgHash string) (bool, error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/wxa/business/checkencryptedmsg?access_token=%s", accessToken)
-	var param = NewParam()
+	var param = vars.NewKvs()
 	param.Add("encrypted_msg_hash", encryptedMsgHash)
 
 	bytesData, _ := json.Marshal(param)
-	response, err := we.httpClient.Post(url, "application/json", bytes.NewReader(bytesData))
+	response, err := we.request("POST", url, vars.ContentTypeJSON, bytes.NewReader(bytesData))
 	if err != nil {
 		return false, err
 	}
 	defer response.Body.Close()
 
-	var result = NewParam()
+	var result = vars.NewKvs()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return false, err
 	}
-	var errCode int64
-	var errMsg string
 	var valid bool
 	if checkData, ok := result.Get("vaild"); ok {
 		valid = checkData.(bool)
 	}
-	if codeData, ok := result.Get("errcode"); ok {
-		errCode = int64(codeData.(float64))
+	errCode, _ := result.GetInt64("errcode")
+	errMsg, _ := result.GetString("errmsg")
+	if errMsg == "ok" {
+		return valid, nil
 	}
-	if msgData, ok := result.Get("errmsg"); ok {
-		errMsg = msgData.(string)
-	}
-	if errCode != 0 || errMsg != "ok" {
-		return false, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
-	}
-	return valid, nil
+	return valid, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
 
 // DecryptMiniProgramData 用于解密微信小程序的敏感加密数据，如用户信息、用户手机号码等
@@ -144,14 +134,14 @@ func (we *weChatClient) CheckMiniProgramEncryptedData(accessToken, encryptedMsgH
 //  "country": "CN", // 国家代码
 //  "avatarUrl": "http://wx.qlogo.cn/mmopen/vi_32/1vZvI39NWFQ9XM4LtQpFrQJ1xlgZxx3w7bQxKARol6503Iuswjjn6nIGBiaycAjAtpujxyzYsrztuuICqIM5ibXQ/0" // 头像
 // }
-func (we *weChatClient) DecryptMiniProgramData(code, encryptedData, ivStr string) (Param, error) {
+func (we *WeChatClient) DecryptMiniProgramData(code, encryptedData, ivStr string) (vars.Kvs, error) {
 	openData, err := we.GetOpenIdByMiniProgram(code)
 	if err != nil {
 		return nil, err
 	}
 	session, ok := openData.Get("session_key")
 	if !ok {
-		return nil, ErrInvalidCode
+		return nil, vars.ErrInvalidSessionKey
 	}
 	sessionKey, err := base64.StdEncoding.DecodeString(session.(string))
 	if err != nil {
@@ -169,7 +159,7 @@ func (we *weChatClient) DecryptMiniProgramData(code, encryptedData, ivStr string
 		PaddingType: secret.PaddingTypePKCS7,
 		Iv:          iv,
 	}
-	plainData, err := secret.NewCipher().SymDecrypt(decryptRequest)
+	plainData, err := we.cipher.SymDecrypt(decryptRequest)
 	if err != nil {
 		return nil, err
 	}
