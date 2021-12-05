@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pyihe/go-pkg/utils"
 	"github.com/pyihe/secret"
-	"github.com/pyihe/util/utils"
 )
 
 //微信小程序获取用户电话号码

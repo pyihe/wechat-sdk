@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pyihe/util/certs"
+	"github.com/pyihe/go-pkg/certs"
 )
 
 func (m *myPayer) SendRedPack(param Param, p12CertPath string) (ResultParam, error) {
