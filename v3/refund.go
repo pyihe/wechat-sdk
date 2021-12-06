@@ -6,6 +6,10 @@ import (
 	"github.com/pyihe/wechat-sdk/v3/vars"
 )
 
+// Refund 申请退款
+// 参数说明:
+// 调用接口前请仔细阅读官方API文档，需要填写哪些参数，如果参数填写错误，API可能调用失败
+// 申请退款API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_9.shtml
 func (we *WeChatClient) Refund(refundRequest *vars.RefundRequest) (refundResponse *vars.RefundResponse, err error) {
 	if refundRequest == nil {
 		err = vars.ErrNoParam
@@ -42,4 +46,10 @@ func (we *WeChatClient) Refund(refundRequest *vars.RefundRequest) (refundRespons
 	refundResponse.RequestId = requestId
 	err = unMarshal(body, &refundResponse)
 	return
+}
+
+// QueryRefundOrder 查询单笔退款
+func (we *WeChatClient) QueryRefundOrder(outRefundNo string) (interface{}, error) {
+
+	return nil, nil
 }

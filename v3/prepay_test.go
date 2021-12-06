@@ -34,7 +34,7 @@ func TestWeChatClient_Prepay(t *testing.T) {
 	outTradeNo := rands.String(32)
 	t.Logf("订单号为: %v\n", outTradeNo)
 	request := &vars.PrepayRequest{
-		PayType:     vars.JSAPI,
+		TradeType:   vars.JSAPI,
 		AppId:       appId,
 		MchId:       mchId,
 		Description: "API TEST",

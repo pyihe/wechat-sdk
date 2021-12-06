@@ -22,10 +22,6 @@ func (we *WeChatClient) Prepay(prePayRequest *vars.PrepayRequest) (payResponse *
 		return
 	}
 
-	// 校验支付的必要参数
-	if err = prePayRequest.Check(); err != nil {
-		return
-	}
 	if we.serialNo == "" {
 		err = vars.ErrNoSerialNo
 		return
@@ -35,8 +31,20 @@ func (we *WeChatClient) Prepay(prePayRequest *vars.PrepayRequest) (payResponse *
 		return
 	}
 
+	if prePayRequest.AppId == "" {
+		prePayRequest.AppId = we.appId
+	}
+	if prePayRequest.MchId == "" {
+		prePayRequest.MchId = we.mchId
+	}
+
+	// 校验支付的必要参数
+	if err = prePayRequest.Check(); err != nil {
+		return
+	}
+
 	var abUrl string
-	switch prePayRequest.PayType {
+	switch prePayRequest.TradeType {
 	case vars.JSAPI:
 		abUrl = "/v3/pay/transactions/jsapi"
 	case vars.APP:

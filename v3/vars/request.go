@@ -6,9 +6,13 @@ import "github.com/pyihe/go-pkg/errors"
 
 // PrepayRequest 预支付Request
 type PrepayRequest struct {
-	PayType     TradeType   `json:"-"`                      // 支付方式: JSAPI、APP、Native、H5
+	TradeType   TradeType   `json:"-"`                      // 支付方式: JSAPI、APP、Native、H5
 	AppId       string      `json:"appid,omitempty"`        // 由微信生成的应用ID，全局唯一
 	MchId       string      `json:"mchid,omitempty"`        // 直连商户的商户号，由微信支付生成并下发
+	SpAppId     string      `json:"sp_appid,omitempty"`     // 服务商应用ID(H5支付时填写)
+	SpMchId     string      `json:"sp_mchid,omitempty"`     // 服务商户号(H5支付时填写)
+	SubAppId    string      `json:"sub_appid,omitempty"`    // 子商户应用ID（H5支付时填写如果需要）
+	SubMchId    string      `json:"sub_mchid,omitempty"`    // 子商户号（H5支付时填写如果需要）
 	Description string      `json:"description,omitempty"`  // 商品描述
 	OutTradeNo  string      `json:"out_trade_no,omitempty"` // 商户系统内部订单号
 	NotifyUrl   string      `json:"notify_url,omitempty"`   // 步接收微信支付结果通知的回调地址，通知url必须为外网可访问的url，不能携带参数。 公网域名必须为https，如果是走专线接入，使用专线NAT IP或者私有回调域名可使用http
@@ -23,69 +27,78 @@ type PrepayRequest struct {
 }
 
 func (pre *PrepayRequest) Check() (err error) {
-	if pre.PayType.Valid() == false {
-		err = errors.New("unknown pay type: " + string(pre.PayType) + ".")
+	if pre.TradeType.Valid() == false {
+		err = errors.New("错误的支付类型: " + string(pre.TradeType))
 		return
 	}
-	if pre.AppId == "" {
-		err = errors.New("appid is necessary param.")
-		return
-	}
-	if pre.MchId == "" {
-		err = errors.New("mchid is necessary param.")
-		return
-	}
-	if pre.Description == "" {
-		err = errors.New("description is necessary param.")
-		return
-	}
-	if pre.OutTradeNo == "" {
-		err = errors.New("out_trade_no is necessary param.")
-		return
-	}
-	if pre.NotifyUrl == "" {
-		err = errors.New("notify_url is necessary param.")
-		return
-	}
-	if pre.Amount == nil || pre.Amount.Total <= 0 {
-		err = errors.New("amount is invalid.")
-		return
-	} else {
-		if pre.Amount.PayerTotal > 0 || pre.Amount.PayerCurrency != "" {
-			err = errors.New("payer_total&payer_currency must be empty when prepay.")
+
+	switch pre.TradeType {
+	case H5:
+		if pre.SpAppId == "" {
+			err = errors.New("请填写sp_appid!")
+			return
+		}
+		if pre.SpMchId == "" {
+			err = errors.New("请填写sp_mchid!")
+			return
+		}
+		if pre.SubMchId == "" {
+			err = errors.New("请填写sub_mchid!")
+			return
+		}
+		if pre.AppId == "" {
+
+		}
+	default:
+		if pre.AppId == "" {
+			err = errors.New("请填写appid!")
+			return
+		}
+		if pre.MchId == "" {
+			err = errors.New("请填写mchid!")
 			return
 		}
 	}
+	if pre.Description == "" {
+		err = errors.New("请填写description!")
+		return
+	}
+	if pre.OutTradeNo == "" {
+		err = errors.New("请填写out_trade_no!")
+		return
+	}
+	if pre.NotifyUrl == "" {
+		err = errors.New("请填写notify_url!")
+		return
+	}
+	if pre.Amount == nil {
+		err = errors.New("请填写Amount!")
+		return
+	}
+	if err = pre.Amount.Check(apiTypePrepay); err != nil {
+		return
+	}
 	// JSAPI 支付必须填写支付者的ID
-	if pre.PayType == JSAPI {
+	if pre.TradeType == JSAPI {
 		if pre.Payer == nil || pre.Payer.OpenId == "" {
-			err = errors.New("payer is invalid.")
+			err = errors.New("JSAPI支付必须填写支付者openid!")
 			return
 		}
 	} else {
 		if pre.Payer != nil {
-			err = errors.New("payer must be empty when pay type is not JSAPI.")
+			err = errors.New("非JSAPI支付请勿填写payer!")
 			return
 		}
 	}
 	if pre.Detail != nil && len(pre.Detail.GoodsDetail) > 0 {
 		for _, goods := range pre.Detail.GoodsDetail {
-			if goods.MerchantGoodsId == "" {
-				err = errors.New("merchant_goods_id is necessary when detail is fill in.")
-				return
-			}
-			if goods.Quantity <= 0 {
-				err = errors.New("quantity is necessary when detail is fill in.")
-				return
-			}
-			if goods.UnitPrice <= 0 {
-				err = errors.New("unit_price is necessary when detail is fill in.")
+			if err = goods.Check(); err != nil {
 				return
 			}
 		}
 	}
-	if pre.PayType == H5 && pre.SceneInfo == nil {
-		err = errors.New("scene_info is necessary for h5 pay.")
+	if pre.TradeType == H5 && pre.SceneInfo == nil {
+		err = errors.New("H5支付请务必填写scene_info!")
 		return
 	}
 	if pre.SceneInfo != nil {
@@ -99,7 +112,7 @@ func (pre *PrepayRequest) Check() (err error) {
 				return
 			}
 		}
-		if pre.PayType == H5 {
+		if pre.TradeType == H5 {
 			if pre.SceneInfo.H5Info == nil {
 				err = errors.New("scene_info.h5_info is necessary for h5 pay.")
 				return
@@ -137,9 +150,54 @@ type Amount struct {
 	DiscountRefund   int64   `json:"discount_refund,omitempty"`   // 优惠退款金额
 }
 
+func (a *Amount) Check(apiType string) (err error) {
+	switch apiType {
+	case apiTypePrepay:
+		if a.Total <= 0 {
+			err = errors.New("金额必须大于0!")
+			return
+		}
+		if a.PayerTotal > 0 || a.PayerCurrency != "" || a.Refund > 0 || a.PayerRefund > 0 || len(a.From) > 0 || a.SettlementRefund > 0 || a.SettlementTotal > 0 || a.DiscountRefund > 0 {
+			err = errors.New("微信下单的金额信息中, total为必填字段, currency为可选, 其他字段请勿填写!")
+			return
+		}
+	case apiTypeRefund:
+		if a.Refund <= 0 {
+			err = errors.New("请填写amount.refund!")
+			return
+		}
+		for _, f := range a.From {
+			if err = f.Check(); err != nil {
+				return
+			}
+		}
+		if a.Total <= 0 {
+			err = errors.New("请填写amount.total!")
+			return
+		}
+		if a.Currency == "" {
+			err = errors.New("退款时请填写amount.currency!")
+			return
+		}
+	}
+	return
+}
+
 type From struct {
 	Account string `json:"account,omitempty"` // 出资账户类型
 	Amount  int64  `json:"amount,omitempty"`  // 对应账户出资金额
+}
+
+func (f *From) Check() (err error) {
+	if f.Account == "" {
+		err = errors.New("如果填写了出资账户信息, 请务必填写from.account!")
+		return
+	}
+	if f.Amount <= 0 {
+		err = errors.New("如果填写了出资账户信息, 请务必from.amount!")
+		return
+	}
+	return
 }
 
 // Payer 支付者信息
@@ -175,6 +233,22 @@ type GoodsDetail struct {
 	UnitPrice int64 `json:"unit_price,omitempty"` // 商品单价, 商品单价，单位为分
 }
 
+func (goods *GoodsDetail) Check() (err error) {
+	if goods.MerchantGoodsId == "" {
+		err = errors.New("如果填写了单品列表, 请务必填写merchant_goods_id!")
+		return
+	}
+	if goods.Quantity <= 0 {
+		err = errors.New("如果填写了单品列表, 请务必填写quantity!")
+		return
+	}
+	if goods.UnitPrice <= 0 {
+		err = errors.New("如果填写了单品列表, 请务必填写unit_price!")
+		return
+	}
+	return
+}
+
 // SceneInfo 场景信息
 type SceneInfo struct {
 	PayerClientIp string     `json:"payer_client_ip,omitempty"` // 用户终端IP, 用户的客户端IP，支持IPv4和IPv6两种格式的IP地址
@@ -183,12 +257,33 @@ type SceneInfo struct {
 	H5Info        *H5Info    `json:"h5_info,omitempty"`         // H5场景信息
 }
 
+func (s *SceneInfo) Check() (err error) {
+	if s.PayerClientIp == "" {
+		err = errors.New("如果填写了场景信息, 请务必填写scene_info.payer_client_ip!")
+		return
+	}
+	if s.StoreInfo != nil {
+		if err = s.StoreInfo.Check(); err != nil {
+			return
+		}
+	}
+	return
+}
+
 // StoreInfo 门店信息
 type StoreInfo struct {
 	Id       string `json:"id,omitempty"`        // 门店编号, 商户侧门店编号
 	Name     string `json:"name,omitempty"`      // 门店名称, 商户侧门店名称
 	AreaCode string `json:"area_code,omitempty"` // 地区编码, 地区编码，详细请见省市区编号对照表
 	Address  string `json:"address,omitempty"`   // 详细地址, 详细的商户门店地址
+}
+
+func (s *StoreInfo) Check() (err error) {
+	if s.Id == "" {
+		err = errors.New("如果填写了商户门店信息, 请务必填写store_info.id!")
+		return
+	}
+	return
 }
 
 // H5Info H5场景信息

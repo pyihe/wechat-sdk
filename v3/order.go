@@ -22,11 +22,19 @@ func (we *WeChatClient) QueryOrder(queryType vars.QueryType, queryId string) (qu
 	var abUrl string
 	switch queryType {
 	case vars.QueryOutTradeNo:
+		if queryId == "" {
+			err = errors.New("通过商户订单号查询订单时, out_trade_no不能为空!")
+			return
+		}
 		abUrl = fmt.Sprintf("/v3/pay/transactions/out-trade-no/%s?mchid=%s", queryId, we.mchId)
 	case vars.QueryTransactionId:
+		if queryId == "" {
+			err = errors.New("通过微信订单号查询订单时, transaction_id不能为空!")
+			return
+		}
 		abUrl = fmt.Sprintf("/v3/pay/transactions/id/%s?mchid=%s", queryId, we.mchId)
 	default:
-		err = errors.New("unknown pay type: " + string(queryType) + ".")
+		err = errors.New("仅支持商户订单号或者微信订单号查询: " + string(queryType))
 		return
 	}
 	signParam, err := we.signSHA256WithRSA("GET", abUrl, nil)
