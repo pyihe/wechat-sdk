@@ -3,7 +3,7 @@ package service
 import (
 	"net/http"
 
-	"github.com/pyihe/wechat-sdk/v3/model/merchant"
+	merchant2 "github.com/pyihe/wechat-sdk/v3/model/pay/merchant"
 
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/secret"
@@ -14,29 +14,29 @@ import (
 type Option func(*Config)
 
 type Config struct {
+	// v3版本API域名公共部分
+	domain string
+
 	// 标志是否在下载证书的同时，将证书加载同步更新到内存Config中，在证书更替时，如果不同步到内存的话，以后的方法调用需要手动更换证书信息
 	SyncCertificateTag bool
 
 	// 服务商应用ID（服务商申请的公众号appid）
-	SpAppId string
-
-	// 服务商户号
-	SpMchId string
-
-	// 子商户应用ID
-	SubAppId string
-
-	// 子商户号
-	SubMchId string
+	//SpAppId string
+	//
+	//// 服务商户号
+	//SpMchId string
+	//
+	//// 子商户应用ID
+	//SubAppId string
+	//
+	//// 子商户号
+	//SubMchId string
 
 	// 商户在微信平台的唯一ID
 	AppId string
 
-	// 商户号
+	// 商户号, 包括直连商户、服务商或渠道商的商户号mchid，用于生成签名
 	MchId string
-
-	// v3版本API域名公共部分
-	Domain string
 
 	// app secret
 	Secret string
@@ -60,15 +60,15 @@ type Config struct {
 	Certificates maps.Param
 
 	// 处理支付通知的handler
-	PrepayNotifyHandler func(prepayOrder *merchant.PrepayOrder) error
+	PrepayNotifyHandler func(prepayOrder *merchant2.PrepayOrder) error
 
 	// 处理退款通知的handler
-	RefundNotifyHandler func(refundOrder *merchant.RefundOrder) error
+	RefundNotifyHandler func(refundOrder *merchant2.RefundOrder) error
 }
 
 func NewConfig(opts ...Option) *Config {
 	var c = &Config{
-		Domain:     "https://api.mch.weixin.qq.com",
+		domain:     "https://api.mch.weixin.qq.com",
 		HttpClient: http.DefaultClient,
 		Cipher:     secret.NewCipher(),
 	}
@@ -99,29 +99,29 @@ func WithPlatform(platform vars.Platform) Option {
 	}
 }
 
-func WithSpAppId(spAppId string) Option {
-	return func(config *Config) {
-		config.SpAppId = spAppId
-	}
-}
-
-func WithSpMchId(spMchId string) Option {
-	return func(config *Config) {
-		config.SpMchId = spMchId
-	}
-}
-
-func WithSubAppId(subAppId string) Option {
-	return func(config *Config) {
-		config.SubAppId = subAppId
-	}
-}
-
-func WithSubMchId(subMchId string) Option {
-	return func(config *Config) {
-		config.SubMchId = subMchId
-	}
-}
+//func WithSpAppId(spAppId string) Option {
+//	return func(config *Config) {
+//		config.SpAppId = spAppId
+//	}
+//}
+//
+//func WithSpMchId(spMchId string) Option {
+//	return func(config *Config) {
+//		config.SpMchId = spMchId
+//	}
+//}
+//
+//func WithSubAppId(subAppId string) Option {
+//	return func(config *Config) {
+//		config.SubAppId = subAppId
+//	}
+//}
+//
+//func WithSubMchId(subMchId string) Option {
+//	return func(config *Config) {
+//		config.SubMchId = subMchId
+//	}
+//}
 
 func WithAppId(appId string) Option {
 	return func(config *Config) {
@@ -187,13 +187,13 @@ func WithHttpClient(client *http.Client) Option {
 	}
 }
 
-func WithPrepayNotifyHandler(handler func(response *merchant.PrepayOrder) error) Option {
+func WithPrepayNotifyHandler(handler func(response *merchant2.PrepayOrder) error) Option {
 	return func(config *Config) {
 		config.PrepayNotifyHandler = handler
 	}
 }
 
-func WithRefundNotifyHandler(handler func(refundOrder *merchant.RefundOrder) error) Option {
+func WithRefundNotifyHandler(handler func(refundOrder *merchant2.RefundOrder) error) Option {
 	return func(config *Config) {
 		config.RefundNotifyHandler = handler
 	}

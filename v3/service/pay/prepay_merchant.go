@@ -6,7 +6,7 @@ import (
 
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/model"
-	"github.com/pyihe/wechat-sdk/v3/model/merchant"
+	"github.com/pyihe/wechat-sdk/v3/model/pay/merchant"
 	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/v3/service"
 	"github.com/pyihe/wechat-sdk/v3/vars"
@@ -23,11 +23,6 @@ func Prepay(config *service.Config, prepayRequest *merchant.PrepayRequest) (prep
 	}
 	if config.SerialNo == "" {
 		err = vars.ErrNoSerialNo
-		return
-	}
-
-	if config.MchId == "" {
-		err = vars.ErrNoMchId
 		return
 	}
 
@@ -84,10 +79,6 @@ func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (or
 		err = vars.ErrNoSerialNo
 		return
 	}
-	if config.MchId == "" {
-		err = vars.ErrNoMchId
-		return
-	}
 	if queryRequest == nil {
 		err = vars.ErrNoRequest
 		return
@@ -125,11 +116,6 @@ func CloseOrder(config *service.Config, outTradeNo string) (requestId string, er
 	}
 	if config.SerialNo == "" {
 		err = vars.ErrNoSerialNo
-		return
-	}
-
-	if config.MchId == "" {
-		err = vars.ErrNoMchId
 		return
 	}
 	if outTradeNo == "" {

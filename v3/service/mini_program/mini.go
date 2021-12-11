@@ -151,6 +151,10 @@ func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err err
 // }
 // API详细介绍: https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html
 func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) (result maps.Param, err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
+	}
 	openData, err := GetOpenId(config, code)
 	if err != nil {
 		return

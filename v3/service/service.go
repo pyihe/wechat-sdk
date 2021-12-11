@@ -29,18 +29,7 @@ import (
 // signResult: 返回用于签名的各个参数，包括签名结果
 // 签名介绍详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
 func RequestWithSign(config *Config, method, url string, body interface{}) (response *http.Response, err error) {
-	// 获取对应的mchId
-	var mchId string
-	switch config.Platform {
-	case vars.Merchant:
-		mchId = config.MchId
-	case vars.Partner:
-		mchId = config.SpMchId
-	default:
-		err = errors.New("请填写正确的服务平台!")
-		return
-	}
-	if mchId == "" {
+	if config.MchId == "" {
 		err = vars.ErrNoMchId
 		return
 	}
@@ -75,8 +64,8 @@ func RequestWithSign(config *Config, method, url string, body interface{}) (resp
 		return
 	}
 	// 签名头
-	signatureHead := fmt.Sprintf("mchid=\"%s\",nonce_str=\"%s\",signature=\"%s\",timestamp=\"%d\",serial_no=\"%s\"", mchId, nonceStr, signature, timestamp, config.SerialNo)
-	request, err := http.NewRequest(method, config.Domain+url, ioutil.NopCloser(bytes.NewReader(data)))
+	signatureHead := fmt.Sprintf("mchid=\"%s\",nonce_str=\"%s\",signature=\"%s\",timestamp=\"%d\",serial_no=\"%s\"", config.MchId, nonceStr, signature, timestamp, config.SerialNo)
+	request, err := http.NewRequest(method, config.domain+url, ioutil.NopCloser(bytes.NewReader(data)))
 	if err != nil {
 		return
 	}
