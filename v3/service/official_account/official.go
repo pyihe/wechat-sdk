@@ -1,32 +1,43 @@
-package v3
+package official_account
 
 import (
 	"encoding/json"
 	"fmt"
 
 	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/go-pkg/maps"
+	"github.com/pyihe/wechat-sdk/v3/service"
 	"github.com/pyihe/wechat-sdk/v3/vars"
 )
 
-// GetBaseAccessTokenByOfficialAccounts 公众号和小程序获取全局唯一接口调用凭证access_token
+// GetBaseAccessToken 公众号和小程序获取全局唯一接口调用凭证access_token
 // 返回的结果包含两个字段, 分别为:
 // access_token: 接口调用凭证, 有效期为2小时，需要手动刷新同时必须包含被动刷新机制(再次获取即可刷新)
 // expire_in: 凭证有效时长, 单位: s(秒)
 // 返回成功实例: {"access_token": "ACCESS_TOKEN", "expire_in": 7200}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
-func (we *WeChatClient) GetBaseAccessTokenByOfficialAccounts() (vars.Kvs, error) {
-	if we.secret == "" {
-		return nil, vars.ErrNoSecret
+func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
 	}
-	var url = fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%v&secret=%v", we.appId, we.secret)
+	if config.Secret == "" {
+		err = vars.ErrNoSecret
+		return
+	}
+	if config.AppId == "" {
+		err = vars.ErrNoAppId
+		return
+	}
 
-	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
+	var url = fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%v&secret=%v", config.AppId, config.Secret)
+	response, err := service.Request(config, "GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = vars.NewKvs()
+	result = maps.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -39,7 +50,7 @@ func (we *WeChatClient) GetBaseAccessTokenByOfficialAccounts() (vars.Kvs, error)
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
 
-// GetOpenIdByOfficialAccounts 公众号授权获取用户OpenId
+// GetOpenId 公众号授权获取用户OpenId
 // 需要传递的参数为:
 // grantCode: 用户授权网页后获取的授权码code
 // appid, secret: 创建实例时传递，接口调用时不需要再传递了
@@ -58,19 +69,27 @@ func (we *WeChatClient) GetBaseAccessTokenByOfficialAccounts() (vars.Kvs, error)
 //  "scope":"SCOPE"
 //}
 // 接口详情介绍页面：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *WeChatClient) GetOpenIdByOfficialAccounts(grantCode string) (vars.Kvs, error) {
-	if we.secret == "" {
-		return nil, vars.ErrNoSecret
+func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
 	}
-	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code", we.appId, we.secret, grantCode)
-	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
+	if config.Secret == "" {
+		err = vars.ErrNoSecret
+		return
+	}
+	if config.AppId == "" {
+		err = vars.ErrNoAppId
+		return
+	}
+	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code", config.AppId, config.Secret, grantCode)
+	response, err := service.Request(config, "GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	defer response.Body.Close()
 
-	var result = vars.NewKvs()
+	result = maps.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -102,15 +121,19 @@ func (we *WeChatClient) GetOpenIdByOfficialAccounts(grantCode string) (vars.Kvs,
 //  "scope":"SCOPE"
 //}
 // 接口详情介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *WeChatClient) RefreshOauthAccessToken(refreshToken string) (vars.Kvs, error) {
-	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%s&grant_type=refresh_token&refresh_token=%s", we.appId, refreshToken)
-	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
+func RefreshOauthAccessToken(config *service.Config, refreshToken string) (result maps.Param, err error) {
+	if config.AppId == "" {
+		err = vars.ErrNoAppId
+		return
+	}
+	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%s&grant_type=refresh_token&refresh_token=%s", config.AppId, refreshToken)
+	response, err := service.Request(config, "GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = vars.NewKvs()
+	result = maps.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -123,7 +146,7 @@ func (we *WeChatClient) RefreshOauthAccessToken(refreshToken string) (vars.Kvs, 
 	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
 }
 
-// GetUserInfoByOfficialAccounts 公众号获取用户基本信息
+// GetUserInfo 公众号获取用户基本信息
 // 需要传递的参数为:
 // accessToken: 通过GetOpenIdByOfficialAccounts接口获取到的access_token
 // openId: 通过GetUserInfoByOfficialAccounts接口获取到的用户openid
@@ -141,15 +164,15 @@ func (we *WeChatClient) RefreshOauthAccessToken(refreshToken string) (vars.Kvs, 
 //  "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL" // 用户在同一商户不同公众号的唯一标示
 //}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *WeChatClient) GetUserInfoByOfficialAccounts(accessToken, openId, lang string) (vars.Kvs, error) {
+func GetUserInfo(accessToken, openId, lang string) (result maps.Param, err error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s&lang=%s", accessToken, openId, lang)
-	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
+	response, err := service.Request(service.NewConfig(), "GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	var result = vars.NewKvs()
+	result = maps.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -169,15 +192,15 @@ func (we *WeChatClient) GetUserInfoByOfficialAccounts(accessToken, openId, lang 
 // 返回成功实例如下:
 // { "errcode":0,"errmsg":"ok"}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func (we *WeChatClient) CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
+func CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/auth?access_token=%s&openid=%s", accessToken, openId)
-	response, err := we.request("GET", url, vars.ContentTypeJSON, nil)
+	response, err := service.Request(service.NewConfig(), "GET", url, vars.ContentTypeJSON, nil)
 	if err != nil {
 		return false, err
 	}
 	defer response.Body.Close()
 
-	var result = vars.NewKvs()
+	var result = maps.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return false, err

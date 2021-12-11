@@ -1,23 +1,20 @@
 package vars
 
 const (
-	JSAPI  TradeType = "JSAPI"
-	H5     TradeType = "H5"
-	Native TradeType = "Native"
-	APP    TradeType = "APP"
+	_BeginTradeType TradeType = iota // begin
+	JSAPI                            // JSAPI支付
+	H5                               // H5支付
+	Native                           // Native支付
+	APP                              // App支付
+	FacePay                          // 刷脸支付
+	_EndTradeType                    // end
+)
 
-	QueryOutTradeNo    QueryType = "out-trade-no"
-	QueryTransactionId QueryType = "transactions"
-
-	// 内部API类型
-	apiTypePrepay              = "prepay"               // 预支付
-	apiTypePrepayNotify        = "prepay-notify"        // 支付通知
-	apiTypeOrderQuery          = "order-query"          // 订单查询
-	apiTypeOrderClose          = "order-close"          // 关闭订单
-	apiTypeRefund              = "refund"               // 查询单笔退款订单
-	apiTypeRefundQuery         = "refund_query"         // 退款查询
-	apiTypeCertificateDownload = "certificate-download" // 证书下载
-
+const (
+	_BeginPlatform Platform = iota // begin
+	Merchant                       // 服务商平台
+	Partner                        // 商户平台
+	_EndPlatform                   // end
 )
 
 const (

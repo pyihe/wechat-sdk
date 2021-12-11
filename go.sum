@@ -24,6 +24,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pyihe/go-pkg v0.0.0-20211204180754-e50469121fca h1:uFmAew4OsLS5s2u7seiv88nMlPSAkD/Rg0hHHlo/EUY=
 github.com/pyihe/go-pkg v0.0.0-20211204180754-e50469121fca/go.mod h1:zYn7jzKOjtr8piG9Ull9EihUroL130Z1wKljPVwAQQU=
+github.com/pyihe/go-pkg v0.0.0-20211210143529-a1fb84f0ad0a h1:aEeDOyasZ5NDitlPKB40+VOFY8VUCqMAd6l7dJdRGik=
+github.com/pyihe/go-pkg v0.0.0-20211210143529-a1fb84f0ad0a/go.mod h1:zYn7jzKOjtr8piG9Ull9EihUroL130Z1wKljPVwAQQU=
 github.com/pyihe/secret v0.0.6 h1:lhq3PjrtC4lhnNES45weYRbCa7qHaTe/sRxXdI8YpmM=
 github.com/pyihe/secret v0.0.6/go.mod h1:sdYR2so2a5O4lQxm1/QHjWaIyzXEW+ajvEI1zH3DbGg=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
