@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -94,35 +93,69 @@ func Request(config *Config, method, url, contentType string, body interface{}) 
 	return config.HttpClient.Do(request)
 }
 
-// VerifySign 验证微信返回的签名
-// 验证过程详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/wechatpay/wechatpay4_1.shtml
-func VerifySign(config *Config, header http.Header, reader io.ReadCloser, httpCode ...int) (requestId string, body []byte, err error) {
-	requestId = header.Get("Request-ID")
-	// 读取签名主体
-	// 当状态码为http.StatusNoContent时无body返回
-	var code int
-	if len(httpCode) > 0 {
-		code = httpCode[0]
-		// 请求已经被接收，但尚未处理，需要重复请求一遍
-		if code == http.StatusAccepted {
-			err = vars.ErrRequestAgain
-			return
-		}
-		// 请求失败
-		if code != http.StatusOK && code != http.StatusNoContent {
-			err = errors.NewWithCode("see errcode for detail.", errors.ErrorCode(code))
-			return
-		}
-		if code == http.StatusOK {
-			if reader != nil {
-				defer reader.Close()
-				body, err = ioutil.ReadAll(reader)
-				if err != nil {
-					return
-				}
-			}
-		}
+// VerifyResponse 验证向微信服务器发送请求后从微信得到的应答签名
+// 微信(验证)签名验证详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_1.shtml
+func VerifyResponse(config *Config, response *http.Response) (requestId string, body []byte, err error) {
+	if response == nil {
+		err = errors.New("response为空!")
+		return
 	}
+	header := response.Header
+	// 获取唯一请求ID
+	requestId = header.Get("Request-ID")
+
+	// 根据http code 判断请求是否成功
+	var code = response.StatusCode
+	// 请求已经被接收，但尚未处理，需要重复请求一遍
+	if code == http.StatusAccepted {
+		err = vars.ErrRequestAgain
+		return
+	}
+	// 请求失败
+	if code != http.StatusOK && code != http.StatusNoContent {
+		err = errors.NewWithCode("see errcode for detail.", errors.ErrorCode(code))
+		return
+	}
+	if code == http.StatusOK {
+		body, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			return
+		}
+		_ = response.Body.Close()
+	}
+	// 1. 验证证书序列号是否正确
+	serialNo := header.Get("Wechatpay-Serial")
+	publicKey, ok := config.Certificates[serialNo].(*rsa.PublicKey)
+	if !ok {
+		err = errors.New("inconsistent Wechatpay-Serial.")
+		return
+	}
+
+	// 2. 获取微信的签名结果
+	wechatSign := header.Get("Wechatpay-Signature") // 微信签名
+	// 3. 获取签名参数
+	timestamp := header.Get("Wechatpay-Timestamp") // 时间戳
+	nonceStr := header.Get("Wechatpay-Nonce")      // 随机字符串
+
+	// 4. 构造原始的签名数据
+	plainTxt := fmt.Sprintf("%v\n%v\n%v\n", timestamp, nonceStr, string(body))
+
+	// 验证签名
+	_ = config.Cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
+	err = rsas.VerifySHA256WithRSA(config.Cipher, wechatSign, plainTxt)
+	return
+}
+
+// VerifyRequest 验证微信服务器的通知，预支付、退款等请求后，微信回调的Request同样需要签名验证
+// 微信（验证）签名方法详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_1.shtml
+func VerifyRequest(config *Config, request *http.Request) (body []byte, err error) {
+	header := request.Header
+
+	body, err = ioutil.ReadAll(request.Body)
+	if err != nil {
+		return
+	}
+	_ = request.Body.Close()
 
 	// 1. 验证证书序列号是否正确
 	serialNo := header.Get("Wechatpay-Serial")

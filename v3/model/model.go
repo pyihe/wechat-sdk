@@ -51,6 +51,7 @@ type Amount struct {
 
 	// combine
 	TotalAmount int64 `json:"total_amount,omitempty"` // 标价金额
+	PayerAmount int64 `json:"payer_amount,omitempty"` // 现金支付金额
 }
 
 // Detail 优惠功能

@@ -57,7 +57,7 @@ func Prepay(config *service.Config, prepayRequest *merchant.PrepayRequest) (prep
 		return
 	}
 
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (or
 	if err != nil {
 		return
 	}
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
@@ -132,7 +132,7 @@ func CloseOrder(config *service.Config, outTradeNo string) (requestId string, er
 	if err != nil {
 		return
 	}
-	requestId, _, err = service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, _, err = service.VerifyResponse(config, response)
 	return
 }
 
@@ -151,7 +151,7 @@ func PrepayNotify(config *service.Config, responseWriter http.ResponseWriter, re
 		err = vars.ErrNoApiV3Key
 		return
 	}
-	_, body, err := service.VerifySign(config, request.Header, request.Body)
+	body, err := service.VerifyRequest(config, request)
 	if err != nil {
 		return
 	}
@@ -226,7 +226,7 @@ func Refund(config *service.Config, refundRequest *merchant.RefundRequest) (refu
 	if err != nil {
 		return
 	}
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
@@ -257,7 +257,7 @@ func QueryRefundOrder(config *service.Config, outRefundNo string) (refundOrder *
 	if err != nil {
 		return
 	}
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
@@ -282,7 +282,7 @@ func RefundNotify(config *service.Config, responseWriter http.ResponseWriter, re
 		err = vars.ErrNoApiV3Key
 		return
 	}
-	_, body, err := service.VerifySign(config, request.Header, request.Body)
+	body, err := service.VerifyRequest(config, request)
 	if err != nil {
 		return
 	}
@@ -358,7 +358,7 @@ func TradeBill(config *service.Config, request *merchant.TradeBillRequest) (bill
 	if err != nil {
 		return
 	}
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
@@ -394,7 +394,7 @@ func FundFlowBill(config *service.Config, request *merchant.FundFlowRequest) (bi
 	if err != nil {
 		return
 	}
-	requestId, body, err := service.VerifySign(config, response.Header, response.Body, response.StatusCode)
+	requestId, body, err := service.VerifyResponse(config, response)
 	if err != nil {
 		return
 	}
