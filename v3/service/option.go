@@ -9,6 +9,7 @@ import (
 
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/secret"
+	payscore "github.com/pyihe/wechat-sdk/v3/model/manage/merchant"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/vars"
 )
@@ -69,6 +70,9 @@ type Config struct {
 
 	// 处理商户平台合单支付通知的handler
 	CombinePrepayNotifyHandler func(prepayOrder *combine.PrepayOrder) error
+
+	// 微信支付分服务开启/解除授权服务回调通知的handler
+	PermissionNotifyHandler func(permissionResponse *payscore.OpenOrCloseResponse) error
 }
 
 func NewConfig(opts ...Option) *Config {
@@ -207,5 +211,11 @@ func WithRefundNotifyHandler(handler func(refundOrder *merchant.RefundOrder) err
 func WithCombinePrepayNotifyHandler(handler func(order *combine.PrepayOrder) error) Option {
 	return func(config *Config) {
 		config.CombinePrepayNotifyHandler = handler
+	}
+}
+
+func WithPermissionNotifyHandler(handler func(response *payscore.OpenOrCloseResponse) error) Option {
+	return func(config *Config) {
+		config.PermissionNotifyHandler = handler
 	}
 }

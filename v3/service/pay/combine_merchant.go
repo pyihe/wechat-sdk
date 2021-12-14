@@ -89,7 +89,7 @@ func CombineQueryOrder(config *service.Config, outTradeNo string) (combineOrder 
 
 // CombineCloseOrder 合单关闭订单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_12.shtml
-func CombineCloseOrder(config *service.Config, closeRequest *combine.CloseRequest) (requestId string, err error) {
+func CombineCloseOrder(config *service.Config, closeRequest *combine.CloseRequest) (closeResponse *combine.CloseResponse, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
 		return
@@ -106,7 +106,13 @@ func CombineCloseOrder(config *service.Config, closeRequest *combine.CloseReques
 	if err != nil {
 		return
 	}
-	requestId, _, err = service.VerifyResponse(config, response)
+	requestId, body, err := service.VerifyResponse(config, response)
+	if err != nil {
+		return
+	}
+	closeResponse = new(combine.CloseResponse)
+	closeResponse.RequestId = requestId
+	err = service.Unmarshal(body, &closeResponse)
 	return
 }
 
@@ -136,6 +142,10 @@ func CombinePrepayNotify(config *service.Config, responseWriter http.ResponseWri
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		return
+	}
+	if notifyResponse.Resource == nil {
+		err = errors.New("未获取到通知资源数据!")
 		return
 	}
 	// 解密

@@ -1,6 +1,7 @@
 package other
 
 import (
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -66,7 +67,7 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 		}
 		certsResponse.Certificates.Add(serialNo, certificate)
 		if config.SyncCertificateTag {
-			config.Certificates.Add(serialNo, certificate)
+			config.Certificates.Add(serialNo, certificate.PublicKey.(*rsa.PublicKey))
 		}
 		// 同步到本地
 		fileName := fmt.Sprintf("public_key_%s.pem", encryptData.ExpireTime.Format("2006_01_02"))

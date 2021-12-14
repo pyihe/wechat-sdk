@@ -1,6 +1,8 @@
 package merchant
 
 import (
+	"time"
+
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/model"
 )
@@ -31,9 +33,18 @@ type PrepayOrder struct {
 	TradeStateDesc  string                   `json:"trade_state_desc,omitempty"` // 交易状态描述
 	BankType        string                   `json:"bank_type,omitempty"`        // 银行类型
 	Attach          string                   `json:"attach,omitempty"`           // 附加数据
-	SuccessTime     string                   `json:"success_time,omitempty"`     // 支付完成时间
+	SuccessTime     time.Time                `json:"success_time,omitempty"`     // 支付完成时间
 	Payer           *model.Payer             `json:"payer,omitempty"`            // 支付者信息
 	Amount          *model.Amount            `json:"amount,omitempty"`           // 订单金额
 	SceneInfo       *model.SceneInfo         `json:"scene_info,omitempty"`       // 场景信息
 	PromotionDetail []*model.PromotionDetail `json:"promotion_detail,omitempty"` // 优惠功能
+}
+
+type CloseRequest struct {
+	OutTradeNo string `json:"out_trade_no,omitempty"` // 需要关闭的订单的商户订单号
+}
+
+type CloseResponse struct {
+	model.WechatError
+	RequestId string `json:"request_id,omitempty"`
 }

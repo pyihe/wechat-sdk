@@ -1,6 +1,8 @@
 package merchant
 
 import (
+	"time"
+
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/model"
 )
@@ -87,8 +89,8 @@ type RefundOrder struct {
 	OutTradeNo          string                   `json:"out_trade_no,omitempty"`          // 商户订单号
 	Channel             string                   `json:"channel,omitempty"`               // 退款渠道
 	UserReceivedAccount string                   `json:"user_received_account,omitempty"` // 退款入账账户
-	SuccessTime         string                   `json:"success_time,omitempty"`          // 退款成功时间
-	CreateTime          string                   `json:"create_time,omitempty"`           // 退款受理时间
+	SuccessTime         time.Time                `json:"success_time,omitempty"`          // 退款成功时间
+	CreateTime          time.Time                `json:"create_time,omitempty"`           // 退款受理时间
 	Status              string                   `json:"status,omitempty"`                // 退款状态
 	RefundStatus        string                   `json:"refund_status,omitempty"`         // 退款状态
 	FundsAccount        string                   `json:"funds_account,omitempty"`         // 资金账户

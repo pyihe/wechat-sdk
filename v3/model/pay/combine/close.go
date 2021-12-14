@@ -1,6 +1,9 @@
 package combine
 
-import "github.com/pyihe/go-pkg/errors"
+import (
+	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/model"
+)
 
 type CloseRequest struct {
 	CombineAppId      string      `json:"combine_appid,omitempty"`
@@ -32,4 +35,9 @@ func (c *CloseRequest) Check() (err error) {
 		}
 	}
 	return
+}
+
+type CloseResponse struct {
+	model.WechatError
+	RequestId string `json:"request_id,omitempty"`
 }

@@ -109,7 +109,7 @@ func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (or
 
 // CloseOrder 关闭订单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_3.shtml
-func CloseOrder(config *service.Config, outTradeNo string) (requestId string, err error) {
+func CloseOrder(config *service.Config, request *merchant.CloseRequest) (closeResponse *merchant.CloseResponse, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
 		return
@@ -118,21 +118,28 @@ func CloseOrder(config *service.Config, outTradeNo string) (requestId string, er
 		err = vars.ErrNoSerialNo
 		return
 	}
-	if outTradeNo == "" {
+	if request == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+
+	if request.OutTradeNo == "" {
 		err = errors.New("商户订单号不能为空!")
 		return
 	}
 
-	var abUrl = fmt.Sprintf("/v3/pay/transactions/out-trade-no/%s/close", outTradeNo)
-	var body = struct {
-		MchId string `json:"mchid,omitempty"`
-	}{MchId: config.MchId}
-
-	response, err := service.RequestWithSign(config, "POST", abUrl, body)
+	var abUrl = fmt.Sprintf("/v3/pay/transactions/out-trade-no/%s/close", request.OutTradeNo)
+	response, err := service.RequestWithSign(config, "POST", abUrl, request)
 	if err != nil {
 		return
 	}
-	requestId, _, err = service.VerifyResponse(config, response)
+	requestId, body, err := service.VerifyResponse(config, response)
+	if err != nil {
+		return
+	}
+	closeResponse = new(merchant.CloseResponse)
+	closeResponse.RequestId = requestId
+	err = service.Unmarshal(body, &closeResponse)
 	return
 }
 
@@ -165,6 +172,10 @@ func PrepayNotify(config *service.Config, responseWriter http.ResponseWriter, re
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		return
+	}
+	if notifyResponse.Resource == nil {
+		err = errors.New("未获取到通知资源数据!")
 		return
 	}
 	// 解密
@@ -289,6 +300,10 @@ func RefundNotify(config *service.Config, responseWriter http.ResponseWriter, re
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		return
+	}
+	if notifyResponse.Resource == nil {
+		err = errors.New("未获取到通知资源数据!")
 		return
 	}
 	// 解密

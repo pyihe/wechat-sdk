@@ -182,8 +182,11 @@ func VerifyRequest(config *Config, request *http.Request) (body []byte, err erro
 }
 
 // Unmarshal 反序列化
-func Unmarshal(data []byte, dst interface{}) error {
-	return json.Unmarshal(data, &dst)
+func Unmarshal(data []byte, dst interface{}) (err error) {
+	if len(data) > 0 {
+		err = json.Unmarshal(data, &dst)
+	}
+	return
 }
 
 // Marshal 序列化
