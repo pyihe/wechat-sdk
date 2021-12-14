@@ -1,13 +1,13 @@
 package other
 
 import (
-	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"time"
 
 	"github.com/pyihe/go-pkg/maps"
+	"github.com/pyihe/wechat-sdk/v3/model/other"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/v3/service"
@@ -22,7 +22,7 @@ import (
 // certs: key为证书序列号, value为*rsa.PublicKey
 // err: error
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/wechatpay/wechatpay5_1.shtml
-func DownloadCertificates(config *service.Config, savePath string) (requestId string, certs maps.Param, err error) {
+func DownloadCertificates(config *service.Config, savePath string) (certsResponse *other.CertificateResponse, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
 		return
@@ -37,36 +37,22 @@ func DownloadCertificates(config *service.Config, savePath string) (requestId st
 		return
 	}
 
-	requestId = response.Header.Get("Request-ID")
-	// 反序列化body到指定结构
-	var data struct {
-		Data []struct {
-			EffectiveTime      time.Time `json:"effective_time"` // 证书生效时间
-			ExpireTime         time.Time `json:"expire_time"`    // 证书过期时间
-			SerialNo           string    `json:"serial_no"`      // 证书序列号
-			EncryptCertificate struct {
-				Algorithm      string `json:"algorithm"`       // 加密算法
-				AssociatedData string `json:"associated_data"` // 附加数据包
-				CipherText     string `json:"ciphertext"`      // 密文
-				Nonce          string `json:"nonce"`           // 加密随机向量
-			} `json:"encrypt_certificate"` // 加密信息
-		} `json:"data"` // 返回的数据
-	}
+	certsResponse = new(other.CertificateResponse)
+	certsResponse.RequestId = response.Header.Get("Request-ID")
+	certsResponse.Certificates = maps.NewParam()
 	content, err := ioutil.ReadAll(response.Body)
 	_ = response.Body.Close()
-	if err = json.Unmarshal(content, &data); err != nil {
+	if err = json.Unmarshal(content, &certsResponse); err != nil {
 		return
 	}
-
-	certs = maps.NewParam()
-	for _, encryptData := range data.Data {
+	for _, encryptData := range certsResponse.Data {
 		// 解密
 		cipherText := encryptData.EncryptCertificate.CipherText
 		associateData := encryptData.EncryptCertificate.AssociatedData
 		nonce := encryptData.EncryptCertificate.Nonce
 		var serialNo string
 		var plainText []byte
-		var publicKey *rsa.PublicKey
+		var certificate *x509.Certificate
 
 		plainText, err = rsas.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
 		if err != nil {
@@ -74,14 +60,13 @@ func DownloadCertificates(config *service.Config, savePath string) (requestId st
 		}
 
 		// 同步公钥信息到内存
-		serialNo, publicKey, err = files.UnmarshalRSAPublicKey(plainText)
+		serialNo, certificate, err = files.UnmarshalCertificate(plainText)
 		if err != nil {
 			return
 		}
-
-		certs.Add(serialNo, publicKey)
+		certsResponse.Certificates.Add(serialNo, certificate)
 		if config.SyncCertificateTag {
-			config.Certificates.Add(serialNo, publicKey)
+			config.Certificates.Add(serialNo, certificate)
 		}
 		// 同步到本地
 		fileName := fmt.Sprintf("public_key_%s.pem", encryptData.ExpireTime.Format("2006_01_02"))

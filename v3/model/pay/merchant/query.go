@@ -20,6 +20,7 @@ func (q *QueryRequest) Check() (err error) {
 
 // PrepayOrder 预支付订单
 type PrepayOrder struct {
+	model.WechatError
 	Id              string                   `json:"id,omitempty"`               // 唯一标示，可能是请求的唯一ID，也可能是通知的唯一ID
 	AppId           string                   `json:"appid,omitempty"`            // 直连商户申请的公众号或者移动应用的apppid
 	MchId           string                   `json:"mchid,omitempty"`            // 直连商户的商户号

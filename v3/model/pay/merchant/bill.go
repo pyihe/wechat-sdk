@@ -1,6 +1,9 @@
 package merchant
 
-import "github.com/pyihe/go-pkg/errors"
+import (
+	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/model"
+)
 
 type TradeBillRequest struct {
 	BillDate string `json:"bill_date,omitempty"` // 账单日期，格式为YYYY-MM-DD
@@ -31,6 +34,7 @@ func (f *FundFlowRequest) Check() (err error) {
 }
 
 type BillResponse struct {
+	model.WechatError
 	RequestId   string `json:"-"`                      // 唯一请求ID
 	HashType    string `json:"hash_type,omitempty"`    // 原始账单的摘要值类型
 	HashValue   string `json:"hash_value,omitempty"`   // 摘要值

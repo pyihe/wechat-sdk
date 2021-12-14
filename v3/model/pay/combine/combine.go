@@ -123,6 +123,7 @@ type SubOrder struct {
 }
 
 type PrepayResponse struct {
+	model.WechatError
 	RequestId string `json:"request_id,omitempty"`
 	PrepayId  string `json:"prepay_id,omitempty"`
 	CodeUrl   string `json:"code_url,omitempty"`

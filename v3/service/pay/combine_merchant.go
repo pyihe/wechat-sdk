@@ -23,10 +23,6 @@ func CombinePrepay(config *service.Config, request *combine.PrepayRequest) (prep
 		err = vars.ErrInitConfig
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
 	if request == nil {
 		err = vars.ErrNoRequest
 		return
@@ -72,10 +68,6 @@ func CombineQueryOrder(config *service.Config, outTradeNo string) (combineOrder 
 		err = vars.ErrInitConfig
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
 	if outTradeNo == "" {
 		err = errors.New("查询时合单商户号订单号不能为空!")
 		return
@@ -100,10 +92,6 @@ func CombineQueryOrder(config *service.Config, outTradeNo string) (combineOrder 
 func CombineCloseOrder(config *service.Config, closeRequest *combine.CloseRequest) (requestId string, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
-		return
-	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
 		return
 	}
 	if closeRequest == nil {

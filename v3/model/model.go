@@ -1,5 +1,20 @@
 package model
 
+// WechatError 调用微信接口返回的通用错误格式
+type WechatError struct {
+	Code    string       `json:"code,omitempty"`
+	Message string       `json:"message,omitempty"`
+	Detail  *ErrorDetail `json:"detail,omitempty"`
+}
+
+// ErrorDetail 错误详情
+type ErrorDetail struct {
+	Field    string `json:"field,omitempty"`
+	Value    string `json:"value,omitempty"`
+	Issue    string `json:"issue,omitempty"`
+	Location string `json:"location,omitempty"`
+}
+
 // Response 用于商户想微信服务端发送通知
 type Response struct {
 	Code    string `json:"code,omitempty"`    // 返回状态码

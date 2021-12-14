@@ -114,6 +114,7 @@ func (pre *PrepayRequest) Check() (err error) {
 
 // PrepayResponse 预支付回复
 type PrepayResponse struct {
+	model.WechatError
 	RequestId string `json:"request_id"`
 	PrepayId  string `json:"prepay_id"`
 	CodeUrl   string `json:"code_url"`

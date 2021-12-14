@@ -78,6 +78,7 @@ func (refund *RefundRequest) Check() (err error) {
 
 // RefundOrder 退款订单
 type RefundOrder struct {
+	model.WechatError
 	Id                  string                   `json:"-"`                               // 申请退款，查询退款时为Request-ID, 退款通知时为通知ID
 	MchId               string                   `json:"mchid,omitempty"`                 // 直连商户号
 	RefundId            string                   `json:"refund_id,omitempty"`             // 微信支付退款单号

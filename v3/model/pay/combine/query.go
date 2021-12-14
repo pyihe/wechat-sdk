@@ -3,6 +3,7 @@ package combine
 import "github.com/pyihe/wechat-sdk/v3/model"
 
 type PrepayOrder struct {
+	model.WechatError
 	Id                string           `json:"-"`                              // 请求唯一ID或者通知的唯一ID                              // 唯一请求ID
 	CombineAppId      string           `json:"combine_appid,omitempty"`        // 合单商户appid
 	CombineMchId      string           `json:"combine_mchid,omitempty"`        // 合单商户号

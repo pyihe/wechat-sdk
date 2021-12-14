@@ -106,3 +106,14 @@ func UnmarshalRSAPublicKey(key []byte) (serialNo string, publicKey *rsa.PublicKe
 	}
 	return
 }
+
+// UnmarshalCertificate 反序列化data到证书
+func UnmarshalCertificate(data []byte) (serialNo string, cert *x509.Certificate, err error) {
+	block, _ := pem.Decode(data)
+	cert, err = x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return
+	}
+	serialNo = strings.ToUpper(cert.SerialNumber.Text(16))
+	return
+}

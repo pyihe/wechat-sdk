@@ -38,6 +38,7 @@ func RequestWithSign(config *Config, method, url string, body interface{}) (resp
 	}
 	if config.SerialNo == "" {
 		err = vars.ErrNoSerialNo
+		return
 	}
 	// 构造签名主体
 	var data []byte
