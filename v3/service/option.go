@@ -5,7 +5,7 @@ import (
 
 	"github.com/pyihe/wechat-sdk/v3/model/pay/combine"
 
-	merchant2 "github.com/pyihe/wechat-sdk/v3/model/pay/merchant"
+	"github.com/pyihe/wechat-sdk/v3/model/pay/merchant"
 
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/secret"
@@ -62,10 +62,10 @@ type Config struct {
 	Certificates maps.Param
 
 	// 处理商户平台支付通知的handler
-	PrepayNotifyHandler func(prepayOrder *merchant2.PrepayOrder) error
+	PrepayNotifyHandler func(prepayOrder *merchant.PrepayOrder) error
 
 	// 处理商户平台退款通知的handler
-	RefundNotifyHandler func(refundOrder *merchant2.RefundOrder) error
+	RefundNotifyHandler func(refundOrder *merchant.RefundOrder) error
 
 	// 处理商户平台合单支付通知的handler
 	CombinePrepayNotifyHandler func(prepayOrder *combine.PrepayOrder) error
@@ -192,13 +192,13 @@ func WithHttpClient(client *http.Client) Option {
 	}
 }
 
-func WithPrepayNotifyHandler(handler func(response *merchant2.PrepayOrder) error) Option {
+func WithPrepayNotifyHandler(handler func(response *merchant.PrepayOrder) error) Option {
 	return func(config *Config) {
 		config.PrepayNotifyHandler = handler
 	}
 }
 
-func WithRefundNotifyHandler(handler func(refundOrder *merchant2.RefundOrder) error) Option {
+func WithRefundNotifyHandler(handler func(refundOrder *merchant.RefundOrder) error) Option {
 	return func(config *Config) {
 		config.RefundNotifyHandler = handler
 	}

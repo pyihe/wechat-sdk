@@ -10,7 +10,7 @@ type TradeBillRequest struct {
 
 func (t *TradeBillRequest) Check() (err error) {
 	if t.BillDate == "" {
-		err = errors.New("请填写账单日期!")
+		err = errors.New("请填写bill_date!")
 		return
 	}
 	return

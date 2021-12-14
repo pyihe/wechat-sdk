@@ -145,11 +145,6 @@ func CombinePrepayNotify(config *service.Config, responseWriter http.ResponseWri
 	if err = service.Unmarshal(body, &notifyResponse); err != nil {
 		return
 	}
-	// 判断通知类型是否为支付结果通知
-	if notifyResponse.EventType != "TRANSACTION.SUCCESS" {
-		err = errors.New("通知类型错误: " + notifyResponse.EventType)
-		return
-	}
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
@@ -169,7 +164,7 @@ func CombinePrepayNotify(config *service.Config, responseWriter http.ResponseWri
 	if err = service.Unmarshal(plainText, &orderResponse); err != nil {
 		return
 	}
-	if config.CombinePrepayNotifyHandler != nil && responseWriter != nil {
+	if notifyResponse.EventType == "TRANSACTION.SUCCESS" && config.CombinePrepayNotifyHandler != nil && responseWriter != nil {
 		response := new(model.Response)
 		response.Code = "SUCCESS"
 		response.Message = "成功"

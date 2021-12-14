@@ -162,12 +162,6 @@ func PrepayNotify(config *service.Config, responseWriter http.ResponseWriter, re
 		return
 	}
 
-	// 判断通知类型是否为支付结果通知
-	if notifyResponse.EventType != "TRANSACTION.SUCCESS" {
-		err = errors.New("通知类型错误: " + notifyResponse.EventType)
-		return
-	}
-
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
@@ -188,7 +182,7 @@ func PrepayNotify(config *service.Config, responseWriter http.ResponseWriter, re
 		return
 	}
 	// 如果注册了PrepayNotifyHandler, 这里将会调用，如果处理成功了，会同时给微信服务器发送成功的应答消息
-	if config.PrepayNotifyHandler != nil && responseWriter != nil {
+	if notifyResponse.EventType == "TRANSACTION.SUCCESS" && config.PrepayNotifyHandler != nil && responseWriter != nil {
 		response := new(model.Response)
 		response.Code = "SUCCESS"
 		response.Message = "成功"
@@ -292,12 +286,6 @@ func RefundNotify(config *service.Config, responseWriter http.ResponseWriter, re
 		return
 	}
 
-	// 判断通知类型是否为支付结果通知
-	if notifyResponse.EventType != "REFUND.SUCCESS" {
-		err = errors.New("通知类型错误: " + notifyResponse.EventType)
-		return
-	}
-
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
 		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
@@ -317,7 +305,8 @@ func RefundNotify(config *service.Config, responseWriter http.ResponseWriter, re
 	if err = service.Unmarshal(plainText, &refundOrder); err != nil {
 		return
 	}
-	if config.RefundNotifyHandler != nil && responseWriter != nil {
+	// 只有退款成功才会执行handler
+	if notifyResponse.EventType == "REFUND.SUCCESS" && config.RefundNotifyHandler != nil && responseWriter != nil {
 		response := new(model.Response)
 		response.Code = "SUCCESS"
 		response.Message = "成功"
@@ -345,6 +334,9 @@ func TradeBill(config *service.Config, request *merchant.TradeBillRequest) (bill
 	}
 	if request == nil {
 		err = vars.ErrNoRequest
+		return
+	}
+	if err = request.Check(); err != nil {
 		return
 	}
 	var abUrl = fmt.Sprintf("/v3/bill/tradebill?bill_date=%s", request.BillDate)
@@ -381,6 +373,9 @@ func FundFlowBill(config *service.Config, request *merchant.FundFlowRequest) (bi
 	}
 	if request == nil {
 		err = vars.ErrNoRequest
+		return
+	}
+	if err = request.Check(); err != nil {
 		return
 	}
 	abUrl := fmt.Sprintf("/v3/bill/fundflowbill?bill_date=%s", request.BillDate)
