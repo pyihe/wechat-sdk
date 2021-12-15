@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/rsa"
 	"net/http"
 
 	payscore "github.com/pyihe/wechat-sdk/model/manage/merchant"
@@ -178,10 +179,15 @@ func WithPrivateKey(file string) Option {
 
 func WithPublicKey(file string) Option {
 	return func(config *Config) {
-		serialNo, publicKey, err := files.LoadRSAPublicKeyWithSerialNo(file)
+		cert, err := files.LoadCertificate(file)
 		if err != nil {
 			panic(err)
 		}
+		publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
+		if !ok {
+			panic("加载证书失败: 请确认证书是否为RSA PublicKey!")
+		}
+		serialNo := cert.SerialNumber.Text(16)
 		if err = config.Cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8); err != nil {
 			panic(err)
 		}

@@ -41,7 +41,6 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 	certsResponse = new(other.CertificateResponse)
 	certsResponse.RequestId = response.Header.Get("Request-ID")
 	certsResponse.Certificates = maps.NewParam()
-	fmt.Printf("resp: %+v\n", *certsResponse)
 	content, err := ioutil.ReadAll(response.Body)
 	_ = response.Body.Close()
 	if err = json.Unmarshal(content, &certsResponse); err != nil {
@@ -56,13 +55,8 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 		var plainText []byte
 		var certificate *x509.Certificate
 
-		fmt.Printf("apiKey: %v\n", config.ApiKey)
-		fmt.Printf("cipherText: %s\n", cipherText)
-		fmt.Printf("assData: %v\n", associateData)
-		fmt.Printf("nonce: %v\n", nonce)
 		plainText, err = rsas.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
 		if err != nil {
-			fmt.Printf("xxxx: %v\n", err)
 			return
 		}
 
