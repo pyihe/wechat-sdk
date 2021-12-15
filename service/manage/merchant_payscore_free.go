@@ -16,7 +16,7 @@ import (
 
 // PrePermit 商户预授权
 // API 详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_2.shtml
-func PrePermit(config *service.Config, request *merchant.PrePermissionRequest) (permissionResponse *merchant.PrePermissionResponse, err error) {
+func PrePermit(config *service.Config, request *merchant.PrePermitRequest) (permissionResponse *merchant.PrePermissionResponse, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
 		return

@@ -103,7 +103,7 @@ func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (or
 	}
 	orderResponse = new(merchant.PrepayOrder)
 	orderResponse.Id = requestId
-	err = service.Unmarshal(body, &requestId)
+	err = service.Unmarshal(body, &orderResponse)
 	return
 }
 

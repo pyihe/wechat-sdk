@@ -3,8 +3,10 @@ package merchant
 import (
 	"time"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/model/pay"
+
+	"github.com/pyihe/go-pkg/errors"
 )
 
 type QueryRequest struct {
@@ -34,9 +36,9 @@ type PrepayOrder struct {
 	BankType        string                   `json:"bank_type,omitempty"`        // 银行类型
 	Attach          string                   `json:"attach,omitempty"`           // 附加数据
 	SuccessTime     time.Time                `json:"success_time,omitempty"`     // 支付完成时间
-	Payer           *model.Payer             `json:"payer,omitempty"`            // 支付者信息
-	Amount          *model.Amount            `json:"amount,omitempty"`           // 订单金额
-	SceneInfo       *model.SceneInfo         `json:"scene_info,omitempty"`       // 场景信息
+	Payer           *pay.Payer               `json:"payer,omitempty"`            // 支付者信息
+	Amount          *pay.Amount              `json:"amount,omitempty"`           // 订单金额
+	SceneInfo       *pay.SceneInfo           `json:"scene_info,omitempty"`       // 场景信息
 	PromotionDetail []*model.PromotionDetail `json:"promotion_detail,omitempty"` // 优惠功能
 }
 

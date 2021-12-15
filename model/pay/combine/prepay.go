@@ -1,22 +1,24 @@
 package combine
 
 import (
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/model/pay"
 	"github.com/pyihe/wechat-sdk/vars"
+
+	"github.com/pyihe/go-pkg/errors"
 )
 
 type PrepayRequest struct {
-	TradeType         vars.TradeType   `json:"-"`                              // 交易类型
-	CombineAppId      string           `json:"combine_appid,omitempty"`        // 合单发起方的appid
-	CombineMchId      string           `json:"combine_mchid,omitempty"`        // 合单发起方商户号
-	CombineOutTradeNo string           `json:"combine_out_trade_no,omitempty"` // 合单支付总订单号
-	SceneInfo         *model.SceneInfo `json:"scene_info,omitempty"`           // 支付场景描述
-	SubOrders         []*SubOrder      `json:"sub_orders,omitempty"`           // 子单信息
-	CombinePayerInfo  *model.Payer     `json:"combine_payer_info,omitempty"`   // 支付者信息
-	TimeStart         string           `json:"time_start,omitempty"`           // 交易起始时间
-	TimeExpire        string           `json:"time_expire,omitempty"`          // 交易结束时间
-	NotifyUrl         string           `json:"notify_url,omitempty"`           // 通知地址
+	TradeType         vars.TradeType `json:"-"`                              // 交易类型
+	CombineAppId      string         `json:"combine_appid,omitempty"`        // 合单发起方的appid
+	CombineMchId      string         `json:"combine_mchid,omitempty"`        // 合单发起方商户号
+	CombineOutTradeNo string         `json:"combine_out_trade_no,omitempty"` // 合单支付总订单号
+	SceneInfo         *pay.SceneInfo `json:"scene_info,omitempty"`           // 支付场景描述
+	SubOrders         []*SubOrder    `json:"sub_orders,omitempty"`           // 子单信息
+	CombinePayerInfo  *pay.Payer     `json:"combine_payer_info,omitempty"`   // 支付者信息
+	TimeStart         string         `json:"time_start,omitempty"`           // 交易起始时间
+	TimeExpire        string         `json:"time_expire,omitempty"`          // 交易结束时间
+	NotifyUrl         string         `json:"notify_url,omitempty"`           // 通知地址
 }
 
 func (c *PrepayRequest) Check() (err error) {
@@ -109,11 +111,11 @@ func (c *PrepayRequest) Check() (err error) {
 type SubOrder struct {
 	MchId           string                   `json:"mchid,omitempty"`            // 子单商户号
 	Attach          string                   `json:"attach,omitempty"`           // 附加数据
-	Amount          *model.Amount            `json:"amount,omitempty"`           // 金额信息
+	Amount          *pay.Amount              `json:"amount,omitempty"`           // 金额信息
 	OutTradeNo      string                   `json:"out_trade_no,omitempty"`     // 子单商户订单号
 	GoodsTag        string                   `json:"goods_tag,omitempty"`        // 订单优惠标记
 	Description     string                   `json:"description,omitempty"`      // 商品描述
-	SettleInfo      *model.SettleInfo        `json:"settle_info,omitempty"`      // 结算信息
+	SettleInfo      *pay.SettleInfo          `json:"settle_info,omitempty"`      // 结算信息
 	TradeType       string                   `json:"trade_type,omitempty"`       // 交易类型
 	TradeState      string                   `json:"trade_state,omitempty"`      // 交易i状态
 	BankType        string                   `json:"bank_type,omitempty"`        // 付款银行

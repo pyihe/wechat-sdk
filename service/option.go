@@ -72,6 +72,9 @@ type Config struct {
 
 	// 微信支付分服务开启/解除授权服务回调通知的handler
 	PermissionNotifyHandler func(permissionResponse *payscore.OpenOrCloseResponse) error
+
+	// 处理微信支付分(需确认模式)下确认订单回调通知的handler
+	PayScoreConfirmNotifyHandler func(confirmResponse *payscore.PayscoreOrder) error
 }
 
 func NewConfig(opts ...Option) *Config {
@@ -216,5 +219,11 @@ func WithCombinePrepayNotifyHandler(handler func(order *combine.PrepayOrder) err
 func WithPermissionNotifyHandler(handler func(response *payscore.OpenOrCloseResponse) error) Option {
 	return func(config *Config) {
 		config.PermissionNotifyHandler = handler
+	}
+}
+
+func WithPayScoreConfirmNotifyHandler(handler func(response *payscore.PayscoreOrder) error) Option {
+	return func(config *Config) {
+		config.PayScoreConfirmNotifyHandler = handler
 	}
 }
