@@ -3,6 +3,8 @@ package merchant
 import (
 	"time"
 
+	"github.com/pyihe/wechat-sdk/vars"
+
 	"github.com/pyihe/wechat-sdk/model"
 	"github.com/pyihe/wechat-sdk/model/pay"
 
@@ -21,6 +23,9 @@ type RefundRequest struct {
 }
 
 func (refund *RefundRequest) Check() (err error) {
+	if refund == nil {
+		return
+	}
 	if refund.TransactionId == "" && refund.OutTradeNo == "" {
 		err = errors.New("退款时transaction_id和out_trade_no不能同时为空!")
 		return
@@ -98,4 +103,20 @@ type RefundOrder struct {
 	FundsAccount        string                   `json:"funds_account,omitempty"`         // 资金账户
 	Amount              *pay.Amount              `json:"amount,omitempty"`                // 金额信息
 	PromotionDetail     []*model.PromotionDetail `json:"promotion_detail,omitempty"`      // 优惠退款信息
+}
+
+type CloseRefundRequest struct {
+	OutRefundNo string `json:"out_refund_no,omitempty"` // 商户退款单号
+}
+
+func (c *CloseRefundRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if c.OutRefundNo == "" {
+		err = errors.New("请填写out_refund_no!")
+		return
+	}
+	return
 }

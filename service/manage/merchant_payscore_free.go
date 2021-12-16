@@ -17,15 +17,7 @@ import (
 // PrePermit 商户预授权
 // API 详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_2.shtml
 func PrePermit(config *service.Config, request *merchant.PrePermitRequest) (permissionResponse *merchant.PrePermissionResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	response, err := service.RequestWithSign(config, "POST", "/v3/payscore/permissions", request)
@@ -47,15 +39,7 @@ func PrePermit(config *service.Config, request *merchant.PrePermitRequest) (perm
 // 通过authorization_code，商户查询与用户授权关系: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_3.shtml
 // 通过openid查询用户授权信息: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_5.shtml
 func QueryPermission(config *service.Config, request *merchant.QueryPermissionRequest) (queryResponse *merchant.QueryPermissionResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	var abUrl string
@@ -87,15 +71,7 @@ func QueryPermission(config *service.Config, request *merchant.QueryPermissionRe
 // 通过授权协议号解除: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_4.shtml
 // 通过openid解除: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_6.shtml
 func TerminatePermission(config *service.Config, request *merchant.TerminatePermissionRequest) (terminateResponse *merchant.TerminatePermissionResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	var abUrl string
@@ -123,9 +99,9 @@ func TerminatePermission(config *service.Config, request *merchant.TerminatePerm
 	return
 }
 
-// PermissionNotify 开启/解除授权服务的回调通知
+// OpenOrCloseNotify 开启/解除授权服务的回调通知
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_10.shtml
-func PermissionNotify(config *service.Config, responseWriter http.ResponseWriter, request *http.Request) (permissionResponse *merchant.OpenOrCloseResponse, err error) {
+func OpenOrCloseNotify(config *service.Config, responseWriter http.ResponseWriter, request *http.Request) (permissionResponse *merchant.OpenOrCloseResponse, err error) {
 	if config == nil {
 		err = vars.ErrInitConfig
 		return

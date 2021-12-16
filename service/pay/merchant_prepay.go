@@ -17,23 +17,9 @@ import (
 // https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_1.shtml (JSAPI, APP, Native, 小程序)
 // https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_1.shtml (H5)
 func Prepay(config *service.Config, prepayRequest *merchant.PrepayRequest) (prepayResponse *merchant.PrepayResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
+	if err = service.CheckParam(config, prepayRequest); err != nil {
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-
-	if prepayRequest == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = prepayRequest.Check(); err != nil {
-		return
-	}
-
 	var abUrl string
 	switch prepayRequest.TradeType {
 	case vars.JSAPI:
@@ -71,16 +57,7 @@ func Prepay(config *service.Config, prepayRequest *merchant.PrepayRequest) (prep
 // QueryOrder 订单查询
 // API 详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_2.shtml
 func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (orderResponse *merchant.PrepayOrder, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-	if queryRequest == nil {
-		err = vars.ErrNoRequest
+	if err = service.CheckParam(config, queryRequest); err != nil {
 		return
 	}
 	var abUrl string
@@ -109,25 +86,10 @@ func QueryOrder(config *service.Config, queryRequest *merchant.QueryRequest) (or
 
 // CloseOrder 关闭订单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_3.shtml
-func CloseOrder(config *service.Config, request *merchant.CloseRequest) (closeResponse *merchant.CloseResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
+func CloseOrder(config *service.Config, request *merchant.CloseOrderRequest) (closeResponse *merchant.CloseOrderResponse, err error) {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-
-	if request.OutTradeNo == "" {
-		err = errors.New("商户订单号不能为空!")
-		return
-	}
-
 	var abUrl = fmt.Sprintf("/v3/pay/transactions/out-trade-no/%s/close", request.OutTradeNo)
 	response, err := service.RequestWithSign(config, "POST", abUrl, request)
 	if err != nil {
@@ -137,7 +99,7 @@ func CloseOrder(config *service.Config, request *merchant.CloseRequest) (closeRe
 	if err != nil {
 		return
 	}
-	closeResponse = new(merchant.CloseResponse)
+	closeResponse = new(merchant.CloseOrderResponse)
 	closeResponse.RequestId = requestId
 	err = service.Unmarshal(body, &closeResponse)
 	return
@@ -210,24 +172,11 @@ func PrepayNotify(config *service.Config, responseWriter http.ResponseWriter, re
 
 // Refund 申请退款
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_9.shtml
-func Refund(config *service.Config, refundRequest *merchant.RefundRequest) (refundOrder *merchant.RefundOrder, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
+func Refund(config *service.Config, request *merchant.RefundRequest) (refundOrder *merchant.RefundOrder, err error) {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-
-	if refundRequest == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = refundRequest.Check(); err != nil {
-		return
-	}
-	response, err := service.RequestWithSign(config, "POST", "/v3/refund/domestic/refunds", refundRequest)
+	response, err := service.RequestWithSign(config, "POST", "/v3/refund/domestic/refunds", request)
 	if err != nil {
 		return
 	}
@@ -244,20 +193,11 @@ func Refund(config *service.Config, refundRequest *merchant.RefundRequest) (refu
 
 // QueryRefundOrder 查询退款
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_10.shtml
-func QueryRefundOrder(config *service.Config, outRefundNo string) (refundOrder *merchant.RefundOrder, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
+func QueryRefundOrder(config *service.Config, request *merchant.CloseRefundRequest) (refundOrder *merchant.RefundOrder, err error) {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-	if outRefundNo == "" {
-		err = errors.New("商户退款单号out_refund_no不能为空!")
-		return
-	}
-	abUrl := fmt.Sprintf("/v3/refund/domestic/refunds/%s", outRefundNo)
+	abUrl := fmt.Sprintf("/v3/refund/domestic/refunds/%s", request.OutRefundNo)
 	response, err := service.RequestWithSign(config, "GET", abUrl, nil)
 	if err != nil {
 		return
@@ -339,19 +279,7 @@ func RefundNotify(config *service.Config, responseWriter http.ResponseWriter, re
 // TradeBill 申请交易账单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_6.shtml
 func TradeBill(config *service.Config, request *merchant.TradeBillRequest) (billResponse *merchant.BillResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	var abUrl = fmt.Sprintf("/v3/bill/tradebill?bill_date=%s", request.BillDate)
@@ -378,19 +306,7 @@ func TradeBill(config *service.Config, request *merchant.TradeBillRequest) (bill
 // FundFlowBill 申请资金账单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_7.shtml
 func FundFlowBill(config *service.Config, request *merchant.FundFlowRequest) (billResponse *merchant.BillResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if config.SerialNo == "" {
-		err = vars.ErrNoSerialNo
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	abUrl := fmt.Sprintf("/v3/bill/fundflowbill?bill_date=%s", request.BillDate)

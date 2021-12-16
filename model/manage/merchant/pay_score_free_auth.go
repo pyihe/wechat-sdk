@@ -3,6 +3,8 @@ package merchant
 import (
 	"time"
 
+	"github.com/pyihe/wechat-sdk/vars"
+
 	"github.com/pyihe/wechat-sdk/model/manage"
 
 	"github.com/pyihe/go-pkg/errors"
@@ -19,6 +21,10 @@ type PrePermitRequest struct {
 }
 
 func (p *PrePermitRequest) Check() (err error) {
+	if p == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if p.ServiceId == "" {
 		err = errors.New("请填写service_id!")
 		return
@@ -50,6 +56,10 @@ type QueryPermissionRequest struct {
 }
 
 func (query *QueryPermissionRequest) Check() (err error) {
+	if query == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if query.ServiceId == "" {
 		err = errors.New("请填写service_id!")
 		return
@@ -91,6 +101,10 @@ type TerminatePermissionRequest struct {
 }
 
 func (t *TerminatePermissionRequest) Check() (err error) {
+	if t == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if t.ServiceId == "" {
 		err = errors.New("请填写service_id!")
 		return
@@ -168,6 +182,10 @@ type CreatePayscoreOrderRequest struct {
 }
 
 func (c *CreatePayscoreOrderRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if c.OutOrderNo == "" {
 		err = errors.New("请填写out_order_no!")
 		return
@@ -242,6 +260,7 @@ func (c *CreatePayscoreOrderRequest) Check() (err error) {
 }
 
 type PayscoreOrder struct {
+	model.WechatError
 	Id                  string                  `json:"-"`                              // 请求或者通知的唯一ID，如果有的话
 	AppId               string                  `json:"app_id,omitempty"`               // 应用ID
 	MchId               string                  `json:"mch_id,omitempty"`               // 商户号ID
@@ -275,6 +294,10 @@ type QueryPayscoreOrderRequest struct {
 }
 
 func (query *QueryPayscoreOrderRequest) Check() (err error) {
+	if query == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if query.OutOrderNo == "" && query.QueryId == "" {
 		err = errors.New("out_order_no和query_id不能同时为空!")
 		return
@@ -292,4 +315,221 @@ func (query *QueryPayscoreOrderRequest) Check() (err error) {
 		return
 	}
 	return
+}
+
+/*************************************公共API: 取消支付分订单*************************************************************/
+
+type CancelPayscoreOrderRequest struct {
+	OutOrderNo string `json:"-"`                    // 商户服务订单号
+	AppId      string `json:"appid,omitempty"`      // 应用ID
+	ServiceId  string `json:"service_id,omitempty"` // 服务ID
+	Reason     string `json:"reason,omitempty"`     // 取消原因
+}
+
+func (c *CancelPayscoreOrderRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if c.OutOrderNo == "" {
+		err = errors.New("请填写out_order_no!")
+		return
+	}
+	if c.AppId == "" {
+		err = errors.New("请填写appid!")
+		return
+	}
+	if c.ServiceId == "" {
+		err = errors.New("请填写service_id!")
+		return
+	}
+	if c.Reason == "" {
+		err = errors.New("请填写reason!")
+		return
+	}
+	return
+}
+
+type CancelResponse struct {
+	model.WechatError
+	RequestId  string `json:"request_id,omitempty"`   // 请求唯一ID
+	AppId      string `json:"appid,omitempty"`        // 应用ID
+	MchId      string `json:"mchid,omitempty"`        // 商户号
+	OutOrderNo string `json:"out_order_no,omitempty"` // 商户订单号
+	ServiceId  string `json:"service_id,omitempty"`   // 服务ID
+	OrderId    string `json:"order_id,omitempty"`     // 微信支付服务订单号
+}
+
+/*************************************公共API: 修改支付分订单金额**********************************************************/
+
+type ModifyPayscoreOrderRequest struct {
+	OutOrderNo    string                  `json:"-"`                        // 商户服务订单号
+	AppId         string                  `json:"appid,omitempty"`          // 应用ID
+	ServiceId     string                  `json:"service_id,omitempty"`     // 服务ID
+	PostPayments  []*manage.PostPayments  `json:"post_payments,omitempty"`  // 后付费项目
+	PostDiscounts []*manage.PostDiscounts `json:"post_discounts,omitempty"` // 后付费商户优惠
+	TotalAmount   int64                   `json:"total_amount,omitempty"`   // 总金额
+	Reason        string                  `json:"reason,omitempty"`         // 修改原因
+}
+
+func (m *ModifyPayscoreOrderRequest) Check() (err error) {
+	if m == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if m.OutOrderNo == "" {
+		err = errors.New("请填写out_order_no!")
+		return
+	}
+	if m.AppId == "" {
+		err = errors.New("请填写appid!")
+		return
+	}
+	if m.ServiceId == "" {
+		err = errors.New("请填写service_id!")
+		return
+	}
+	if len(m.PostPayments) == 0 {
+		err = errors.New("请填写post_payments!")
+		return
+	}
+	for _, p := range m.PostPayments {
+		if p.Name == "" {
+			err = errors.New("请填写post_payments.name!")
+			return
+		}
+		if p.Amount < 0 {
+			err = errors.New("请填写正确的post_payments.amount!")
+			return
+		}
+		if p.Count > 100 {
+			err = errors.New("post_payments.count数量限制为100!")
+			return
+		}
+	}
+
+	for _, p := range m.PostDiscounts {
+		if (p.Name != "" && p.Description == "") || (p.Name == "" && p.Description != "") {
+			err = errors.New("post_discounts.name和post_discounts.description必须同时写或者都不填写!")
+			return
+		}
+	}
+	if m.TotalAmount <= 0 {
+		err = errors.New("请填写正确的total_amount!")
+		return
+	}
+	if m.Reason == "" {
+		err = errors.New("请填写reason!")
+		return
+	}
+	return
+}
+
+/*************************************公共API: 完结支付分订单*************************************************************/
+
+type CompletePayscoreOrderRequest struct {
+	OutOrderNo    string                  `json:"-"`                        // 商户服务订单号
+	AppId         string                  `json:"appid,omitempty"`          // 应用ID
+	ServiceId     string                  `json:"service_id,omitempty"`     // 服务ID
+	PostPayments  []*manage.PostPayments  `json:"post_payments,omitempty"`  // 后付费项目
+	PostDiscounts []*manage.PostDiscounts `json:"post_discounts,omitempty"` // 后付费商户优惠
+	TotalAmount   int64                   `json:"total_amount"`             // 总金额
+	TimeRange     *manage.TimeRange       `json:"time_range,omitempty"`     // 服务时间段
+	Location      *manage.Location        `json:"location,omitempty"`       // 服务位置
+	ProfitSharing bool                    `json:"profit_sharing,omitempty"` // 微信支付服务分账标记
+	GoodsTag      string                  `json:"goods_tag,omitempty"`      // 订单优惠标记
+}
+
+func (f *CompletePayscoreOrderRequest) Check() (err error) {
+	if f == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if f.OutOrderNo == "" {
+		err = errors.New("请填写out_order_no!")
+		return
+	}
+	if f.AppId == "" {
+		err = errors.New("请填写appid!")
+		return
+	}
+	if f.ServiceId == "" {
+		err = errors.New("请填写service_id!")
+		return
+	}
+	if len(f.PostPayments) == 0 {
+		err = errors.New("请填写post_payments!")
+		return
+	}
+	for _, p := range f.PostPayments {
+		if p.Name == "" {
+			err = errors.New("请填写post_payments.name!")
+			return
+		}
+		if p.Amount < 0 {
+			err = errors.New("请填写正确的post_payments.amount!")
+			return
+		}
+		if p.Count > 100 {
+			err = errors.New("post_payments.count上限数量为100!")
+			return
+		}
+	}
+	for _, p := range f.PostDiscounts {
+		if p.Name == "" {
+			err = errors.New("请填写post_discounts.name!")
+			return
+		}
+		if p.Description == "" {
+			err = errors.New("请填写post_discounts.description!")
+			return
+		}
+		if p.Count > 100 {
+			err = errors.New("post_discounts.count数量上限为100!")
+			return
+		}
+	}
+	if f.TotalAmount < 0 {
+		err = errors.New("请填写正确的total_amount!")
+		return
+	}
+	return
+}
+
+/*************************************公共API: 商户发起催收扣款***********************************************************/
+
+type PayscorePayRequest struct {
+	OutOrderNo string `json:"-"`                    // 商户服务订单号
+	AppId      string `json:"appid,omitempty"`      // 应用ID
+	ServiceId  string `json:"service_id,omitempty"` // 服务ID
+}
+
+func (p *PayscorePayRequest) Check() (err error) {
+	if err == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if p.OutOrderNo == "" {
+		err = errors.New("请填写out_order_no!")
+		return
+	}
+	if p.AppId == "" {
+		err = errors.New("请填写appid!")
+		return
+	}
+	if p.ServiceId == "" {
+		err = errors.New("请填写service_id!")
+		return
+	}
+	return
+}
+
+type PayscorePayResponse struct {
+	model.WechatError
+	RequestId  string `json:"request_id,omitempty"`   // 唯一请求ID
+	AppId      string `json:"appid,omitempty"`        // 应用ID
+	MchId      string `json:"mchid,omitempty"`        // 商户号
+	OutOrderNo string `json:"out_order_no,omitempty"` // 商户订单号
+	ServiceId  string `json:"service_id,omitempty"`   // 服务ID
+	OrderId    string `json:"order_id,omitempty"`     // 微信支付服务订单号
 }

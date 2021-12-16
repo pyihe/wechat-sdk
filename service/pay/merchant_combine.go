@@ -17,15 +17,7 @@ import (
 // H5合单下单: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_2.shtml
 // 其他合单下单: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_1.shtml
 func CombinePrepay(config *service.Config, request *combine.PrepayRequest) (prepayResponse *combine.PrepayResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if request == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = request.Check(); err != nil {
+	if err = service.CheckParam(config, request); err != nil {
 		return
 	}
 	var abUrl string
@@ -88,15 +80,7 @@ func CombineQueryOrder(config *service.Config, outTradeNo string) (combineOrder 
 // CombineCloseOrder 合单关闭订单
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter5_1_12.shtml
 func CombineCloseOrder(config *service.Config, closeRequest *combine.CloseRequest) (closeResponse *combine.CloseResponse, err error) {
-	if config == nil {
-		err = vars.ErrInitConfig
-		return
-	}
-	if closeRequest == nil {
-		err = vars.ErrNoRequest
-		return
-	}
-	if err = closeRequest.Check(); err != nil {
+	if err = service.CheckParam(config, closeRequest); err != nil {
 		return
 	}
 	var abUrl = fmt.Sprintf("/v3/combine-transactions/out-trade-no/%s/close", closeRequest.CombineOutTradeNo)

@@ -3,6 +3,7 @@ package combine
 import (
 	"github.com/pyihe/wechat-sdk/model"
 	"github.com/pyihe/wechat-sdk/model/pay"
+	"github.com/pyihe/wechat-sdk/vars"
 
 	"github.com/pyihe/go-pkg/errors"
 )
@@ -19,6 +20,10 @@ type RefundRequest struct {
 }
 
 func (refund *RefundRequest) Check() (err error) {
+	if refund == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if refund.TransactionId == "" && refund.OutTradeNo == "" {
 		err = errors.New("退款时transaction_id和out_trade_no不能同时为空!")
 		return

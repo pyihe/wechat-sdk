@@ -22,6 +22,10 @@ type PrepayRequest struct {
 }
 
 func (c *PrepayRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if c.TradeType.Valid() == false {
 		err = errors.New("请填写正确的交易类型!")
 		return

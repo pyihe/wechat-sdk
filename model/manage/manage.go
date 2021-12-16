@@ -18,7 +18,7 @@ type PostPayments struct {
 type PostDiscounts struct {
 	Name        string `json:"name,omitempty"`        // 优惠名称
 	Description string `json:"description,omitempty"` // 优惠说明
-	Amount      int64  `json:"amount,omitempty"`      // 优惠金额
+	Amount      int64  `json:"amount"`                // 优惠金额
 	Count       uint   `json:"count,omitempty"`       // 优惠数量
 }
 

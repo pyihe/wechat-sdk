@@ -17,6 +17,10 @@ import (
 	"github.com/pyihe/wechat-sdk/vars"
 )
 
+type Checker interface {
+	Check() error
+}
+
 // RequestWithSign 对发送给微信服务器的body进行SHA-256 with RSA签名, 返回*http.Request
 // 参数说明:
 // method: api方法类型, 如: GET、POST等
@@ -176,6 +180,18 @@ func VerifyRequest(config *Config, request *http.Request) (body []byte, err erro
 	// 验证签名
 	_ = config.Cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
 	err = rsas.VerifySHA256WithRSA(config.Cipher, wechatSign, plainTxt)
+	return
+}
+
+// CheckParam API参数校验
+func CheckParam(config *Config, checker Checker) (err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
+	}
+	if checker != nil {
+		err = checker.Check()
+	}
 	return
 }
 

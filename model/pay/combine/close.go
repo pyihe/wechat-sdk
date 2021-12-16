@@ -3,6 +3,7 @@ package combine
 import (
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/vars"
 )
 
 type CloseRequest struct {
@@ -12,6 +13,10 @@ type CloseRequest struct {
 }
 
 func (c *CloseRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if c.CombineAppId == "" {
 		err = errors.New("请填写combine_appid!")
 		return

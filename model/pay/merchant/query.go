@@ -3,6 +3,8 @@ package merchant
 import (
 	"time"
 
+	"github.com/pyihe/wechat-sdk/vars"
+
 	"github.com/pyihe/wechat-sdk/model"
 	"github.com/pyihe/wechat-sdk/model/pay"
 
@@ -15,6 +17,10 @@ type QueryRequest struct {
 }
 
 func (q *QueryRequest) Check() (err error) {
+	if q == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if q.TransactionId == "" && q.OutTradeNo == "" {
 		err = errors.New("订单查询transaction_id和out_trade_no不能同时为空!")
 		return
@@ -42,11 +48,23 @@ type PrepayOrder struct {
 	PromotionDetail []*model.PromotionDetail `json:"promotion_detail,omitempty"` // 优惠功能
 }
 
-type CloseRequest struct {
+type CloseOrderRequest struct {
 	OutTradeNo string `json:"out_trade_no,omitempty"` // 需要关闭的订单的商户订单号
 }
 
-type CloseResponse struct {
+func (c *CloseOrderRequest) Check() (err error) {
+	if c == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if c.OutTradeNo == "" {
+		err = errors.New("请填写out_trade_no!")
+		return
+	}
+	return
+}
+
+type CloseOrderResponse struct {
 	model.WechatError
 	RequestId string `json:"request_id,omitempty"`
 }

@@ -3,6 +3,7 @@ package merchant
 import (
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/vars"
 )
 
 type TradeBillRequest struct {
@@ -12,6 +13,10 @@ type TradeBillRequest struct {
 }
 
 func (t *TradeBillRequest) Check() (err error) {
+	if t == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if t.BillDate == "" {
 		err = errors.New("请填写bill_date!")
 		return
@@ -26,6 +31,10 @@ type FundFlowRequest struct {
 }
 
 func (f *FundFlowRequest) Check() (err error) {
+	if f == nil {
+		err = vars.ErrNoRequest
+		return
+	}
 	if f.BillDate == "" {
 		err = errors.New("请填写账单日期!")
 		return
