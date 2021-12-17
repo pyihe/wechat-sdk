@@ -19,7 +19,7 @@ type PrepayRequest struct {
 	Attach      string          `json:"attach,omitempty"`       // 附加数据，在查询API和支付通知中原样返回，可作为自定义参数使用，实际情况下只有支付完成状态才会返回该字段
 	NotifyUrl   string          `json:"notify_url,omitempty"`   // 步接收微信支付结果通知的回调地址，通知url必须为外网可访问的url，不能携带参数。 公网域名必须为https，如果是走专线接入，使用专线NAT IP或者私有回调域名可使用http
 	GoodsTag    string          `json:"goods_tag,omitempty"`    // 订单优惠标记
-	Amount      *pay.Amount     `json:"amount,omitempty"`       // 订单金额信息
+	Amount      *model.Amount   `json:"amount,omitempty"`       // 订单金额信息
 	Payer       *pay.Payer      `json:"payer,omitempty"`        // 支付者信息
 	Detail      *pay.Detail     `json:"detail,omitempty"`       // 优惠功能
 	SceneInfo   *pay.SceneInfo  `json:"scene_info,omitempty"`   // 场景信息

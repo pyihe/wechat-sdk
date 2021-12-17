@@ -158,11 +158,6 @@ type OpenOrCloseResponse struct {
 	AuthorizationCode string    `json:"authorization_code,omitempty"`  // 授权协议号
 }
 
-/*************************************订单确认回调通知********************************************************************/
-
-type ConfirmOrderResponse struct {
-}
-
 /*************************************公共API: 创建支付分订单*************************************************************/
 
 type CreatePayscoreOrderRequest struct {
@@ -532,4 +527,166 @@ type PayscorePayResponse struct {
 	OutOrderNo string `json:"out_order_no,omitempty"` // 商户订单号
 	ServiceId  string `json:"service_id,omitempty"`   // 服务ID
 	OrderId    string `json:"order_id,omitempty"`     // 微信支付服务订单号
+}
+
+/*************************************公共API: 商户发起催收扣款***********************************************************/
+
+type SyncPayscoreOrder struct {
+	OutOrderNo string         `json:"-"`                    // 商户服务订单号
+	AppId      string         `json:"appid,omitempty"`      // 应用ID
+	ServiceId  string         `json:"service_id,omitempty"` // 服务ID
+	Type       string         `json:"type,omitempty"`       // 场景类型
+	Detail     *manage.Detail `json:"detail,omitempty"`     // 内容信息详情
+}
+
+func (s *SyncPayscoreOrder) Check() (err error) {
+	if s == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if s.OutOrderNo == "" {
+		err = errors.New("请填写out_order_no!")
+		return
+	}
+	if s.AppId == "" {
+		err = errors.New("请填写appid!")
+		return
+	}
+	if s.ServiceId == "" {
+		err = errors.New("请填写service_id!")
+		return
+	}
+	if s.Type == "" {
+		err = errors.New("请填写type!")
+		return
+	}
+	if s.Type == "Order_Paid" && s.Detail == nil {
+		err = errors.New("请填写detail!")
+		return
+	}
+	if s.Detail != nil {
+		if s.Detail.PaidTime == "" {
+			err = errors.New("请填写detail.paid_time!")
+			return
+		}
+		detail := s.Detail
+		if detail.Amount != 0 || len(detail.PromotionDetail) > 0 || detail.Seq != 0 || detail.PaidType != "" || detail.TransactionId != "" {
+			err = errors.New("文档要求detail只填写paid_time字段!")
+			return
+		}
+	}
+	return
+}
+
+/*************************************公共API: 申请退款******************************************************************/
+
+type PayscoreRefundRequest struct {
+	TransactionId string               `json:"transaction_id,omitempty"` // 微信支付订单号
+	OutRefundNo   string               `json:"out_refund_no,omitempty"`  // 商户退款单号
+	Reason        string               `json:"reason,omitempty"`         // 退款原因
+	NotifyUrl     string               `json:"notify_url,omitempty"`     // 退款结果回调
+	FundsAccount  string               `json:"funds_account,omitempty"`  // 退款资金来源
+	Amount        *model.Amount        `json:"amount,omitempty"`         // 金额信息
+	GoodsDetail   []*model.GoodsDetail `json:"goods_detail,omitempty"`   // 退款商品
+}
+
+func (refund *PayscoreRefundRequest) Check() (err error) {
+	if refund == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if refund.TransactionId == "" {
+		err = errors.New("请填写transaction_id!")
+		return
+	}
+	if refund.OutRefundNo == "" {
+		err = errors.New("请填写out_refund_no!")
+		return
+	}
+	if refund.Amount == nil {
+		err = errors.New("请填写amount!")
+		return
+	}
+	amount := refund.Amount
+	if amount.Refund <= 0 {
+		err = errors.New("请填写正确的amount.refund!")
+		return
+	}
+	for _, f := range amount.From {
+		if f.Amount <= 0 {
+			err = errors.New("请填写from.amount!")
+			return
+		}
+		if f.Account == "" {
+			err = errors.New("请填写from.account!")
+			return
+		}
+	}
+	if amount.TotalAmount <= 0 {
+		err = errors.New("请填写amount.total_amount!")
+		return
+	}
+	if amount.Refund > amount.TotalAmount {
+		err = errors.New("退款金额不能大于原订单金额!")
+		return
+	}
+	if amount.Currency == "" {
+		err = errors.New("请填写amount.currency!")
+		return
+	}
+	for _, goods := range refund.GoodsDetail {
+		if goods.MerchantGoodsId == "" {
+			err = errors.New("请填写goods_detail.merchant_goods_id!")
+			return
+		}
+		if goods.UnitPrice <= 0 {
+			err = errors.New("请填写goods_detail.unit_price!")
+			return
+		}
+		if goods.RefundAmount <= 0 {
+			err = errors.New("请填写goods_detail.refund_amount!")
+			return
+		}
+		if goods.RefundQuantity <= 0 {
+			err = errors.New("请填写goods_detail.refund_quantity!")
+			return
+		}
+	}
+	return
+}
+
+type PayscoreRefundOrder struct {
+	Id                  string                 `json:"-"`                               // 唯一请求ID
+	MchId               string                 `json:"mchid,omitempty"`                 // 商户号
+	RefundId            string                 `json:"refund_id,omitempty"`             // 微信支付退款单号
+	OutRefundNo         string                 `json:"out_refund_no,omitempty"`         // 商户退款单号
+	TransactionId       string                 `json:"transaction_id,omitempty"`        // 微信支付订单号
+	OutTradeNo          string                 `json:"out_trade_no,omitempty"`          // 商户订单号
+	Channel             string                 `json:"channel,omitempty"`               // 退款渠道
+	UserReceivedAccount string                 `json:"user_received_account,omitempty"` // 退款入账账户
+	SuccessTime         time.Time              `json:"success_time,omitempty"`          // 退款成功时间
+	CreateTime          time.Time              `json:"create_time,omitempty"`           // 退款创建时间
+	Status              string                 `json:"status,omitempty"`                // 退款状态
+	RefundStatus        string                 `json:"refund_status,omitempty"`         // 退款状态
+	FundsAccount        string                 `json:"funds_account,omitempty"`         // 资金账户
+	Amount              *model.Amount          `json:"amount,omitempty"`                // 金额
+	PromotionDetail     *model.PromotionDetail `json:"promotion_detail,omitempty"`      // 优惠退款信息
+}
+
+/*************************************公共API: 查询退款******************************************************************/
+
+type PayscoreQueryRefundRequest struct {
+	OutRefundNo string `json:"out_refund_no,omitempty"`
+}
+
+func (p *PayscoreQueryRefundRequest) Check() (err error) {
+	if p == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	if p.OutRefundNo == "" {
+		err = errors.New("请填写out_refund_no!")
+		return
+	}
+	return
 }

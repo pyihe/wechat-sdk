@@ -7,30 +7,6 @@ type Payer struct {
 	OpenId string `json:"openid,omitempty"` // 用户OpenId
 }
 
-// From 退款出资账户及金额
-type From struct {
-	Account string `json:"account,omitempty"` // 出资账户类型
-	Amount  int64  `json:"amount,omitempty"`  // 出资金额
-}
-
-// Amount 金额信息，根据每个API参数要求填写，如果填写了API没要求的参数可能导致请求失败
-type Amount struct {
-	Total            int64   `json:"total,omitempty"`             // 金额
-	Currency         string  `json:"currency,omitempty"`          // 货币类型
-	Refund           int64   `json:"refund,omitempty"`            // 退款金额
-	From             []*From `json:"from,omitempty"`              // 退款出资账户及金额
-	PayerTotal       int64   `json:"payer_total,omitempty"`       // 用户支付金额
-	PayerCurrency    string  `json:"payer_currency,omitempty"`    // 用户支付币种
-	PayerRefund      int64   `json:"payer_refund,omitempty"`      // 用户退款金额
-	SettlementRefund int64   `json:"settlement_refund,omitempty"` // 应结退款金额
-	SettlementTotal  int64   `json:"settlement_total,omitempty"`  // 应结订单金额
-	DiscountRefund   int64   `json:"discount_refund,omitempty"`   // 优惠退款金额
-
-	// combine
-	TotalAmount int64 `json:"total_amount,omitempty"` // 标价金额
-	PayerAmount int64 `json:"payer_amount,omitempty"` // 现金支付金额
-}
-
 // Detail 优惠功能
 type Detail struct {
 	CostPrice   int64                `json:"cost_price,omitempty"`   // 订单原价

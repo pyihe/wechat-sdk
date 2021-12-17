@@ -115,7 +115,7 @@ func (c *PrepayRequest) Check() (err error) {
 type SubOrder struct {
 	MchId           string                   `json:"mchid,omitempty"`            // 子单商户号
 	Attach          string                   `json:"attach,omitempty"`           // 附加数据
-	Amount          *pay.Amount              `json:"amount,omitempty"`           // 金额信息
+	Amount          *model.Amount            `json:"amount,omitempty"`           // 金额信息
 	OutTradeNo      string                   `json:"out_trade_no,omitempty"`     // 子单商户订单号
 	GoodsTag        string                   `json:"goods_tag,omitempty"`        // 订单优惠标记
 	Description     string                   `json:"description,omitempty"`      // 商品描述

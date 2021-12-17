@@ -2,6 +2,13 @@ package manage
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/pyihe/wechat-sdk/pkg/aess"
+
+	"github.com/pyihe/wechat-sdk/model"
+
+	"github.com/pyihe/wechat-sdk/vars"
 
 	"github.com/pyihe/go-pkg/errors"
 
@@ -147,5 +154,156 @@ func PayscorePay(config *service.Config, request *merchant.PayscorePayRequest) (
 	payResponse = new(merchant.PayscorePayResponse)
 	payResponse.RequestId = requestId
 	err = service.Unmarshal(body, &payResponse)
+	return
+}
+
+// SyncPayscoreOrder 同步服务订单信息
+// API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_20.shtml
+func SyncPayscoreOrder(config *service.Config, request *merchant.SyncPayscoreOrder) (payscoreOrder *merchant.PayscoreOrder, err error) {
+	if err = service.CheckParam(config, request); err != nil {
+		return
+	}
+	var abUrl = fmt.Sprintf("/v3/payscore/serviceorder/%s/sync", request.OutOrderNo)
+	response, err := service.RequestWithSign(config, "POST", abUrl, request)
+	if err != nil {
+		return
+	}
+	requestId, body, err := service.VerifyResponse(config, response)
+	if err != nil {
+		return
+	}
+	payscoreOrder = new(merchant.PayscoreOrder)
+	payscoreOrder.Id = requestId
+	err = service.Unmarshal(body, &payscoreOrder)
+	return
+}
+
+// PayscorePayNotify 支付成功回调通知
+// API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_22.shtml
+func PayscorePayNotify(config *service.Config, request *http.Request) (payscoreOrder *merchant.PayscoreOrder, err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
+	}
+	if config.ApiKey == "" {
+		err = vars.ErrNoApiV3Key
+		return
+	}
+	if request == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	body, err := service.VerifyRequest(config, request)
+	if err != nil {
+		return
+	}
+	notifyResponse := new(model.WechatNotifyResponse)
+	if err = service.Unmarshal(body, &notifyResponse); err != nil {
+		return
+	}
+	if notifyResponse.ResourceType != "encrypt-resource" {
+		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		return
+	}
+	if notifyResponse.Resource == nil {
+		err = errors.New("未获取到通知资源数据!")
+		return
+	}
+	cipherText := notifyResponse.Resource.CipherText
+	associateData := notifyResponse.Resource.AssociatedData
+	nonce := notifyResponse.Resource.Nonce
+	plainText, err := aess.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
+	if err != nil {
+		return
+	}
+
+	payscoreOrder = new(merchant.PayscoreOrder)
+	payscoreOrder.Id = notifyResponse.Id
+	err = service.Unmarshal(plainText, &payscoreOrder)
+	return
+}
+
+// PayscoreRefund 申请退款
+// API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_26.shtml
+func PayscoreRefund(config *service.Config, request *merchant.PayscoreRefundRequest) (refundResponse *merchant.PayscoreRefundOrder, err error) {
+	if err = service.CheckParam(config, request); err != nil {
+		return
+	}
+	response, err := service.RequestWithSign(config, "POST", "/v3/refund/domestic/refunds", request)
+	if err != nil {
+		return
+	}
+	requestId, body, err := service.VerifyResponse(config, response)
+	if err != nil {
+		return
+	}
+	refundResponse = new(merchant.PayscoreRefundOrder)
+	refundResponse.Id = requestId
+	err = service.Unmarshal(body, &refundResponse)
+	return
+}
+
+// PayscoreQueryRefund 查询退款
+// API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_27.shtml
+func PayscoreQueryRefund(config *service.Config, request *merchant.PayscoreQueryRefundRequest) (refundOrder *merchant.PayscoreRefundOrder, err error) {
+	if err = service.CheckParam(config, request); err != nil {
+		return
+	}
+	var abUrl = fmt.Sprintf("/v3/refund/domestic/refunds/%s", request.OutRefundNo)
+	response, err := service.RequestWithSign(config, "GET", abUrl, nil)
+	if err != nil {
+		return
+	}
+	requestId, body, err := service.VerifyResponse(config, response)
+	if err != nil {
+		return
+	}
+	refundOrder = new(merchant.PayscoreRefundOrder)
+	refundOrder.Id = requestId
+	err = service.Unmarshal(body, &refundOrder)
+	return
+}
+
+func PayscoreRefundNotify(config *service.Config, request *http.Request) (refundOrder *merchant.PayscoreRefundOrder, err error) {
+	if config == nil {
+		err = vars.ErrInitConfig
+		return
+	}
+	if config.ApiKey == "" {
+		err = vars.ErrNoApiV3Key
+		return
+	}
+	if request == nil {
+		err = vars.ErrNoRequest
+		return
+	}
+	body, err := service.VerifyRequest(config, request)
+	if err != nil {
+		return
+	}
+	notifyResponse := new(model.WechatNotifyResponse)
+	if err = service.Unmarshal(body, &notifyResponse); err != nil {
+		return
+	}
+	// 判断资源类型
+	if notifyResponse.ResourceType != "encrypt-resource" {
+		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		return
+	}
+	if notifyResponse.Resource == nil {
+		err = errors.New("未获取到通知资源数据!")
+		return
+	}
+	// 解密
+	cipherText := notifyResponse.Resource.CipherText
+	associateData := notifyResponse.Resource.AssociatedData
+	nonce := notifyResponse.Resource.Nonce
+	plainText, err := aess.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
+	if err != nil {
+		return
+	}
+	refundOrder = new(merchant.PayscoreRefundOrder)
+	refundOrder.Id = notifyResponse.Id
+	err = service.Unmarshal(plainText, &refundOrder)
 	return
 }

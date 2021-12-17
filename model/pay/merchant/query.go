@@ -43,7 +43,7 @@ type PrepayOrder struct {
 	Attach          string                   `json:"attach,omitempty"`           // 附加数据
 	SuccessTime     time.Time                `json:"success_time,omitempty"`     // 支付完成时间
 	Payer           *pay.Payer               `json:"payer,omitempty"`            // 支付者信息
-	Amount          *pay.Amount              `json:"amount,omitempty"`           // 订单金额
+	Amount          *model.Amount            `json:"amount,omitempty"`           // 订单金额
 	SceneInfo       *pay.SceneInfo           `json:"scene_info,omitempty"`       // 场景信息
 	PromotionDetail []*model.PromotionDetail `json:"promotion_detail,omitempty"` // 优惠功能
 }

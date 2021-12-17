@@ -3,11 +3,12 @@ package manage
 import (
 	"net/http"
 
+	"github.com/pyihe/wechat-sdk/pkg/aess"
+
 	"github.com/pyihe/wechat-sdk/model/manage/merchant"
 
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/model"
-	"github.com/pyihe/wechat-sdk/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/service"
 	"github.com/pyihe/wechat-sdk/vars"
 )
@@ -51,7 +52,7 @@ func ConfirmOrderNotify(config *service.Config, w http.ResponseWriter, request *
 	cipherText := notifyResponse.Resource.CipherText
 	associateData := notifyResponse.Resource.AssociatedData
 	nonce := notifyResponse.Resource.Nonce
-	plainText, err := rsas.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
+	plainText, err := aess.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
 	if err != nil {
 		return
 	}

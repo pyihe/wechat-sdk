@@ -5,10 +5,8 @@ import (
 
 	"github.com/pyihe/wechat-sdk/vars"
 
-	"github.com/pyihe/wechat-sdk/model"
-	"github.com/pyihe/wechat-sdk/model/pay"
-
 	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/model"
 )
 
 type RefundRequest struct {
@@ -18,7 +16,7 @@ type RefundRequest struct {
 	Reason        string               `json:"reason,omitempty"`         // 退款原因
 	NotifyUrl     string               `json:"notify_url,omitempty"`     // 退款结果回调URL
 	FundsAccount  string               `json:"funds_account,omitempty"`  // 退款资金来源
-	Amount        *pay.Amount          `json:"amount,omitempty"`         // 金额信息
+	Amount        *model.Amount        `json:"amount,omitempty"`         // 金额信息
 	GoodsDetail   []*model.GoodsDetail `json:"goods_detail,omitempty"`   // 退款商品
 }
 
@@ -101,7 +99,7 @@ type RefundOrder struct {
 	Status              string                   `json:"status,omitempty"`                // 退款状态
 	RefundStatus        string                   `json:"refund_status,omitempty"`         // 退款状态
 	FundsAccount        string                   `json:"funds_account,omitempty"`         // 资金账户
-	Amount              *pay.Amount              `json:"amount,omitempty"`                // 金额信息
+	Amount              *model.Amount            `json:"amount,omitempty"`                // 金额信息
 	PromotionDetail     []*model.PromotionDetail `json:"promotion_detail,omitempty"`      // 优惠退款信息
 }
 

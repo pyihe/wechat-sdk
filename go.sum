@@ -18,6 +18,8 @@ github.com/pyihe/go-pkg v0.0.0-20211210143529-a1fb84f0ad0a h1:aEeDOyasZ5NDitlPKB
 github.com/pyihe/go-pkg v0.0.0-20211210143529-a1fb84f0ad0a/go.mod h1:zYn7jzKOjtr8piG9Ull9EihUroL130Z1wKljPVwAQQU=
 github.com/pyihe/secret v0.0.6 h1:lhq3PjrtC4lhnNES45weYRbCa7qHaTe/sRxXdI8YpmM=
 github.com/pyihe/secret v0.0.6/go.mod h1:sdYR2so2a5O4lQxm1/QHjWaIyzXEW+ajvEI1zH3DbGg=
+github.com/pyihe/secret v0.0.7-0.20211217073949-f4e53165dcbe h1:dQL/S+x6kOUER/3gYvr3/nL88RbTZsdB1e8LpJBdF/U=
+github.com/pyihe/secret v0.0.7-0.20211217073949-f4e53165dcbe/go.mod h1:sdYR2so2a5O4lQxm1/QHjWaIyzXEW+ajvEI1zH3DbGg=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

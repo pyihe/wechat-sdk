@@ -34,7 +34,7 @@ type WechatNotifyResponse struct {
 // WechatCipherData 微信返回的加密数据
 type WechatCipherData struct {
 	Algorithm      string `json:"algorithm,omitempty"`       // 加密算法
-	CipherText     string `json:"cipher_text,omitempty"`     // 密文
+	CipherText     string `json:"ciphertext,omitempty"`      // 密文
 	AssociatedData string `json:"associated_data,omitempty"` // 附加数据
 	OriginalType   string `json:"original_type,omitempty"`   // 原始回调类型
 	Nonce          string `json:"nonce,omitempty"`           // 加密使用的随机串
@@ -69,4 +69,28 @@ type GoodsDetail struct {
 	GoodsRemark      string `json:"goods_remark,omitempty"`       // 商品备注
 	RefundAmount     int64  `json:"refund_amount,omitempty"`      // 商品退款金额
 	RefundQuantity   int    `json:"refund_quantity,omitempty"`    // 单品的退款数量
+}
+
+// From 退款出资账户及金额
+type From struct {
+	Account string `json:"account,omitempty"` // 出资账户类型
+	Amount  int64  `json:"amount,omitempty"`  // 出资金额
+}
+
+// Amount 金额信息，根据每个API参数要求填写，如果填写了API没要求的参数可能导致请求失败
+type Amount struct {
+	Total            int64   `json:"total,omitempty"`             // 金额
+	Currency         string  `json:"currency,omitempty"`          // 货币类型
+	Refund           int64   `json:"refund,omitempty"`            // 退款金额
+	From             []*From `json:"from,omitempty"`              // 退款出资账户及金额
+	PayerTotal       int64   `json:"payer_total,omitempty"`       // 用户支付金额
+	PayerCurrency    string  `json:"payer_currency,omitempty"`    // 用户支付币种
+	PayerRefund      int64   `json:"payer_refund,omitempty"`      // 用户退款金额
+	SettlementRefund int64   `json:"settlement_refund,omitempty"` // 应结退款金额
+	SettlementTotal  int64   `json:"settlement_total,omitempty"`  // 应结订单金额
+	DiscountRefund   int64   `json:"discount_refund,omitempty"`   // 优惠退款金额
+
+	// combine
+	TotalAmount int64 `json:"total_amount,omitempty"` // 标价金额
+	PayerAmount int64 `json:"payer_amount,omitempty"` // 现金支付金额
 }

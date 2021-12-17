@@ -1,8 +1,6 @@
 package manage
 
 import (
-	"time"
-
 	"github.com/pyihe/wechat-sdk/model"
 )
 
@@ -57,7 +55,7 @@ type Detail struct {
 	Seq             int                      `json:"seq,omitempty"`              // 收款序号
 	Amount          int64                    `json:"amount,omitempty"`           // 单笔收款金额
 	PaidType        string                   `json:"paid_type,omitempty"`        // 收款成功渠道
-	PaidTime        time.Time                `json:"paid_time,omitempty"`        // 收款成功时间
+	PaidTime        string                   `json:"paid_time,omitempty"`        // 收款成功时间
 	TransactionId   string                   `json:"transaction_id,omitempty"`   // 微信支付交易单号
 	PromotionDetail []*model.PromotionDetail `json:"promotion_detail,omitempty"` // 优惠功能
 }

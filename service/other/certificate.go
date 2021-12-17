@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/pyihe/wechat-sdk/pkg/aess"
+
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/wechat-sdk/model/other"
 	"github.com/pyihe/wechat-sdk/pkg/files"
-	"github.com/pyihe/wechat-sdk/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/service"
 	"github.com/pyihe/wechat-sdk/vars"
 )
@@ -55,7 +56,7 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 		var plainText []byte
 		var certificate *x509.Certificate
 
-		plainText, err = rsas.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
+		plainText, err = aess.DecryptAEADAES256GCM(config.Cipher, config.ApiKey, cipherText, associateData, nonce)
 		if err != nil {
 			return
 		}
