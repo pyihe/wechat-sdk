@@ -85,7 +85,7 @@ func LoadRSAPublicKeyWithSerialNo(file string) (serialNo string, publicKey *rsa.
 	serialNo = strings.ToUpper(cert.SerialNumber.Text(16))
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		err = errors.New("invalid certificate!")
+		err = errors.New("错误的证书类型!")
 		return
 	}
 	return
@@ -101,7 +101,7 @@ func UnmarshalRSAPublicKey(key []byte) (serialNo string, publicKey *rsa.PublicKe
 	serialNo = strings.ToUpper(cert.SerialNumber.Text(16))
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		err = errors.New("invalid certificate!")
+		err = errors.New("错误的证书类型!")
 		return
 	}
 	return
