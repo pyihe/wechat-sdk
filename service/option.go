@@ -217,17 +217,9 @@ func (c *Config) RequestWithSign(method, url string, body interface{}) (response
 		return
 	}
 	// 构造签名主体
-	var data []byte
-	if !reflect.ValueOf(body).IsZero() {
-		switch content := body.(type) {
-		case []byte:
-			data = content
-		default:
-			data, err = marshalJSON(body)
-			if err != nil {
-				return
-			}
-		}
+	data, err := marshalJSON(body)
+	if err != nil {
+		return
 	}
 
 	method = strings.ToUpper(method) // 方法类型，转为大写
@@ -255,12 +247,9 @@ func (c *Config) RequestWithSign(method, url string, body interface{}) (response
 
 // Request 发起普通的HTTP请求
 func (c *Config) Request(method, url, contentType string, data interface{}) (response *http.Response, err error) {
-	var body []byte
-	if !reflect.ValueOf(data).IsZero() {
-		body, err = marshalJSON(body)
-		if err != nil {
-			return
-		}
+	body, err := marshalJSON(data)
+	if err != nil {
+		return
 	}
 	request, err := http.NewRequest(method, url, bytes.NewReader(body))
 	if err != nil {
@@ -417,7 +406,6 @@ func (c *Config) Download(url string) (data []byte, err error) {
 	return
 }
 
-// unmarshalJSON 反序列化
 func unmarshalJSON(data []byte, dst interface{}) (err error) {
 	if len(data) == 0 {
 		return
@@ -430,8 +418,17 @@ func unmarshalJSON(data []byte, dst interface{}) (err error) {
 	return
 }
 
-// marshalJSON 序列化
 func marshalJSON(data interface{}) (bytes []byte, err error) {
-	bytes, err = json.Marshal(data)
+	if reflect.ValueOf(data).IsZero() {
+		return
+	}
+	switch d := data.(type) {
+	case string:
+		bytes = []byte(d)
+	case []byte:
+		bytes = d
+	default:
+		bytes, err = json.Marshal(data)
+	}
 	return
 }
