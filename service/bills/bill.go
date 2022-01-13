@@ -39,8 +39,7 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 	}
 
 	billResponse = new(BillResponse)
-	requestId, err := config.ParseWechatResponse(response, billResponse)
-	billResponse.RequestId = requestId
+	billResponse.RequestId, err = config.ParseWechatResponse(response, billResponse)
 	if err != nil || billResponse.DownloadUrl == "" {
 		return
 	}
@@ -53,7 +52,7 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = request.BillDate
+		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
 		filePath = "./bills"
@@ -88,8 +87,7 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 	}
 
 	billResponse = new(BillResponse)
-	requestId, err := config.ParseWechatResponse(response, billResponse)
-	billResponse.RequestId = requestId
+	billResponse.RequestId, err = config.ParseWechatResponse(response, billResponse)
 	if err != nil || billResponse.DownloadUrl == "" {
 		return
 	}
@@ -102,7 +100,7 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = request.BillDate
+		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
 		filePath = "./bills"
@@ -153,8 +151,7 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 	}
 
 	billResponse = new(SubMerchantFundFlowResponse)
-	requestId, err := config.ParseWechatResponse(response, billResponse)
-	billResponse.RequestId = requestId
+	billResponse.RequestId, err = config.ParseWechatResponse(response, billResponse)
 	if err != nil || len(billResponse.DownloadBillList) == 0 {
 		return
 	}
@@ -191,7 +188,7 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = request.BillDate
+		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
 		filePath = "./bills"

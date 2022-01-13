@@ -61,8 +61,7 @@ func Register(config *service.Config, request *RegisterRequest) (registerRespons
 		return
 	}
 	registerResponse = new(RegisterResponse)
-	requestId, err := config.ParseWechatResponse(response, registerResponse)
-	registerResponse.RequestId = requestId
+	registerResponse.RequestId, err = config.ParseWechatResponse(response, registerResponse)
 	return
 }
 
@@ -91,8 +90,7 @@ func Assign(config *service.Config, request *AssignRequest) (assignResponse *Ass
 		return
 	}
 	assignResponse = new(AssignResponse)
-	requestId, err := config.ParseWechatResponse(response, assignResponse)
-	assignResponse.RequestId = requestId
+	assignResponse.RequestId, err = config.ParseWechatResponse(response, assignResponse)
 	return
 }
 
@@ -138,8 +136,7 @@ func Query(config *service.Config, request *QueryRequest) (queryResponse *QueryR
 		return
 	}
 	queryResponse = new(QueryResponse)
-	requestId, err := config.ParseWechatResponse(response, queryResponse)
-	queryResponse.RequestId = requestId
+	queryResponse.RequestId, err = config.ParseWechatResponse(response, queryResponse)
 	return
 }
 
@@ -178,7 +175,6 @@ func Update(config *service.Config, guideId string, request *UpdateRequest) (upd
 		return
 	}
 	updateResponse = new(UpdateResponse)
-	requestId, err := config.ParseWechatResponse(response, updateResponse)
-	updateResponse.RequestId = requestId
+	updateResponse.RequestId, err = config.ParseWechatResponse(response, updateResponse)
 	return
 }

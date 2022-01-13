@@ -26,8 +26,7 @@ func PrePermit(config *service.Config, request interface{}) (permissionResponse 
 		return
 	}
 	permissionResponse = new(PrePermitResponse)
-	requestId, err := config.ParseWechatResponse(response, permissionResponse)
-	permissionResponse.RequestId = requestId
+	permissionResponse.RequestId, err = config.ParseWechatResponse(response, permissionResponse)
 	return
 }
 
@@ -70,8 +69,7 @@ func QueryPermissions(config *service.Config, request *QueryPermissionsRequest) 
 		return
 	}
 	queryResponse = new(QueryPermissionsResponse)
-	requestId, err := config.ParseWechatResponse(response, queryResponse)
-	queryResponse.RequestId = requestId
+	queryResponse.RequestId, err = config.ParseWechatResponse(response, queryResponse)
 	return
 }
 
@@ -115,8 +113,7 @@ func TerminatePermission(config *service.Config, request *TerminatePermissionReq
 		return
 	}
 	terminateResponse = new(TerminatePermissionResponse)
-	requestId, err := config.ParseWechatResponse(response, terminateResponse)
-	terminateResponse.RequestId = requestId
+	terminateResponse.RequestId, err = config.ParseWechatResponse(response, terminateResponse)
 	return
 }
 
@@ -128,8 +125,7 @@ func ParseOpenOrCloseNotify(config *service.Config, request *http.Request) (resp
 		return
 	}
 	response = new(OpenOrCloseResponse)
-	notifyId, err := config.ParseWechatNotify(request, response)
-	response.Id = notifyId
+	response.Id, err = config.ParseWechatNotify(request, response)
 	return
 }
 
@@ -141,8 +137,7 @@ func ParseConfirmOrderNotify(config *service.Config, request *http.Request) (con
 		return
 	}
 	confirmResponse = new(ServiceOrder)
-	notifyId, err := config.ParseWechatNotify(request, confirmResponse)
-	confirmResponse.Id = notifyId
+	confirmResponse.Id, err = config.ParseWechatNotify(request, confirmResponse)
 	return
 }
 
@@ -162,8 +157,7 @@ func CreateServiceOrder(config *service.Config, request interface{}) (serviceOrd
 		return
 	}
 	serviceOrder = new(ServiceOrder)
-	requestId, err := config.ParseWechatResponse(response, serviceOrder)
-	serviceOrder.Id = requestId
+	serviceOrder.Id, err = config.ParseWechatResponse(response, serviceOrder)
 	return
 }
 
@@ -205,8 +199,7 @@ func QueryServiceOrder(config *service.Config, request *QueryOrderRequest) (quer
 		return
 	}
 	queryResponse = new(ServiceOrder)
-	requestId, err := config.ParseWechatResponse(response, queryResponse)
-	queryResponse.Id = requestId
+	queryResponse.Id, err = config.ParseWechatResponse(response, queryResponse)
 	return
 }
 
@@ -243,8 +236,7 @@ func CancelServiceOrder(config *service.Config, request *CancelRequest) (cancelR
 		return
 	}
 	cancelResponse = new(CancelResponse)
-	requestId, err := config.ParseWechatResponse(response, cancelResponse)
-	cancelResponse.RequestId = requestId
+	cancelResponse.RequestId, err = config.ParseWechatResponse(response, cancelResponse)
 	return
 }
 
@@ -268,8 +260,7 @@ func ModifyServiceOrder(config *service.Config, outOrderNo string, request *Modi
 		return
 	}
 	modifyResponse = new(ModifyResponse)
-	requestId, err := config.ParseWechatResponse(response, modifyResponse)
-	modifyResponse.RequestId = requestId
+	modifyResponse.RequestId, err = config.ParseWechatResponse(response, modifyResponse)
 	return
 }
 
@@ -293,8 +284,7 @@ func CompleteServiceOrder(config *service.Config, outOrderNo string, request *Co
 		return
 	}
 	completeResponse = new(CompleteResponse)
-	requestId, err := config.ParseWechatResponse(response, completeResponse)
-	completeResponse.RequestId = requestId
+	completeResponse.RequestId, err = config.ParseWechatResponse(response, completeResponse)
 	return
 }
 
@@ -318,8 +308,7 @@ func PayServiceOrder(config *service.Config, outOrderNo string, request *PayOrde
 		return
 	}
 	payResponse = new(PayOrderResponse)
-	requestId, err := config.ParseWechatResponse(response, payResponse)
-	payResponse.RequestId = requestId
+	payResponse.RequestId, err = config.ParseWechatResponse(response, payResponse)
 	return
 }
 
@@ -343,8 +332,7 @@ func SyncServiceOrder(config *service.Config, outOrderNo string, request *SyncRe
 		return
 	}
 	syncResponse = new(SyncResponse)
-	requestId, err := config.ParseWechatResponse(response, syncResponse)
-	syncResponse.RequestId = requestId
+	syncResponse.RequestId, err = config.ParseWechatResponse(response, syncResponse)
 	return
 }
 
@@ -356,7 +344,6 @@ func ParsePaymentNotify(config *service.Config, request *http.Request) (payRespo
 		return
 	}
 	payResponse = new(ServiceOrder)
-	notifyId, err := config.ParseWechatNotify(request, payResponse)
-	payResponse.Id = notifyId
+	payResponse.Id, err = config.ParseWechatNotify(request, payResponse)
 	return
 }

@@ -53,8 +53,7 @@ func FindParkingService(config *service.Config, request *FindRequest) (findRespo
 		return
 	}
 	findResponse = new(FindResponse)
-	requestId, err := config.ParseWechatResponse(response, findResponse)
-	findResponse.RequestId = requestId
+	findResponse.RequestId, err = config.ParseWechatResponse(response, findResponse)
 	return
 }
 
@@ -75,8 +74,7 @@ func CreateParking(config *service.Config, request interface{}) (createResponse 
 		return
 	}
 	createResponse = new(CreateParkingResponse)
-	requestId, err := config.ParseWechatResponse(response, createResponse)
-	createResponse.RequestId = requestId
+	createResponse.RequestId, err = config.ParseWechatResponse(response, createResponse)
 	return
 }
 
@@ -97,8 +95,7 @@ func TransactionsParking(config *service.Config, request interface{}) (transacti
 		return
 	}
 	transactionsResponse = new(TransactionsResponse)
-	requestId, err := config.ParseWechatResponse(response, transactionsResponse)
-	transactionsResponse.RequestId = requestId
+	transactionsResponse.RequestId, err = config.ParseWechatResponse(response, transactionsResponse)
 	return
 }
 
@@ -127,8 +124,7 @@ func QueryOrder(config *service.Config, outTradeNo, subMchId string) (queryRespo
 		return
 	}
 	queryResponse = new(QueryResponse)
-	requestId, err := config.ParseWechatResponse(response, queryResponse)
-	queryResponse.RequestId = requestId
+	queryResponse.RequestId, err = config.ParseWechatResponse(response, queryResponse)
 	return
 }
 
@@ -141,8 +137,7 @@ func ParseParkingStateNotify(config *service.Config, request *http.Request) (sta
 		return
 	}
 	stateResponse = new(ParkStateResponse)
-	notifyId, err := config.ParseWechatNotify(request, stateResponse)
-	stateResponse.Id = notifyId
+	stateResponse.Id, err = config.ParseWechatNotify(request, stateResponse)
 	return
 }
 
@@ -155,7 +150,6 @@ func ParsePaymentNotify(config *service.Config, request *http.Request) (paymentR
 		return
 	}
 	paymentResponse = new(PaymentResponse)
-	notifyId, err := config.ParseWechatNotify(request, paymentResponse)
-	paymentResponse.Id = notifyId
+	paymentResponse.Id, err = config.ParseWechatNotify(request, paymentResponse)
 	return
 }

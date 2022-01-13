@@ -28,8 +28,7 @@ func JSAPI(config *service.Config, request interface{}) (jsapiResponse *model.JS
 	}
 
 	jsapiResponse = new(model.JSAPIResponse)
-	requestId, err := config.ParseWechatResponse(response, jsapiResponse)
-	jsapiResponse.RequestId = requestId
+	jsapiResponse.RequestId, err = config.ParseWechatResponse(response, jsapiResponse)
 	return
 }
 
@@ -51,8 +50,7 @@ func H5(config *service.Config, request interface{}) (h5Response *model.H5Respon
 		return
 	}
 	h5Response = new(model.H5Response)
-	requestId, err := config.ParseWechatResponse(response, h5Response)
-	h5Response.RequestId = requestId
+	h5Response.RequestId, err = config.ParseWechatResponse(response, h5Response)
 	return
 }
 
@@ -74,8 +72,7 @@ func APP(config *service.Config, request interface{}) (appResponse *model.AppRes
 		return
 	}
 	appResponse = new(model.AppResponse)
-	requestId, err := config.ParseWechatResponse(response, appResponse)
-	appResponse.RequestId = requestId
+	appResponse.RequestId, err = config.ParseWechatResponse(response, appResponse)
 	return
 }
 
@@ -97,8 +94,7 @@ func Native(config *service.Config, request interface{}) (nativeResponse *model.
 		return
 	}
 	nativeResponse = new(model.NativeResponse)
-	requestId, err := config.ParseWechatResponse(response, nativeResponse)
-	nativeResponse.RequestId = requestId
+	nativeResponse.RequestId, err = config.ParseWechatResponse(response, nativeResponse)
 	return
 }
 
@@ -119,8 +115,7 @@ func QueryOrder(config *service.Config, combineOutTradeNo string) (order *Prepay
 		return
 	}
 	order = new(PrepayOrder)
-	requestId, err := config.ParseWechatResponse(response, order)
-	order.Id = requestId
+	order.Id, err = config.ParseWechatResponse(response, order)
 	return
 }
 
@@ -145,8 +140,7 @@ func CloseOrder(config *service.Config, combineOutTradeNo string, request interf
 		return
 	}
 	closeResponse = new(CloseOrderResponse)
-	requestId, err := config.ParseWechatResponse(response, closeResponse)
-	closeResponse.RequestId = requestId
+	closeResponse.RequestId, err = config.ParseWechatResponse(response, closeResponse)
 	return
 }
 
@@ -159,7 +153,6 @@ func ParsePrepayNotify(config *service.Config, request *http.Request) (order *Pr
 		return
 	}
 	order = new(PrepayOrder)
-	notifyId, err := config.ParseWechatNotify(request, order)
-	order.Id = notifyId
+	order.Id, err = config.ParseWechatNotify(request, order)
 	return
 }

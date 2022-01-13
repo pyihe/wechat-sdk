@@ -28,8 +28,7 @@ func SyncPoints(config *service.Config, request interface{}) (syncResponse *Sync
 	}
 
 	syncResponse = new(SyncPointsResponse)
-	requestId, err := config.ParseWechatResponse(response, syncResponse)
-	syncResponse.RequestId = requestId
+	syncResponse.RequestId, err = config.ParseWechatResponse(response, syncResponse)
 	return
 }
 
@@ -64,8 +63,7 @@ func QueryUserAuthorization(config *service.Config, request *QueryUserAuthorizat
 		return
 	}
 	queryResponse = new(QueryUserAuthorizationResponse)
-	requestId, err := config.ParseWechatResponse(response, queryResponse)
-	queryResponse.RequestId = requestId
+	queryResponse.RequestId, err = config.ParseWechatResponse(response, queryResponse)
 	return
 }
 
@@ -78,8 +76,7 @@ func ParseRefundNotify(config *service.Config, request *http.Request) (refundRes
 		return
 	}
 	refundResponse = new(RefundResponse)
-	notifyId, err := config.ParseWechatNotify(request, refundResponse)
-	refundResponse.Id = notifyId
+	refundResponse.Id, err = config.ParseWechatNotify(request, refundResponse)
 	return
 }
 
@@ -92,7 +89,6 @@ func ParsePaymentNotify(config *service.Config, request *http.Request) (paymentR
 		return
 	}
 	paymentResponse = new(PaymentResponse)
-	notifyId, err := config.ParseWechatNotify(request, paymentResponse)
-	paymentResponse.Id = notifyId
+	paymentResponse.Id, err = config.ParseWechatNotify(request, paymentResponse)
 	return
 }

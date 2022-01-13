@@ -27,8 +27,7 @@ func Refund(config *service.Config, request interface{}) (refundOrder *RefundOrd
 		return
 	}
 	refundOrder = new(RefundOrder)
-	requestId, err := config.ParseWechatResponse(response, refundOrder)
-	refundOrder.Id = requestId
+	refundOrder.Id, err = config.ParseWechatResponse(response, refundOrder)
 	return
 }
 
@@ -51,8 +50,7 @@ func QueryRefund(config *service.Config, outRefundNo string) (refundOrder *Refun
 		return
 	}
 	refundOrder = new(RefundOrder)
-	requestId, err := config.ParseWechatResponse(response, refundOrder)
-	refundOrder.Id = requestId
+	refundOrder.Id, err = config.ParseWechatResponse(response, refundOrder)
 	return
 }
 
@@ -67,7 +65,6 @@ func ParseRefundNotify(config *service.Config, request *http.Request) (refundOrd
 		return
 	}
 	refundOrder = new(RefundOrder)
-	notifyId, err := config.ParseWechatNotify(request, refundOrder)
-	refundOrder.Id = notifyId
+	refundOrder.Id, err = config.ParseWechatNotify(request, refundOrder)
 	return
 }
