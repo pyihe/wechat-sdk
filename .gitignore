@@ -1,3 +1,4 @@
 .idea
 *_.test
 cmd
+.DS_Store
