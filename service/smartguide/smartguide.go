@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/wechat-sdk/pkg/rsas"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // Register 服务人员注册API

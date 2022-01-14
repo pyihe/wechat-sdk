@@ -13,14 +13,13 @@ import (
 	"time"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/go-pkg/rands"
-	"github.com/pyihe/wechat-sdk/model"
-	"github.com/pyihe/wechat-sdk/pkg/aess"
-	"github.com/pyihe/wechat-sdk/pkg/files"
-	"github.com/pyihe/wechat-sdk/pkg/rsas"
-
 	"github.com/pyihe/go-pkg/maps"
+	"github.com/pyihe/go-pkg/rands"
 	"github.com/pyihe/secret"
+	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
+	"github.com/pyihe/wechat-sdk/v3/pkg/files"
+	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
 )
 
 const (

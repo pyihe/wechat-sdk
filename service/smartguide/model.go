@@ -1,6 +1,6 @@
 package smartguide
 
-import "github.com/pyihe/wechat-sdk/model"
+import "github.com/pyihe/wechat-sdk/v3/model"
 
 // RegisterRequest 服务人员注册请求
 type RegisterRequest struct {

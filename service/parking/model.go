@@ -3,7 +3,7 @@ package parking
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // FindRequest 查询车牌服务开通信息请求参数

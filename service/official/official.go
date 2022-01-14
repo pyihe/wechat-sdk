@@ -7,7 +7,7 @@ import (
 
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/go-pkg/maps"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // GetBaseAccessToken 公众号和小程序获取全局唯一接口调用凭证access_token

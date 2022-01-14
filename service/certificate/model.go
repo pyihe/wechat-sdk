@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/pyihe/go-pkg/maps"
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // CertResponse 用于证书下载API返回的数据

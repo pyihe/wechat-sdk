@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // SyncPoints 商圈积分同步

@@ -10,8 +10,8 @@ import (
 	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/go-pkg/utils"
-	"github.com/pyihe/wechat-sdk/pkg/aess"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // GetBaseAccessToken 微信小程序获取全局唯一的后台接口调用凭证(access_token)

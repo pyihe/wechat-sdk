@@ -3,7 +3,7 @@ package payscore
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // PrePermitResponse 商户预授权应答

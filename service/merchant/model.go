@@ -3,7 +3,7 @@ package merchant
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 /****************************************************《基础支付》********************************************************/

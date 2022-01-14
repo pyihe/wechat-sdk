@@ -3,7 +3,7 @@ package combine
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // PrepayOrder 合单支付订单

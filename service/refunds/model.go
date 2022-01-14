@@ -3,7 +3,7 @@ package refunds
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // RefundOrder 微信支付退款API应答

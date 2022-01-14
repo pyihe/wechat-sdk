@@ -1,172 +1,170 @@
 # wechat-sdk
 
-### 最重要的事
+### Update
 
-如果在使用过程中存在任何bug，还请指出，非常感谢！
+更新至V3版本微信API
+
+### 如何在项目中引用
+
+#### V2版本微信API
+
+```go
+// get go mod
+go get github.com/pyihe/wechat-sdk@v1.0.0
+
+// import in project
+import "github.com/pyihe/wechat-sdk"
+```
+
+[v2版本API文档](https://github.com/pyihe/wechat-sdk/blob/v2/README.md)
+
+#### V3版本微信API
+
+```go
+// get go mod
+go get github.com/pyihe/wechat-sdk/v3@v3.0.0
+
+// import in project
+import "github.com/pyihe/wechat-sdk/v3"
+```
+
+### Usage
+
+**NOTE:**
+
+1. 考虑v3版本的微信API参数较多且存在很多嵌套的结构体, 对于只需要body参数的API, 本package统统使用interface{}作为函数形参，请调用者自己构造可序列化的参数体(
+   结构体、map或者序列化好了的json字符串或者字节切片[]byte)!
+2. 对于非interface{}的形参, 调用者只需要按照函数规定传参即可!
+3. 对于不同功能但应答参数相似的API(如预支付API和支付查询API等), 本package为了避免重复声明接收API应答参数的结构体, 最终使用了公共的结构体, 调用者处理API返回结果时,
+   请严格参考 [微信官方文档](https://pay.weixin.qq.com/wiki/doc/apiv3/index.shtml) 忽略掉文档没有的参数!
+4. 对于微信异步回调回来的通知, 本package会将通知结果反序列化至对应的应答结构体, 请调用者根据结果处理自己的业务逻辑, 并在处理完成后一定告知微信服务器!
+5. 微信官方尚未移植的API有: [付款码支付(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/micropay.php?chapter=5_1)
+   , [现金红包(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/tools/cash_coupon.php?chapter=13_1)
+   , [付款(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_1)
+   , [清关报关(v2 TODO)](https://pay.weixin.qq.com/wiki/doc/api/external/declarecustom.php?chapter=17_1&index=1)
+
+```go
+package main
+
+import (
+	"github.com/pyihe/wechat-sdk/v3/service"
+	"github.com/pyihe/wechat-sdk/v3/service/combine"
+	"github.com/pyihe/wechat-sdk/v3/service/merchant"
+	"github.com/pyihe/wechat-sdk/v3/service/mini"
+	"github.com/pyihe/wechat-sdk/v3/service/official"
+	"github.com/pyihe/wechat-sdk/v3/service/partner"
+)
+
+var WechatConfig struct {
+	AppId    string `json:"appid"`
+	MchId    string `json:"mchid"`
+	SerialNo string `json:"serial_no"`
+	Apikey   string `json:"apikey"`
+}
+
+type PayBody struct {
+	AppId       string  `json:"appid"`        // 应用ID
+	MchId       string  `json:"mchid"`        // 商户号
+	Description string  `json:"description"`  // 商品描述
+	OutTradeNo  string  `json:"out_trade_no"` // 商户订单号
+	NotifyUrl   string  `json:"notify_url"`   // 支付异步回调通知
+	Amount      *Amount `json:"amount"`       // 订单金额信息
+	Payer       *Payer  `json:"payer"`        // 支付者
+}
+
+type Amount struct {
+	Total    int64  `json:"total"`              // 订单总金额
+	Currency string `json:"currency,omitempty"` // 货币类型
+}
+
+type Payer struct {
+	OpenId string `json:"openid"` // 用户标识
+}
+
+func main() {
+	var opts = []service.Option{
+		service.WithAppId(WechatConfig.AppId),
+		service.WithMchId(WechatConfig.MchId),
+		service.WithApiV3Key(WechatConfig.Apikey),
+		service.WithSerialNo(WechatConfig.SerialNo),
+	}
+	var srvConfig = service.NewConfig(opts...)
+
+	var param = &PayBody{
+		AppId:       "wxdace645e0bc2cXXX",
+		MchId:       "1900006XXX",
+		Description: "Image形象店-深圳腾大-QQ公仔",
+		OutTradeNo:  "1217752501201407033233368318",
+		NotifyUrl:   "https://weixin.qq.com/",
+		Amount: &Amount{
+			Total:    1,
+			Currency: "CNY",
+		},
+		Payer: &Payer{OpenId: "o4GgauInH_RCEdvrrNGrntXDuXXX"},
+	}
+	// 普通商户支付
+	merchantResponse, err := merchant.JSAPI(srvConfig, param)
+	if err != nil {
+		handle(err)
+	}
+	// 合单支付
+	combineResponse, err := combine.JSAPI(srvConfig, param)
+	if err != nil {
+		handle(err)
+	}
+	// 服务商支付
+	partnerResponse, err := partner.JSAPI(srvConfig, param)
+	if err != nil {
+		handle(err)
+	}
+	// 小程序获取用户openid
+	miniData, err := mini.GetOpenId(srvConfig, "your jsCode")
+	if err != nil {
+		handle(err)
+	}
+	// 公众号获取用户openid
+	officialData, err := official.GetOpenId(srvConfig, "your grant code")
+	if err != nil {
+		handle(err)
+	}
+}
+```
+
+### TODO
+
+- [x] [账单申请及下载(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/bills)
+- [x] [智慧商圈(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/businesscircle)
+- [x] [证书下载](https://github.com/pyihe/wechat-sdk/tree/master/service/certificate)
+- [x] [合单支付(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/combine)
+- [x] [代金券(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/favor)
+- [x] 基础支付( [商户](https://github.com/pyihe/wechat-sdk/tree/master/service/merchant)
+  、[服务商](https://github.com/pyihe/wechat-sdk/tree/master/service/partner))
+- [x] [小程序](https://github.com/pyihe/wechat-sdk/tree/master/service/mini)
+- [x] [微信公众号](https://github.com/pyihe/wechat-sdk/tree/master/service/official)
+- [x] [支付分停车服务(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/parking)
+- [x] [支付分(商户)](https://github.com/pyihe/wechat-sdk/tree/master/service/payscore)
+- [x] [退款(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/refunds)
+- [x] [支付即服务(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/smartguide)
+- [ ] 点金计划(服务商)
+- [ ] 电商收付通(服务商)
+- [ ] 商家券(商户、服务商)
+- [ ] 委托营销(商户、服务商)
+- [ ] 消费卡(商户)
+- [ ] 支付有礼(商户、服务商)
+- [ ] 分账(商户、服务商)
+- [ ] 连锁品牌分账(服务商)
+- [ ] 消费者投诉(商户、服务商)
+- [ ] 商户开户意愿确认(服务商)
+- [ ] 商户违规通知(服务商)
+- [ ] 图片上传
+- [ ] 视频上传
 
 ### 致谢
 
-[Jetbrains Tools](https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png)
+感谢[Jetbrains开源开发许可证](https://www.jetbrains.com/zh-cn/community/opensource/#support) 提供的免费开发工具支持!
 
 <img src="https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png" width="50" height="50"/>
 
-### 功能列表
+### 最后
 
-##### 小程序
-
-| Name  |  Explain |  comment |
-| :---- | :----| :----|
-| GetUserPhoneForMini | 小程序获取电话号码 | 客户端调用微信接口获取加密信息时不能在回调中再次调用登陆接口, 否则会让session_key失效 |
-| GetSessionKeyAndOpenId | 通过小程序授权code获取session_key和用户openid |
-| GetAccessTokenForMini | 小程序获取AccessToken | |
-| GetUserInfoForMini | 小程序获取用户基本信息 | |
-
-##### 公众号
-
-| Name  |  Explain |  comment |
-| :---- | :----| :----|
-| GetAppBaseAccessToken | 公众号开发获取基础接口调用Access_Token | 用于调用其他接口 |
-| GetAppOauthAccessToken | 公众号开发通过code获取网页授权Access_Token | 此Access_Token用于拉取用户信息, code只能用一次 |
-| RefreshOauthToken | 公众号开发刷新网页授权Access_Token ||
-| GetAppUserInfo | 公众号开发拉取用户信息 | 返回结果参考[微信文档](https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html) |
-| CheckOauthToken | 公众号开发校验网页授权Access_Token是否有效 ||
-
-##### 微信支付
-
-| Name  |  Explain |  comment |
-| :---- | :----| :----|
-| CloseOrder |  关闭订单 |   |
-| DownloadBill | 下载对账单  |   |
-| DownloadComment | 拉取订单评论 |  |
-| DownloadFundFlow | 下载资金账单 |  |
-| GetPublicKey | 获取RSA加密公钥 |  |
-| RefundOrder | 申请退款 |  |
-| RefundNotify | 解析微信退款回调内容, 主要是对req_info解密 |   |
-| RefundQuery | 退款查询 |  |
-| Report | 向微信发送接口调用结果的报告, 包括接口调用时间 |  |
-| ReverseOrder | 撤销订单 |  |
-| Transfers | 企业付款到用户零钱 |  |
-| TransfersQuery | 查询企业付款到用户零钱的结果 |  |
-| TransferBank | 企业付款到银行卡 | 未测试 |
-| TransferBankQuery | 查询企业付款到银行卡的结果 | 未测试 |
-| UnifiedMicro | 扫码下单 | 如果需要传detail参数, 参数格式参照[单品优惠活动detail字段列表说明](https://pay.weixin.qq.com/wiki/doc/api/danpin.php?chapter=9_102&index=2) |
-| UnifiedOrder | 统一下单: H5/APP/MWEB/NATIVE | 返回给前端的唤起支付参数中, package = prepay_id=xxxxxxx |
-| UnifiedQuery | 下单结果查询 |  |
-
-##### 商户分账
-| Name  |  Explain |  comment |
-| :---- | :---- | :---- |
-|ProfitSharing|申请分账(单次或多次)|multiTag标志是否是多次分账|
-|QueryProfitSharing|查询分账请求的结果|非分账的结果，而是分账申请的结果|
-|AddProfitSharingReceiver|添加分账接收方||
-|RemoveProfitSharingReceiver|删除分账接受方||
-|FinishProfitSharing|完结分账|如果订单不需要(再)分账, 且剩余待分账金额不为0时, 调用本接口将剩余金额冻结给特约商户|
-|ReturnProfitSharing|分账回退|对已分账的订单进行退款时，先调用本接口将金额从分账接收方回退给商户(非异步, 同步回传回退结果)|
-|QueryProfitSharingReturn|回退结果查询|用于核实回退结果|
-|ProfitSharingNotify|分账动帐通知|分账或分账回退成功后, 微信会将结果发送给商户, 通知结果包含加密信息, **此处解密密钥为ApiV3密钥**。接口返回结果中忽略层级关系，对于需要的字段直接使用Get方法获取值。通知url在商户平台配置，详情参加[分账动帐通知](https://pay.weixin.qq.com/wiki/doc/api/allocation.php?chapter=27_9&index=9)|
-
-##### 现金红包
-| Name  |  Explain |  comment |
-| :---- | :---- | :---- |
-|SendRedPack|发放现金红包||
-|SendGroupRedPack|发放裂变红包||
-|GetRedPackRecords|查询红包记录||
-
-**Notice: NewPayer()必须传入所有需要使用的微信参数, 使用过程中所有请求接口都不需要加入appid/mch_id/ApiKey/secret/sign/ApiV3Key参数**
-
-### Usage Example: 
-```go
-package main
-
-import (
-    "fmt"
-    dev "github.com/pyihe/wechat-sdk"
-)
-
-func main() {
-    var appId, mchId, apiKey, apiSecret string
-    
-    client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-    
-    //unified order
-    param := dev.NewParam()
-    param.Add("nonce_str", "yourNonceStr")
-    param.Add("body", "yourBody")
-    param.Add("out_trade_no", "yourOutTradeNo")
-    param.Add("total_fee", 1)
-    param.Add("spbill_create_ip", "yourIp")
-    param.Add("notify_url", "yourUrl")
-    param.Add("trade_type", "JSAPI")
-    result, err := client.UnifiedOrder(param)
-    if err != nil {
-        handleErr(err)
-    }
-    appId, _ = result.GetString("apppid")
-    prepayId, _ := result.GetString("prepay_id")
-    param = dev.NewParam()
-    param.Add("appId", appId)
-    param.Add("timeStamp", time.Now().Unix())
-    param.Add("nonceStr", "nonceStr")
-    param.Add("package", "prepay_id="+prepayId)
-    param.Add("signType", "MD5")
-    //use to evoke wechat pay 
-    sign := param.Sign("MD5")
-
-
-    //download bill
-    param = dev.NewParam()
-    param.Add("nonce_str", "yourNonceStr")
-    param.Add("bill_date", "yourDate")
-    param.Add("bill_type", "ALL")
-    param.Add("tar_type", "GZIP")
-    err := client.DownloadBill(param, "./bill")
-    if err != nil {
-        handleErr(err)
-    }
-    
-
-    //get phone for mini program user
-    result, err := client.GetUserPhoneForMini("code", "encryptedData", "iv")
-    if err != nil {
-    	handleErr(err)
-    }
-    var phone string
-    if countryCode := result.Get("countryCode"); countryCode != nil && countryCode.(string) == "86" {
-    	purePhone := result.Get("purePhoneNumber")
-    	phone = purePhone.(string)
-    } else {
-    	phoneNumber := result.Get("phoneNumber")
-    	phone = phoneNumber.(string)
-    }
-    fmt.Printf("user phone is %s\n", phone)
-}
-
-```
-
-```go
-package main
-
-import (
-    "fmt"
-    "net/http"
-    
-    dev "github.com/pyihe/wechat-sdk"
-)
-
-func main() {
-    var appId, mchId, apiKey, apiSecret string
-    
-    client := dev.NewPayer(dev.WithAppId(appId), dev.WithMchId(mchId), dev.WithApiKey(apiKey), dev.WithSecret(apiSecret))
-    
-    //handle refund notify
-    http.HandleFunc("/refund_notify", func(writer http.ResponseWriter, request *http.Request) {
-        defer request.Body.Close()
-        result, err := client.RefundNotify(request.Body)
-        if err != nil {
-            handleErr(err)
-        }
-        fmt.Printf("RefundNotify Result = %v\n", result.Data())
-    })
-    http.ListenAndServe(":8810", nil)
-}
-```
+欢迎PR/Issue!

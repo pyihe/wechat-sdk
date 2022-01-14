@@ -3,7 +3,7 @@ package businesscircle
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // SyncPointsResponse 商圈积分同步应答参数

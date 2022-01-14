@@ -1,6 +1,6 @@
 package bills
 
-import "github.com/pyihe/wechat-sdk/model"
+import "github.com/pyihe/wechat-sdk/v3/model"
 
 // TradeBillRequest 申请交易账单
 type TradeBillRequest struct {

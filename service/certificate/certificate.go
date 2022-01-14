@@ -8,11 +8,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/pyihe/wechat-sdk/pkg/aess"
-
 	"github.com/pyihe/go-pkg/maps"
-	"github.com/pyihe/wechat-sdk/pkg/files"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
+	"github.com/pyihe/wechat-sdk/v3/pkg/files"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // DownloadCertificates 下载证书API

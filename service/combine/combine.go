@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/wechat-sdk/model"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // JSAPI JSAPI合单支付

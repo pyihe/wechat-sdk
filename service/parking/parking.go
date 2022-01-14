@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // FindParkingService 查询车牌服务开通信息

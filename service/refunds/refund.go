@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pyihe/go-pkg/errors"
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // Refund 申请退款

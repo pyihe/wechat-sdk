@@ -4,7 +4,6 @@ import (
 	"crypto"
 
 	"github.com/pyihe/go-pkg/errors"
-
 	"github.com/pyihe/secret"
 )
 

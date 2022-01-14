@@ -7,13 +7,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pyihe/wechat-sdk/pkg/files"
-
 	"github.com/pyihe/go-pkg/bytes"
-
 	"github.com/pyihe/go-pkg/errors"
-
-	"github.com/pyihe/wechat-sdk/service"
+	"github.com/pyihe/wechat-sdk/v3/pkg/files"
+	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
 // CreateStock 创建代金券批次API

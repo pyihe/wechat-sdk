@@ -3,7 +3,7 @@ package partner
 import (
 	"time"
 
-	"github.com/pyihe/wechat-sdk/model"
+	"github.com/pyihe/wechat-sdk/v3/model"
 )
 
 // QueryOrderRequest 查询订单request
