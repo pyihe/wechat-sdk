@@ -14,7 +14,8 @@ import (
 )
 
 // DownloadTradeBill 申请交易账单
-// API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_6.shtml
+// 商户平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_6.shtml
+// 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_6.shtml
 func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billResponse *BillResponse, err error) {
 	if config == nil {
 		err = service.ErrInitConfig
@@ -71,7 +72,8 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 }
 
 // DownloadFundFlowBill 申请资金账单
-// API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_7.shtml
+// 商户平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_7.shtml
+// 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_7.shtml
 func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (billResponse *BillResponse, err error) {
 	if config == nil {
 		err = service.ErrInitConfig
