@@ -1,4 +1,4 @@
-package payment
+package merchant
 
 import (
 	"fmt"
