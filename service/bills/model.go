@@ -6,7 +6,6 @@ import "github.com/pyihe/wechat-sdk/model"
 type TradeBillRequest struct {
 	BillDate string `json:"bill_date"`           // 账单日期
 	BillType string `json:"bill_type,omitempty"` // 账单类型
-	TarType  string `json:"tar_type,omitempty"`  // 压缩类型
 	FileName string `json:"file_name,omitempty"` // 文件存储名
 	FilePath string `json:"file_path,omitempty"` // 文件存放路径
 }
@@ -15,7 +14,6 @@ type TradeBillRequest struct {
 type FundFlowRequest struct {
 	BillDate    string `json:"bill_date"`              // 账单日期
 	AccountType string `json:"account_type,omitempty"` // 资金账户类型
-	TarType     string `json:"tar_type,omitempty"`     // 压缩类型
 	FileName    string `json:"file_name,omitempty"`    // 文件存储名
 	FilePath    string `json:"file_path,omitempty"`    // 文件存放路径
 }
@@ -35,13 +33,13 @@ type SubMerchantFundFlowRequest struct {
 	BillDate    string `json:"bill_date"`           // 账单日期
 	AccountType string `json:"account_type"`        // 资金账户类型
 	Algorithm   string `json:"algorithm"`           // 加密算法
-	TarType     string `json:"tar_type,omitempty"`  // 压缩格式
 	FileName    string `json:"file_name,omitempty"` // 账单文件存储名
 	FilePath    string `json:"file_path,omitempty"` // 账单文件存储路径
 }
 
 // SubMerchantFundFlowResponse 服务商平台申请单个子商户资金账单应答
 type SubMerchantFundFlowResponse struct {
+	model.WechatError
 	RequestId         string              `json:"-"`
 	DownloadBillCount int32               `json:"download_bill_count,omitempty"` // 下载信息总数
 	DownloadBillList  []*DownloadBillList `json:"download_bill_list,omitempty"`  // 下载信息明细

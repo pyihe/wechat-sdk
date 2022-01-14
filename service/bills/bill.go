@@ -1,6 +1,7 @@
 package bills
 
 import (
+	"crypto"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -29,10 +30,6 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 	if request.BillType != "" {
 		param.Add("bill_type", request.BillType)
 	}
-	if request.TarType != "" {
-		param.Add("tar_type", request.TarType)
-	}
-
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/bill/tradebill?%s", param.Encode()), nil)
 	if err != nil {
 		return
@@ -49,13 +46,25 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 	if err != nil {
 		return
 	}
+
+	// 校验hash值
+	switch billResponse.HashType {
+	case "SHA1":
+		if err = config.VerifyHashValue(crypto.SHA1, content, billResponse.HashValue); err != nil {
+			return
+		}
+	default:
+		err = service.ErrInvalidHashType
+		return
+	}
+
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
+		filename = fmt.Sprintf("trade_bill_%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
-		filePath = "./bills"
+		filePath = "./tradebill"
 	}
 	err = files.WritToFile(filePath, filename, content)
 	return
@@ -78,9 +87,6 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 	if request.AccountType != "" {
 		param.Add("account_type", request.AccountType)
 	}
-	if request.TarType != "" {
-		param.Add("tar_type", request.TarType)
-	}
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/bill/fundflowbill?%s", param.Encode()), nil)
 	if err != nil {
 		return
@@ -97,13 +103,25 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 	if err != nil {
 		return
 	}
+
+	// 校验hash值
+	switch billResponse.HashType {
+	case "SHA1":
+		if err = config.VerifyHashValue(crypto.SHA1, content, billResponse.HashValue); err != nil {
+			return
+		}
+	default:
+		err = service.ErrInvalidHashType
+		return
+	}
+
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
+		filename = fmt.Sprintf("fund_flow_%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
-		filePath = "./bills"
+		filePath = "./fundflow"
 	}
 	err = files.WritToFile(filePath, filename, content)
 	return
@@ -141,9 +159,6 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 	param.Add("bill_date", request.BillDate)
 	param.Add("account_type", request.AccountType)
 	param.Add("algorithm", request.Algorithm)
-	if request.TarType == "" {
-		param.Add("tar_type", request.TarType)
-	}
 
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/bill/sub-merchant-fundflowbill?%s", param.Encode()), nil)
 	if err != nil {
@@ -181,6 +196,17 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 		if err != nil {
 			return
 		}
+		// 校验明文hash值
+		switch list.HashType {
+		case "SHA1":
+			if err = config.VerifyHashValue(crypto.SHA1, plainText, list.HashValue); err != nil {
+				return
+			}
+		default:
+			err = service.ErrInvalidHashType
+			return
+		}
+
 		content = append(content, plainText...)
 	}
 
@@ -188,10 +214,10 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 	filename := request.FileName
 	filePath := request.FilePath
 	if filename == "" {
-		filename = fmt.Sprintf("%s.xlsx", request.BillDate)
+		filename = fmt.Sprintf("sub_fund_flow_%s.xlsx", request.BillDate)
 	}
 	if filePath == "" {
-		filePath = "./bills"
+		filePath = "./mchfundflow"
 	}
 	err = files.WritToFile(filePath, filename, content)
 	return

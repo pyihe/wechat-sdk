@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
@@ -36,8 +37,9 @@ var (
 	ErrNoApiV3Key        = errors.New("请提供商户API密钥!")
 	ErrInvalidSessionKey = errors.New("获取session_key失败!")
 	ErrRequestAgain      = errors.New("请稍后再次请求!")
-	ErrInitConfig        = errors.New("请初始化Config!")
+	ErrInitConfig        = errors.New("请初始化config!")
 	ErrInvalidResource   = errors.New("未获取到通知资源数据!")
+	ErrInvalidHashType   = errors.New("暂不支持的哈希类型!")
 )
 
 type Option func(*Config)
@@ -142,6 +144,9 @@ type Config struct {
 	// 用于签名与验证签名
 	cipher secret.Cipher
 
+	// 用于验证hash值
+	hasher secret.Hasher
+
 	// 微信平台公钥证书, key为serialNo, value为*rsa.PublicKey
 	certificates maps.Param
 }
@@ -151,6 +156,7 @@ func NewConfig(opts ...Option) *Config {
 		domain:       "https://api.mch.weixin.qq.com",
 		httpClient:   http.DefaultClient,
 		cipher:       secret.NewCipher(),
+		hasher:       secret.NewHasher(),
 		certificates: maps.NewParam(),
 	}
 	for _, op := range opts {
@@ -403,6 +409,18 @@ func (c *Config) Download(url string) (data []byte, err error) {
 	}
 	defer response.Body.Close()
 	data, err = ioutil.ReadAll(response.Body)
+	return
+}
+
+// VerifyHashValue 校验hash值
+func (c *Config) VerifyHashValue(hashType crypto.Hash, data interface{}, hashValue string) (err error) {
+	v, err := c.hasher.HashToString(data, hashType)
+	if err != nil {
+		return err
+	}
+	if strings.ToUpper(hashValue) != strings.ToUpper(v) {
+		err = errors.New("HASH校验不通过!")
+	}
 	return
 }
 
