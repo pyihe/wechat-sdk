@@ -1,9 +1,8 @@
-module github.com/pyihe/wechat-sdk
+module github.com/pyihe/wechat-sdk/v3
 
 go 1.13
 
 require (
-	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/pyihe/secret v0.0.5-0.20210108054104-d1cd583d6a9b
-	github.com/pyihe/util v0.0.3-0.20210226122117-52b5f3a2cd65
+	github.com/pyihe/go-pkg v0.0.0-20211210143529-a1fb84f0ad0a
+	github.com/pyihe/secret v0.0.7-0.20211217073949-f4e53165dcbe
 )
