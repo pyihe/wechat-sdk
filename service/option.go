@@ -436,16 +436,25 @@ func unmarshalJSON(data []byte, dst interface{}) (err error) {
 }
 
 func marshalJSON(data interface{}) (bytes []byte, err error) {
-	if reflect.ValueOf(data).IsZero() {
+	dataValue := reflect.ValueOf(data)
+	dataType := reflect.TypeOf(data).Kind()
+
+	if dataValue.IsZero() {
 		return
 	}
-	switch d := data.(type) {
-	case string:
-		bytes = []byte(d)
-	case []byte:
-		bytes = d
-	default:
+	switch dataType {
+	case reflect.String:
+		bytes = []byte(dataValue.String())
+	case reflect.Slice:
+		if dataValue.Elem().Kind() != reflect.Uint8 {
+			err = errors.New("请传入字节切片!")
+			break
+		}
+		bytes = dataValue.Bytes()
+	case reflect.Struct, reflect.Ptr:
 		bytes, err = json.Marshal(data)
+	default:
+		err = errors.New("序列化失败, 数据类型不支持: " + dataType.String())
 	}
 	return
 }
