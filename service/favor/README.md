@@ -15,5 +15,5 @@
 |根据商户号查询用户的券|[QueryUserCoupons](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L376)|
 |下载批次核销明细|[DownloadStockUseFlow](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L431)|
 |下载批次退款明细|[DownloadStockRefundFlow](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L481)|
-|设置消息通知地址|[SettingCallbacks](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L537)|
+|设置消息通知地址|[SetCallbacks](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L537)|
 |解析核销事件回调通知|[ParseUseNotify](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L559)|

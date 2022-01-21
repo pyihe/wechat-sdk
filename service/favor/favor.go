@@ -528,10 +528,10 @@ func DownloadStockRefundFlow(config *service.Config, request *DownloadRequest) (
 	return
 }
 
-// SettingCallbacks 设置消息通知地址API
+// SetCallbacks 设置消息通知地址API
 // 商户平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter9_1_12.shtml
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_12.shtml
-func SettingCallbacks(config *service.Config, request interface{}) (settingResponse *SettingCallbacksResponse, err error) {
+func SetCallbacks(config *service.Config, request interface{}) (settingResponse *SettingCallbacksResponse, err error) {
 	if config == nil {
 		err = service.ErrInitConfig
 		return
