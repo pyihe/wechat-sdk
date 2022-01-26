@@ -53,7 +53,7 @@ type TerminatePermissionResponse struct {
 
 // OpenOrCloseResponse 开启/解除授权服务回调通知内容
 type OpenOrCloseResponse struct {
-	Id                string    // 通知ID
+	NotifyId          string    // 通知ID
 	AppId             string    `json:"appid,omitempty"`               // 公众号ID
 	MchId             string    `json:"mchid,omitempty"`               // 商户号
 	OutRequestNo      string    `json:"out_request_no,omitempty"`      // 商户签约单号

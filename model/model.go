@@ -1,44 +1,40 @@
 package model
 
-// WechatError 调用微信接口返回的通用错误格式
-type WechatError struct {
-	Code    string      `json:"code,omitempty"`
-	Message string      `json:"message,omitempty"`
-	Detail  ErrorDetail `json:"detail,omitempty"`
+import (
+	"fmt"
+)
+
+// WechatHeader 微信Header
+type WechatHeader struct {
+	RequestId string // 唯一请求ID
+	NotifyId  string // 唯一通知ID
 }
 
-func (w WechatError) IsZero() bool {
-	if len(w.Code) != 0 {
-		return false
+// WechatError 调用微信接口返回的通用错误格式
+type WechatError struct {
+	Code    string      `json:"code,omitempty"`    // 详细错误码
+	Message string      `json:"message,omitempty"` // 错误描述
+	Detail  ErrorDetail `json:"detail,omitempty"`  // 错误详细信息
+}
+
+func (w WechatError) Error() error {
+	if len(w.Code) == 0 &&
+		len(w.Message) == 0 &&
+		len(w.Detail.Field) == 0 &&
+		len(w.Detail.Value) == 0 &&
+		len(w.Detail.Issue) == 0 &&
+		len(w.Detail.Location) == 0 {
+		return nil
 	}
-	if len(w.Message) != 0 {
-		return false
-	}
-	return w.Detail.IsZero()
+	return fmt.Errorf(`{"code":"%s" "message":"%s" "field":"%s" "value":"%s" "issue":"%s" "location":"%s"}`, w.Code, w.Message, w.Detail.Field, w.Detail.Value, w.Detail.Issue, w.Detail.Location)
 }
 
 // ErrorDetail 错误详情
 type ErrorDetail struct {
-	Field    string `json:"field,omitempty"`
-	Value    string `json:"value,omitempty"`
-	Issue    string `json:"issue,omitempty"`
-	Location string `json:"location,omitempty"`
-}
-
-func (e ErrorDetail) IsZero() bool {
-	if len(e.Field) != 0 {
-		return false
-	}
-	if len(e.Value) != 0 {
-		return false
-	}
-	if len(e.Issue) != 0 {
-		return false
-	}
-	if len(e.Location) != 0 {
-		return false
-	}
-	return true
+	Field    string `json:"field,omitempty"`    // 错误参数的位置
+	Value    string `json:"value,omitempty"`    // 错误的值
+	Issue    string `json:"issue,omitempty"`    // 具体错误的原因
+	Location string `json:"location,omitempty"` // 出错的位置
 }
 
 // WechatNotifyResponse 微信通知的回复格式

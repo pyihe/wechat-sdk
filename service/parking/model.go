@@ -111,7 +111,7 @@ type QueryResponse struct {
 
 // ParkStateResponse 停车入场状态变更通知参数
 type ParkStateResponse struct {
-	Id                      string    `json:"id,omitempty"`                        // 唯一通知ID
+	NotifyId                string    // 唯一通知ID
 	SpMchId                 string    `json:"sp_mchid,omitempty"`                  // 商户号
 	SubMchId                string    `json:"sub_mchid,omitempty"`                 // 子商户号
 	ParkingId               string    `json:"parking_id,omitempty"`                // 停车入场ID
@@ -127,7 +127,7 @@ type ParkStateResponse struct {
 
 // PaymentResponse 支付结果通知参数
 type PaymentResponse struct {
-	Id                    string                   `json:"-"`                                 // 唯一通知ID
+	NotifyId              string                   // 唯一通知ID
 	AppId                 string                   `json:"appid,omitempty"`                   // 应用ID
 	SpMchId               string                   `json:"sp_mchid,omitempty"`                // 商户号
 	SubAppId              string                   `json:"sub_appid,omitempty"`               // 子商户应用ID

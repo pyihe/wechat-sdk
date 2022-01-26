@@ -1,12 +1,13 @@
 package certificate
 
 import (
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
@@ -24,11 +25,11 @@ import (
 // API详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/wechatpay/wechatpay5_1.shtml
 func DownloadCertificates(config *service.Config, savePath string) (certsResponse *CertResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if config.GetApiKey() == "" {
-		err = service.ErrNoApiV3Key
+		err = errors.ErrNoApiV3Key
 		return
 	}
 	// 发起带签名的请求
@@ -45,9 +46,8 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 		return
 	}
 
-	var cipher = config.GetCipher()
+	var cipher = config.GetMerchantCipher()
 	var key = config.GetApiKey()
-	var certificates = config.GetCertificates()
 	var syncTag = config.GetSyncCertificateTag()
 
 	for _, encryptData := range certsResponse.Data {
@@ -71,7 +71,7 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 		}
 		certsResponse.Certificates.Add(serialNo, certificate)
 		if syncTag {
-			certificates.Add(serialNo, certificate.PublicKey.(*rsa.PublicKey))
+			config.AddCertificate(serialNo, certificate)
 		}
 		// 同步到本地
 		fileName := fmt.Sprintf("public_key_%s.pem", encryptData.ExpireTime.Format("2006_01_02"))

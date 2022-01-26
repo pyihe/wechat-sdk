@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/go-pkg/maps"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -18,15 +18,15 @@ import (
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
 func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if config.GetSecret() == "" {
-		err = service.ErrNoSecret
+		err = errors.ErrNoSecret
 		return
 	}
 	if config.GetAppId() == "" {
-		err = service.ErrNoAppId
+		err = errors.ErrNoSecret
 		return
 	}
 
@@ -47,7 +47,7 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // GetOpenId 公众号授权获取用户OpenId
@@ -71,15 +71,15 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 // 接口详情介绍页面：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
 func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if config.GetSecret() == "" {
-		err = service.ErrNoSecret
+		err = errors.ErrNoSecret
 		return
 	}
 	if config.GetAppId() == "" {
-		err = service.ErrNoAppId
+		err = errors.ErrNoSecret
 		return
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code", config.GetAppId(), config.GetSecret(), grantCode)
@@ -99,7 +99,7 @@ func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // RefreshOauthAccessToken 刷新公众号内网页授权获取的access_token
@@ -123,7 +123,7 @@ func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err
 // 接口详情介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
 func RefreshOauthAccessToken(config *service.Config, refreshToken string) (result maps.Param, err error) {
 	if config.GetAppId() == "" {
-		err = service.ErrNoAppId
+		err = errors.ErrNoSecret
 		return
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%s&grant_type=refresh_token&refresh_token=%s", config.GetAppId(), refreshToken)
@@ -143,7 +143,7 @@ func RefreshOauthAccessToken(config *service.Config, refreshToken string) (resul
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // GetUserInfo 公众号获取用户基本信息
@@ -182,7 +182,7 @@ func GetUserInfo(accessToken, openId, lang string) (result maps.Param, err error
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // CheckOauthAccessTokenValid 校验网页授权凭证access_token是否有效
@@ -210,5 +210,5 @@ func CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
 	if errMsg == "ok" {
 		return true, nil
 	}
-	return false, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return false, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }

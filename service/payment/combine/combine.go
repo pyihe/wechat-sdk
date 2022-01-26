@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -14,11 +14,11 @@ import (
 // 服务商平台JSAPI合单支付API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_3.shtml
 func JSAPI(config *service.Config, request interface{}) (jsapiResponse *model.JSAPIResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -37,11 +37,11 @@ func JSAPI(config *service.Config, request interface{}) (jsapiResponse *model.JS
 // 服务商平台H5合单支付API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_2.shtml
 func H5(config *service.Config, request interface{}) (h5Response *model.H5Response, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -59,11 +59,11 @@ func H5(config *service.Config, request interface{}) (h5Response *model.H5Respon
 // 服务商平台APP合单支付API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_1.shtml
 func APP(config *service.Config, request interface{}) (appResponse *model.AppResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -81,11 +81,11 @@ func APP(config *service.Config, request interface{}) (appResponse *model.AppRes
 // 服务商平台合单支付API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_5.shtml
 func Native(config *service.Config, request interface{}) (nativeResponse *model.NativeResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -103,13 +103,10 @@ func Native(config *service.Config, request interface{}) (nativeResponse *model.
 // 服务商平台合单查询订单API: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_11.shtml
 func QueryOrder(config *service.Config, combineOutTradeNo string) (order *PrepayOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
-	if combineOutTradeNo == "" {
-		err = errors.New("请提供combine_out_trade_no!")
-		return
-	}
+
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/combine-transactions/out-trade-no/%s", combineOutTradeNo), nil)
 	if err != nil {
 		return
@@ -124,15 +121,12 @@ func QueryOrder(config *service.Config, combineOutTradeNo string) (order *Prepay
 // 服务商平台合单关闭订单API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_12.shtml
 func CloseOrder(config *service.Config, combineOutTradeNo string, request interface{}) (closeResponse *CloseOrderResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
-	if combineOutTradeNo == "" {
-		err = errors.New("请提供combine_out_trade_no!")
-		return
-	}
+
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/combine-transactions/out-trade-no/%s/close", combineOutTradeNo), request)
@@ -149,7 +143,7 @@ func CloseOrder(config *service.Config, combineOutTradeNo string, request interf
 // 服务商平台合单支付通知API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_13.shtml
 func ParsePrepayNotify(config *service.Config, request *http.Request) (order *PrepayOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	order = new(PrepayOrder)

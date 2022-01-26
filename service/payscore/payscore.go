@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -14,11 +14,11 @@ import (
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_2.shtml
 func PrePermit(config *service.Config, request interface{}) (permissionResponse *PrePermitResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/payscore/permissions", request)
@@ -35,16 +35,11 @@ func PrePermit(config *service.Config, request interface{}) (permissionResponse 
 // 通过openid查询API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_5.shtml
 func QueryPermissions(config *service.Config, request *QueryPermissionsRequest) (queryResponse *QueryPermissionsResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-
-	if request.ServiceId == "" {
-		err = errors.New("请填写service_id!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -61,7 +56,7 @@ func QueryPermissions(config *service.Config, request *QueryPermissionsRequest) 
 		apiUrl = fmt.Sprintf("/v3/payscore/permissions/openid/%s?%s", request.OpenId, param.Encode())
 
 	default:
-		err = errors.New("参数错误, 请查看文档!")
+		err = errors.ErrParam
 	}
 
 	response, err := config.RequestWithSign(http.MethodGet, apiUrl, nil)
@@ -78,21 +73,14 @@ func QueryPermissions(config *service.Config, request *QueryPermissionsRequest) 
 // 通过openid解除API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_6.shtml
 func TerminatePermission(config *service.Config, request *TerminatePermissionRequest) (terminateResponse *TerminatePermissionResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
-	if request.ServiceId == "" {
-		err = errors.New("请提供service_id!")
-		return
-	}
-	if request.Reason == "" {
-		err = errors.New("请提供reason!")
-		return
-	}
+
 	apiUrl := ""
 	switch {
 	case request.AuthorizationCode != "":
@@ -105,7 +93,7 @@ func TerminatePermission(config *service.Config, request *TerminatePermissionReq
 		apiUrl = fmt.Sprintf("/v3/payscore/permissions/openid/%s/terminate", request.OpenId)
 
 	default:
-		err = errors.New("参数错误!")
+		err = errors.ErrParam
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, apiUrl, request)
@@ -121,11 +109,11 @@ func TerminatePermission(config *service.Config, request *TerminatePermissionReq
 // 文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_10.shtml
 func ParseOpenOrCloseNotify(config *service.Config, request *http.Request) (response *OpenOrCloseResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	response = new(OpenOrCloseResponse)
-	response.Id, err = config.ParseWechatNotify(request, response)
+	response.NotifyId, err = config.ParseWechatNotify(request, response)
 	return
 }
 
@@ -133,7 +121,7 @@ func ParseOpenOrCloseNotify(config *service.Config, request *http.Request) (resp
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_21.shtml
 func ParseConfirmOrderNotify(config *service.Config, request *http.Request) (confirmResponse *ServiceOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	confirmResponse = new(ServiceOrder)
@@ -145,11 +133,11 @@ func ParseConfirmOrderNotify(config *service.Config, request *http.Request) (con
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_14.shtml
 func CreateServiceOrder(config *service.Config, request interface{}) (serviceOrder *ServiceOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if reflect.ValueOf(request).IsZero() {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/payscore/serviceorder", request)
@@ -165,23 +153,11 @@ func CreateServiceOrder(config *service.Config, request interface{}) (serviceOrd
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_15.shtml
 func QueryServiceOrder(config *service.Config, request *QueryOrderRequest) (queryResponse *ServiceOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.OutOrderNo == "" && request.QueryId == "" {
-		err = errors.New("请填写out_order_no或者query_id!")
-		return
-	}
-	if request.ServiceId == "" {
-		err = errors.New("请填写service_id!")
-		return
-	}
-	if request.AppId == "" {
-		err = errors.New("请填写appid!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -207,27 +183,11 @@ func QueryServiceOrder(config *service.Config, request *QueryOrderRequest) (quer
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_16.shtml
 func CancelServiceOrder(config *service.Config, request *CancelRequest) (cancelResponse *CancelResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.OutOrderNo == "" {
-		err = errors.New("请填写out_order_no!")
-		return
-	}
-	if request.AppId == "" {
-		err = errors.New("请填写appid!")
-		return
-	}
-	if request.ServiceId == "" {
-		err = errors.New("请填写service_id!")
-		return
-	}
-	if request.Reason == "" {
-		err = errors.New("请填写reason!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -244,15 +204,7 @@ func CancelServiceOrder(config *service.Config, request *CancelRequest) (cancelR
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_17.shtml
 func ModifyServiceOrder(config *service.Config, outOrderNo string, request *ModifyRequest) (modifyResponse *ModifyResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outOrderNo == "" {
-		err = errors.New("请提供out_order_no!")
-		return
-	}
-	if reflect.ValueOf(request).IsZero() {
-		err = service.ErrNoRequest
+		err = errors.ErrNoConfig
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/payscore/serviceorder/%s/modify", outOrderNo), request)
@@ -268,15 +220,11 @@ func ModifyServiceOrder(config *service.Config, outOrderNo string, request *Modi
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_18.shtml
 func CompleteServiceOrder(config *service.Config, outOrderNo string, request *CompleteRequest) (completeResponse *CompleteResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outOrderNo == "" {
-		err = errors.New("请提供out_order_no!")
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/payscore/serviceorder/%s/complete", outOrderNo), request)
@@ -292,15 +240,11 @@ func CompleteServiceOrder(config *service.Config, outOrderNo string, request *Co
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_19.shtml
 func PayServiceOrder(config *service.Config, outOrderNo string, request *PayOrderRequest) (payResponse *PayOrderResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outOrderNo == "" {
-		err = errors.New("请提供out_order_no!")
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/payscore/serviceorder/%s/pay", outOrderNo), request)
@@ -316,15 +260,11 @@ func PayServiceOrder(config *service.Config, outOrderNo string, request *PayOrde
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_20.shtml
 func SyncServiceOrder(config *service.Config, outOrderNo string, request *SyncRequest) (syncResponse *SyncResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outOrderNo == "" {
-		err = errors.New("请提供out_order_no!")
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/payscore/serviceorder/%s/sync", outOrderNo), request)
@@ -340,7 +280,7 @@ func SyncServiceOrder(config *service.Config, outOrderNo string, request *SyncRe
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_15.shtml
 func ParsePaymentNotify(config *service.Config, request *http.Request) (payResponse *ServiceOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	payResponse = new(ServiceOrder)

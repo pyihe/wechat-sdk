@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -15,11 +15,11 @@ import (
 // 服务商平台合单退款API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_14.shtml
 func Refund(config *service.Config, request interface{}) (refundOrder *RefundOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/refund/domestic/refunds", request)
@@ -38,11 +38,7 @@ func Refund(config *service.Config, request interface{}) (refundOrder *RefundOrd
 // 服务商平台合单支付查询退款API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_15.shtml
 func QueryRefund(config *service.Config, outRefundNo string) (refundOrder *RefundOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outRefundNo == "" {
-		err = errors.New("请提供out_refund_no!")
+		err = errors.ErrNoConfig
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/refund/domestic/refunds/%s", outRefundNo), nil)
@@ -61,7 +57,7 @@ func QueryRefund(config *service.Config, outRefundNo string) (refundOrder *Refun
 // 服务商平台合单支付退款通知API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter5_1_16.shtml
 func ParseRefundNotify(config *service.Config, request *http.Request) (refundOrder *RefundOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	refundOrder = new(RefundOrder)

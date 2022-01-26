@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -14,11 +14,11 @@ import (
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_1.shtml
 func JSAPI(config *service.Config, request interface{}) (jsapiResponse *model.JSAPIResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/pay/partner/transactions/jsapi"), request)
@@ -35,11 +35,11 @@ func JSAPI(config *service.Config, request interface{}) (jsapiResponse *model.JS
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_2_1.shtml
 func APP(config *service.Config, request interface{}) (appResponse *model.AppResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/pay/partner/transactions/app"), request)
@@ -55,11 +55,11 @@ func APP(config *service.Config, request interface{}) (appResponse *model.AppRes
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_3_1.shtml
 func H5(config *service.Config, request interface{}) (h5Response *model.H5Response, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/pay/partner/transactions/h5"), request)
@@ -76,11 +76,11 @@ func H5(config *service.Config, request interface{}) (h5Response *model.H5Respon
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_4_1.shtml
 func Native(config *service.Config, request interface{}) (nativeResponse *model.NativeResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/pay/partner/transactions/native"), request)
@@ -97,19 +97,11 @@ func Native(config *service.Config, request interface{}) (nativeResponse *model.
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_2.shtml
 func QueryOrder(config *service.Config, request *QueryOrderRequest) (order *PrepayOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.SpMchId == "" {
-		err = errors.New("请提供sp_mchid!")
-		return
-	}
-	if request.SubMchId == "" {
-		err = errors.New("请提供sub_mchid!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -124,7 +116,7 @@ func QueryOrder(config *service.Config, request *QueryOrderRequest) (order *Prep
 	case request.OutTradeNo != "":
 		apiUrl = fmt.Sprintf("/v3/combine-transactions/out-trade-no/%s?%s", request.TransactionId, param.Encode())
 	default:
-		err = errors.New("请提供transaction_id或者out_trade_no!")
+		err = errors.ErrParam
 		return
 	}
 
@@ -141,23 +133,11 @@ func QueryOrder(config *service.Config, request *QueryOrderRequest) (order *Prep
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_3.shtml
 func CloseOrder(config *service.Config, request *CloseOrderRequest) (closeResponse *CloseOrderResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.SpMchId == "" {
-		err = errors.New("请提供sp_mchid!")
-		return
-	}
-	if request.SubMchId == "" {
-		err = errors.New("请提供sub_mchid!")
-		return
-	}
-	if request.OutTradeNo == "" {
-		err = errors.New("请提供out_trade_no!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -178,7 +158,7 @@ func CloseOrder(config *service.Config, request *CloseOrderRequest) (closeRespon
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_5.shtml
 func ParsePrepayNotify(config *service.Config, request *http.Request) (order *PrepayOrder, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	order = new(PrepayOrder)

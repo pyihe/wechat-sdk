@@ -4,10 +4,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"io/ioutil"
 	"strings"
-
-	"github.com/pyihe/go-pkg/errors"
 )
 
 // LoadRSAPrivateKey 加载RSA PRIVATE KEY
@@ -18,7 +17,7 @@ func LoadRSAPrivateKey(file string) (privateKey *rsa.PrivateKey, err error) {
 	}
 	block, _ := pem.Decode(data)
 	if block.Type != "PRIVATE KEY" {
-		err = errors.New("证书类型必须是PRIVATE KEY!")
+		err = errors.New("证书类型必须是PRIVATE KEY")
 		return
 	}
 	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
@@ -28,7 +27,7 @@ func LoadRSAPrivateKey(file string) (privateKey *rsa.PrivateKey, err error) {
 	var ok bool
 	privateKey, ok = key.(*rsa.PrivateKey)
 	if !ok {
-		err = errors.New("请提供RSA私钥文件!")
+		err = errors.New("请提供RSA私钥文件")
 	}
 	return
 }
@@ -41,7 +40,7 @@ func LoadRSAPublicKey(file string) (publicKey *rsa.PublicKey, err error) {
 	}
 	block, _ := pem.Decode(data)
 	if block.Type != "PUBLIC KEY" {
-		err = errors.New("证书类型必须是PUBLIC KEY!")
+		err = errors.New("证书类型必须是PUBLIC KEY")
 		return
 	}
 	key, err := x509.ParsePKIXPublicKey(block.Bytes)
@@ -51,7 +50,7 @@ func LoadRSAPublicKey(file string) (publicKey *rsa.PublicKey, err error) {
 	var ok bool
 	publicKey, ok = key.(*rsa.PublicKey)
 	if !ok {
-		err = errors.New("请提供RSA公钥文件!")
+		err = errors.New("请提供RSA公钥文件")
 	}
 	return
 }
@@ -75,7 +74,7 @@ func LoadRSAPublicKeyWithSerialNo(file string) (serialNo string, publicKey *rsa.
 	}
 	block, _ := pem.Decode(data)
 	if block.Type != "PUBLIC KEY" {
-		err = errors.New("证书类型必须是PUBLIC KEY!")
+		err = errors.New("证书类型必须是PUBLIC KEY")
 		return
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
@@ -85,7 +84,7 @@ func LoadRSAPublicKeyWithSerialNo(file string) (serialNo string, publicKey *rsa.
 	serialNo = strings.ToUpper(cert.SerialNumber.Text(16))
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		err = errors.New("错误的证书类型!")
+		err = errors.New("错误的证书类型")
 		return
 	}
 	return
@@ -101,7 +100,7 @@ func UnmarshalRSAPublicKey(key []byte) (serialNo string, publicKey *rsa.PublicKe
 	serialNo = strings.ToUpper(cert.SerialNumber.Text(16))
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		err = errors.New("错误的证书类型!")
+		err = errors.New("错误的证书类型")
 		return
 	}
 	return

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -15,11 +15,11 @@ import (
 // 服务商API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_6_2.shtml
 func SyncPoints(config *service.Config, request interface{}) (syncResponse *SyncPointsResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if reflect.ValueOf(request).IsZero() {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/businesscircle/points/notify", request)
@@ -37,19 +37,11 @@ func SyncPoints(config *service.Config, request interface{}) (syncResponse *Sync
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_6_4.shtml
 func QueryUserAuthorization(config *service.Config, request *QueryUserAuthorizationRequest) (queryResponse *QueryUserAuthorizationResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.AppId == "" {
-		err = errors.New("请填写appid!")
-		return
-	}
-	if request.OpenId == "" {
-		err = errors.New("请填写openid!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	param := make(url.Values)
@@ -72,11 +64,11 @@ func QueryUserAuthorization(config *service.Config, request *QueryUserAuthorizat
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_6_3.shtml
 func ParseRefundNotify(config *service.Config, request *http.Request) (refundResponse *RefundResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	refundResponse = new(RefundResponse)
-	refundResponse.Id, err = config.ParseWechatNotify(request, refundResponse)
+	refundResponse.NotifyId, err = config.ParseWechatNotify(request, refundResponse)
 	return
 }
 
@@ -85,10 +77,10 @@ func ParseRefundNotify(config *service.Config, request *http.Request) (refundRes
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_6_1.shtml
 func ParsePaymentNotify(config *service.Config, request *http.Request) (paymentResponse *PaymentResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	paymentResponse = new(PaymentResponse)
-	paymentResponse.Id, err = config.ParseWechatNotify(request, paymentResponse)
+	paymentResponse.NotifyId, err = config.ParseWechatNotify(request, paymentResponse)
 	return
 }

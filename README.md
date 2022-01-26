@@ -145,26 +145,27 @@ func main() {
 - [x] [支付分(商户)](https://github.com/pyihe/wechat-sdk/tree/master/service/payscore)
 - [x] [退款(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/refunds)
 - [x] [支付即服务(商户、服务商)](https://github.com/pyihe/wechat-sdk/tree/master/service/smartguide)
-- [ ] 点金计划(服务商)
+- [x] [商家券(商户、服务商)]()
+- [x] [委托营销(商户、服务商)]()
+- [x] [消费卡(商户)]()
+- [x] [分账(商户、服务商)]()
+- [x] [图片上传(营销专用)]()
+- [x] [支付有礼(商户、服务商)]()
+- [x] [消费者投诉2.0(商户、服务商)]()
+- [x] [其他能力(图片上传、视频上传)]()
+- [x] [特约商户进件(服务商)]()
+- [x] [点金计划(服务商)]()
+- [x] [商户开户意愿确认(服务商)]()
+- [x] [商户违规通知(服务商)]()
+- [x] [连锁品牌分账(服务商)]()
 - [ ] 电商收付通(服务商)
-- [ ] 商家券(商户、服务商)
-- [ ] 委托营销(商户、服务商)
-- [ ] 消费卡(商户)
-- [ ] 支付有礼(商户、服务商)
-- [ ] 分账(商户、服务商)
-- [ ] 连锁品牌分账(服务商)
-- [ ] 消费者投诉(商户、服务商)
-- [ ] 商户开户意愿确认(服务商)
-- [ ] 商户违规通知(服务商)
-- [ ] 图片上传
-- [ ] 视频上传
+- [ ] **付款码支付(官方尚未升级)**
+- [ ] **现金红包(官方尚未升级)**
+- [ ] **付款(官方尚未升级)**
+- [ ] **海关报关(官方尚未升级)**
 
 ### 致谢
 
 感谢[Jetbrains开源开发许可证](https://www.jetbrains.com/zh-cn/community/opensource/#support) 提供的免费开发工具支持!
 
 <img src="https://github.com/pyihe/wechat-sdk/blob/master/jetbrains.png" width="50" height="50"/>
-
-### 最后
-
-欢迎PR/Issue!

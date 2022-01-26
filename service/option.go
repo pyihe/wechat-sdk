@@ -4,15 +4,21 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
+
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/go-pkg/rands"
 	"github.com/pyihe/secret"
@@ -24,21 +30,7 @@ import (
 
 const (
 	ContentTypeJSON = "application/json"
-	PostContentType = "application/xml;charset=utf-8"
-)
-
-var (
-	ErrNoAppId           = errors.New("请提供appid!")
-	ErrNoRequest         = errors.New("请求参数为空!")
-	ErrNoSecret          = errors.New("请提供secret!")
-	ErrNoSerialNo        = errors.New("请提供商户证书序列号!")
-	ErrNoMchId           = errors.New("请提供商户号!")
-	ErrNoApiV3Key        = errors.New("请提供商户API密钥!")
-	ErrInvalidSessionKey = errors.New("获取session_key失败!")
-	ErrRequestAgain      = errors.New("请稍后再次请求!")
-	ErrInitConfig        = errors.New("请初始化config!")
-	ErrInvalidResource   = errors.New("未获取到通知资源数据!")
-	ErrInvalidHashType   = errors.New("暂不支持的哈希类型!")
+	ContentTypeXML  = "application/xml;charset=utf-8"
 )
 
 type Option func(*Config)
@@ -85,7 +77,7 @@ func WithPrivateKey(file string) Option {
 		if err != nil {
 			panic(err)
 		}
-		if err = config.cipher.SetRSAPrivateKey(privateKey, secret.PKCSLevel8); err != nil {
+		if err = config.merchantCipher.SetRSAPrivateKey(privateKey, secret.PKCSLevel8); err != nil {
 			panic(err)
 		}
 	}
@@ -101,11 +93,11 @@ func WithPublicKey(file string) Option {
 		if !ok {
 			panic("加载证书失败: 请确认证书是否为RSA PublicKey!")
 		}
-		serialNo := cert.SerialNumber.Text(16)
-		if err = config.cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8); err != nil {
+		serialNo := strings.ToUpper(cert.SerialNumber.Text(16))
+		if err = config.wechatCipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8); err != nil {
 			panic(err)
 		}
-		config.certificates.Add(serialNo, publicKey)
+		config.certificates.Add(serialNo, cert)
 	}
 }
 
@@ -140,23 +132,27 @@ type Config struct {
 	// http client
 	httpClient *http.Client
 
-	// 用于签名与验证签名
-	cipher secret.Cipher
+	// 包含商户平台证书的加密器，用于签名、签名验证、解密
+	merchantCipher secret.Cipher
+
+	// 包含微信支付平台公钥信息的加密器，用于加密上载信息
+	wechatCipher secret.Cipher
 
 	// 用于验证hash值
 	hasher secret.Hasher
 
-	// 微信平台公钥证书, key为serialNo, value为*rsa.PublicKey
+	// 微信平台公钥证书, key为serialNo, value为*x509.Certificate
 	certificates maps.Param
 }
 
 func NewConfig(opts ...Option) *Config {
 	var c = &Config{
-		domain:       "https://api.mch.weixin.qq.com",
-		httpClient:   http.DefaultClient,
-		cipher:       secret.NewCipher(),
-		hasher:       secret.NewHasher(),
-		certificates: maps.NewParam(),
+		domain:         "https://api.mch.weixin.qq.com",
+		httpClient:     http.DefaultClient,
+		merchantCipher: secret.NewCipher(),
+		wechatCipher:   secret.NewCipher(),
+		hasher:         secret.NewHasher(),
+		certificates:   maps.NewParam(),
 	}
 	for _, op := range opts {
 		op(c)
@@ -196,12 +192,63 @@ func (c *Config) GetHTTPClient() *http.Client {
 	return c.httpClient
 }
 
-func (c *Config) GetCipher() secret.Cipher {
-	return c.cipher
+func (c *Config) GetMerchantCipher() secret.Cipher {
+	return c.merchantCipher
 }
 
-func (c *Config) GetCertificates() maps.Param {
-	return c.certificates
+func (c *Config) GetWechatCipher() secret.Cipher {
+	return c.wechatCipher
+}
+
+func (c *Config) AddCertificate(serialNo string, cert *x509.Certificate) {
+	serialNo = strings.ToUpper(serialNo)
+	c.certificates.Add(serialNo, cert)
+}
+
+func (c *Config) GetValidPublicKey() (serialNo string, publicKey *rsa.PublicKey) {
+	now := time.Now()
+	c.certificates.Range(func(key string, value interface{}) (breakOut bool) {
+		data, ok := value.(*x509.Certificate)
+		if !ok || data == nil {
+			return
+		}
+		// 如果证书还没开始生效，
+		if now.Before(data.NotBefore) {
+			return
+		}
+		// 如果已经过期
+		if now.After(data.NotAfter) {
+			c.certificates.Delete(key)
+			return
+		}
+		serialNo = key
+		publicKey = data.PublicKey.(*rsa.PublicKey)
+		breakOut = true
+		return
+	})
+	return
+}
+
+func (c *Config) GetRSAPublicKey(serialNo string) *rsa.PublicKey {
+	serialNo = strings.ToUpper(serialNo)
+	data, ok := c.certificates.Get(serialNo)
+	if !ok || data == nil {
+		return nil
+	}
+	certs, ok := data.(*x509.Certificate)
+	if !ok || certs == nil {
+		return nil
+	}
+
+	publicKey, ok := certs.PublicKey.(*rsa.PublicKey)
+	if !ok || publicKey == nil {
+		return nil
+	}
+	return publicKey
+}
+
+func (c *Config) agent() string {
+	return fmt.Sprintf("Pyihe-Wechat-SDK With GO(%s)/%s", runtime.Version(), runtime.GOOS)
 }
 
 // RequestWithSign 对发送给微信服务器的body进行SHA-256 with RSA签名, 返回*http.Request
@@ -212,13 +259,13 @@ func (c *Config) GetCertificates() maps.Param {
 // 返回参数说明:
 // signResult: 返回用于签名的各个参数，包括签名结果
 // 签名介绍详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
-func (c *Config) RequestWithSign(method, url string, body interface{}) (response *http.Response, err error) {
+func (c *Config) RequestWithSign(method, url string, body interface{}, headers ...string) (response *http.Response, err error) {
 	if c.mchId == "" {
-		err = ErrNoMchId
+		err = errors.ErrNoMchId
 		return
 	}
 	if c.serialNo == "" {
-		err = ErrNoSerialNo
+		err = errors.ErrNoSerialNo
 		return
 	}
 	// 构造签名主体
@@ -232,7 +279,7 @@ func (c *Config) RequestWithSign(method, url string, body interface{}) (response
 	nonceStr := rands.String(32)     // 随机字符串
 
 	source := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", method, url, timestamp, nonceStr, string(data))
-	signature, err := rsas.SignSHA256WithRSA(c.cipher, source)
+	signature, err := rsas.SignSHA256WithRSA(c.merchantCipher, source)
 	if err != nil {
 		return
 	}
@@ -242,10 +289,17 @@ func (c *Config) RequestWithSign(method, url string, body interface{}) (response
 	if err != nil {
 		return
 	}
+	if headerLen := len(headers); headerLen > 0 && headerLen%2 == 0 {
+		for i := 0; i < headerLen-1; i++ {
+			hk := headers[i]
+			hv := headers[i+1]
+			request.Header.Set(hk, hv)
+		}
+	}
 	request.Header.Set("Authorization", fmt.Sprintf("%s %s", "WECHATPAY2-SHA256-RSA2048", signatureHead))
 	request.Header.Set("Content-Type", ContentTypeJSON)
 	request.Header.Set("Accept", ContentTypeJSON)
-	request.Header.Set("User-Agent", "Pyihe-Wechat-SDK")
+	request.Header.Set("User-Agent", c.agent())
 	request.Header.Set("Accept-Language", "zh-CN")
 	return c.httpClient.Do(request)
 }
@@ -262,7 +316,7 @@ func (c *Config) Request(method, url, contentType string, data interface{}) (res
 	}
 	request.Header.Set("Content-Type", contentType)
 	request.Header.Set("Accept", contentType)
-	request.Header.Set("User-Agent", "Pyihe-Wechat-SDK")
+	request.Header.Set("User-Agent", c.agent())
 	request.Header.Set("Accept-Language", "zh-CN")
 	return c.httpClient.Do(request)
 }
@@ -271,7 +325,7 @@ func (c *Config) Request(method, url, contentType string, data interface{}) (res
 // 微信(验证)签名验证详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_1.shtml
 func (c *Config) ParseWechatResponse(response *http.Response, dst interface{}) (requestId string, err error) {
 	if response == nil {
-		err = errors.New("response为空!")
+		err = errors.ErrNoHttpResponse
 		return
 	}
 	var body []byte
@@ -280,43 +334,41 @@ func (c *Config) ParseWechatResponse(response *http.Response, dst interface{}) (
 
 	// 获取唯一请求ID
 	requestId = header.Get("Request-ID")
-	// 请求已经被接收，但尚未处理，需要重复请求一遍
-	if code == http.StatusAccepted {
-		err = ErrRequestAgain
+	// 读取response body
+	body, err = ioutil.ReadAll(response.Body)
+	if err != nil {
 		return
 	}
-	// 请求失败
+	_ = response.Body.Close()
+
+	// 请求失败，根据http.StatusCode返回对应的error
+	// 同时将读取出来的body(如果有的话)反序列化到对应的结果中
 	if code != http.StatusOK && code != http.StatusNoContent {
-		err = errors.NewWithCode("see errcode for detail.", errors.ErrorCode(code))
-		return
-	}
-	if code == http.StatusOK {
-		body, err = ioutil.ReadAll(response.Body)
-		if err != nil {
+		if err = unmarshalJSON(body, dst); err != nil {
 			return
 		}
-		_ = response.Body.Close()
-	}
-	// 1. 验证证书序列号是否正确
-	serialNo := header.Get("Wechatpay-Serial")
-	publicKey, ok := c.certificates[serialNo].(*rsa.PublicKey)
-	if !ok {
-		err = errors.New("inconsistent Wechatpay-Serial.")
+		err = errors.New(code)
 		return
 	}
 
+	// API调用成功后的处理流程
+	// 1. 验证证书序列号是否正确
+	serialNo := header.Get("Wechatpay-Serial")
+	publicKey := c.GetRSAPublicKey(serialNo)
+	if publicKey == nil {
+		err = fmt.Errorf("解析微信应答失败: Wechatpay-Serial[%s]不存在", serialNo)
+		return
+	}
 	// 2. 获取微信的签名结果
 	wechatSign := header.Get("Wechatpay-Signature") // 微信签名
 	// 3. 获取签名参数
 	timestamp := header.Get("Wechatpay-Timestamp") // 时间戳
 	nonceStr := header.Get("Wechatpay-Nonce")      // 随机字符串
-
 	// 4. 构造原始的签名数据
 	plainTxt := fmt.Sprintf("%v\n%v\n%v\n", timestamp, nonceStr, string(body))
-
 	// 验证签名
-	_ = c.cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
-	err = rsas.VerifySHA256WithRSA(c.cipher, wechatSign, plainTxt)
+	_ = c.merchantCipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
+	err = rsas.VerifySHA256WithRSA(c.merchantCipher, wechatSign, plainTxt)
 	if err != nil {
 		return
 	}
@@ -326,13 +378,13 @@ func (c *Config) ParseWechatResponse(response *http.Response, dst interface{}) (
 
 // ParseWechatNotify 验证微信服务器的通知，预支付、退款等请求后，微信回调的Request同样需要签名验证
 // 微信（验证）签名方法详细介绍: https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_1.shtml
-func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (id string, err error) {
+func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (notifyId string, err error) {
 	if request == nil {
-		err = ErrNoRequest
+		err = errors.ErrNoHttpRequest
 		return
 	}
 	if c.apiKey == "" {
-		err = ErrNoApiV3Key
+		err = errors.ErrNoApiV3Key
 		return
 	}
 
@@ -347,9 +399,9 @@ func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (id s
 
 	// 1. 验证证书序列号是否正确
 	serialNo := header.Get("Wechatpay-Serial")
-	publicKey, ok := c.certificates[serialNo].(*rsa.PublicKey)
-	if !ok {
-		err = errors.New("inconsistent Wechatpay-Serial.")
+	publicKey := c.GetRSAPublicKey(serialNo)
+	if publicKey == nil {
+		err = fmt.Errorf("解析微信通知失败: Wechatpay-Serial[%s]不存在", serialNo)
 		return
 	}
 
@@ -358,13 +410,12 @@ func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (id s
 	// 3. 获取签名参数
 	timestamp := header.Get("Wechatpay-Timestamp") // 时间戳
 	nonceStr := header.Get("Wechatpay-Nonce")      // 随机字符串
-
 	// 4. 构造原始的签名数据
 	plainTxt := fmt.Sprintf("%v\n%v\n%v\n", timestamp, nonceStr, string(body))
 
 	// 验证签名
-	_ = c.cipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
-	err = rsas.VerifySHA256WithRSA(c.cipher, wechatSign, plainTxt)
+	_ = c.merchantCipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8)
+	err = rsas.VerifySHA256WithRSA(c.merchantCipher, wechatSign, plainTxt)
 	if err != nil {
 		return
 	}
@@ -375,13 +426,14 @@ func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (id s
 		return
 	}
 
+	notifyId = notifyResponse.Id
 	// 判断资源类型
 	if notifyResponse.ResourceType != "encrypt-resource" {
-		err = errors.New("错误的资源类型: " + notifyResponse.ResourceType)
+		err = fmt.Errorf("解析微信通知失败, 错误的资源类型: %s", notifyResponse.ResourceType)
 		return
 	}
 	if notifyResponse.Resource == nil {
-		err = ErrInvalidResource
+		err = errors.ErrInvalidResource
 		return
 	}
 
@@ -389,7 +441,7 @@ func (c *Config) ParseWechatNotify(request *http.Request, dst interface{}) (id s
 	cipherText := notifyResponse.Resource.CipherText
 	associateData := notifyResponse.Resource.AssociatedData
 	nonce := notifyResponse.Resource.Nonce
-	plainData, err := aess.DecryptAEADAES256GCM(c.cipher, c.apiKey, cipherText, associateData, nonce)
+	plainData, err := aess.DecryptAEADAES256GCM(c.merchantCipher, c.apiKey, cipherText, associateData, nonce)
 	if err != nil {
 		return
 	}
@@ -411,6 +463,63 @@ func (c *Config) Download(url string) (data []byte, err error) {
 	return
 }
 
+// UploadMedia 上传多媒体文件到微信服务器
+func (c *Config) UploadMedia(url string, contentType string, fileName string, fileData []byte) (response *http.Response, err error) {
+	if c.mchId == "" {
+		err = errors.ErrNoMchId
+		return
+	}
+	if c.serialNo == "" {
+		err = errors.ErrNoSerialNo
+		return
+	}
+	// 获取文件内容的sha256摘要值
+	sha256Value, err := c.hasher.HashToString(fileData, crypto.SHA256)
+	if err != nil {
+		return
+	}
+	meta := maps.NewParam()
+	meta.Add("filename", fileName)
+	meta.Add("sha256", sha256Value)
+
+	// JSON序列化meta数据
+	metaData, err := marshalJSON(meta)
+	if err != nil {
+		return
+	}
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	buildUploadBody(writer, contentType, fileName, fileData, metaData)
+	if err = writer.Close(); err != nil {
+		return
+	}
+
+	// 构造签名
+	method := http.MethodPost      // 方法类型
+	timestamp := time.Now().Unix() // 时间戳
+	nonceStr := rands.String(32)   // 随机字符串
+	source := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", method, url, timestamp, nonceStr, string(metaData))
+	signature, err := rsas.SignSHA256WithRSA(c.merchantCipher, source)
+	if err != nil {
+		return
+	}
+	// 签名头
+	signatureHead := fmt.Sprintf("mchid=\"%s\",nonce_str=\"%s\",signature=\"%s\",timestamp=\"%d\",serial_no=\"%s\"", c.mchId, nonceStr, signature, timestamp, c.serialNo)
+	// 构造请求头，这里的body为文件二进制数据
+	request, err := http.NewRequest(method, c.domain+url, body)
+	if err != nil {
+		return
+	}
+
+	request.Header.Set("Authorization", fmt.Sprintf("%s %s", "WECHATPAY2-SHA256-RSA2048", signatureHead))
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	request.Header.Set("Accept", "*/*")
+	request.Header.Set("User-Agent", c.agent())
+	request.Header.Set("Accept-Language", "zh-CN")
+	return c.httpClient.Do(request)
+}
+
 // VerifyHashValue 校验hash值
 func (c *Config) VerifyHashValue(hashType crypto.Hash, data interface{}, hashValue string) (err error) {
 	v, err := c.hasher.HashToString(data, hashType)
@@ -418,17 +527,84 @@ func (c *Config) VerifyHashValue(hashType crypto.Hash, data interface{}, hashVal
 		return err
 	}
 	if strings.ToUpper(hashValue) != strings.ToUpper(v) {
-		err = errors.New("HASH校验不通过!")
+		err = errors.ErrCheckHashValueFail
+		return
 	}
 	return
 }
 
-func unmarshalJSON(data []byte, dst interface{}) (err error) {
-	if len(data) == 0 {
+// ImageExt 获取图片后缀名(图片格式)
+func ImageExt(name string) (contentType string, err error) {
+	ext := strings.ToLower(filepath.Ext(name))
+	switch ext {
+	case "jpg":
+		contentType = "image/jpg"
+	case "bmp":
+		contentType = "image/bmp"
+	case "png":
+		contentType = "image/png"
+	default:
+		err = fmt.Errorf("图片文件名必须以jpg、png、bmp为后缀: %s", ext)
+	}
+	return
+}
+
+// VideoExt 获取视频的后缀名(视频格式)
+func VideoExt(name string) (contentType string, err error) {
+	ext := strings.ToLower(filepath.Ext(name))
+	switch ext {
+	case "avi":
+		contentType = "video/avi"
+	case "wmv":
+		contentType = "video/wmv"
+	case "mpeg":
+		contentType = "video/mpeg"
+	case "mp4":
+		contentType = "video/mp4"
+	case "mov":
+		contentType = "video/mov"
+	case "mkv":
+		contentType = "video/mkv"
+	case "flv":
+		contentType = "video/flv"
+	case "f4v":
+		contentType = "video/f4v"
+	case "m4v":
+		contentType = "video/m4v"
+	case "rmvb":
+		contentType = "video/rmvb"
+	default:
+		err = fmt.Errorf("视频文件名只能以avi、wmv、mpeg、mp4、mov、mkv、flv、f4v、m4v、rmvb为后缀: %s", ext)
+	}
+	return
+}
+
+func buildUploadBody(writer *multipart.Writer, contentType, fileName string, fileContent, metaData []byte) {
+	field := make(textproto.MIMEHeader)
+	field.Set("Content-Disposition", "form-data; name=\"meta\";")
+	field.Set("Content-Type", ContentTypeJSON)
+	part, err := writer.CreatePart(field)
+	if err != nil {
 		return
 	}
-	if dst == nil {
-		err = errors.New("反序列化失败: dst不能为nil!")
+	if _, err = part.Write(metaData); err != nil {
+		return
+	}
+
+	field = make(textproto.MIMEHeader)
+	field.Set("Content-Disposition", fmt.Sprintf("form-data; name=\"file\"; filename=\"%s\"", fileName))
+	field.Set("Content-Type", contentType)
+	part, err = writer.CreatePart(field)
+	if err != nil {
+		return
+	}
+	if _, err = part.Write(fileContent); err != nil {
+		return
+	}
+}
+
+func unmarshalJSON(data []byte, dst interface{}) (err error) {
+	if len(data) == 0 {
 		return
 	}
 	err = json.Unmarshal(data, &dst)
@@ -436,25 +612,28 @@ func unmarshalJSON(data []byte, dst interface{}) (err error) {
 }
 
 func marshalJSON(data interface{}) (bytes []byte, err error) {
+	if data == nil {
+		return
+	}
 	dataValue := reflect.ValueOf(data)
-	dataType := reflect.TypeOf(data).Kind()
-
 	if dataValue.IsZero() {
 		return
 	}
+
+	dataType := reflect.TypeOf(data).Kind()
 	switch dataType {
 	case reflect.String:
 		bytes = []byte(dataValue.String())
 	case reflect.Slice:
 		if dataValue.Elem().Kind() != reflect.Uint8 {
-			err = errors.New("请传入字节切片!")
+			err = errors.ErrMarshalFailInvalidDataType
 			break
 		}
 		bytes = dataValue.Bytes()
-	case reflect.Struct, reflect.Ptr:
+	case reflect.Struct, reflect.Ptr, reflect.Map:
 		bytes, err = json.Marshal(data)
 	default:
-		err = errors.New("序列化失败, 数据类型不支持: " + dataType.String())
+		err = fmt.Errorf("序列化失败, 数据类型不支持: %s", dataType.String())
 	}
 	return
 }

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/v3/service"
@@ -18,11 +18,11 @@ import (
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_6.shtml
 func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billResponse *BillResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request.BillDate == "" {
-		err = errors.New("请填写bill_date!")
+		err = errors.ErrParam
 		return
 	}
 
@@ -55,7 +55,7 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 			return
 		}
 	default:
-		err = service.ErrInvalidHashType
+		err = errors.ErrInvalidHashType
 		return
 	}
 
@@ -76,11 +76,11 @@ func DownloadTradeBill(config *service.Config, request *TradeBillRequest) (billR
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_7.shtml
 func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (billResponse *BillResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request.BillDate == "" {
-		err = errors.New("请填写bill_date!")
+		err = errors.ErrParam
 		return
 	}
 
@@ -113,7 +113,7 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 			return
 		}
 	default:
-		err = service.ErrInvalidHashType
+		err = errors.ErrInvalidHashType
 		return
 	}
 
@@ -133,23 +133,11 @@ func DownloadFundFlowBill(config *service.Config, request *FundFlowRequest) (bil
 // API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter4_1_12.shtml
 func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchantFundFlowRequest) (billResponse *SubMerchantFundFlowResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.SubMchId == "" {
-		err = errors.New("请填写sub_mchid!")
-		return
-	}
-	if request.BillDate == "" {
-		err = errors.New("请填写bill_date!")
-		return
-	}
-	if request.AccountType == "" {
-		err = errors.New("请填写account_type!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	if request.Algorithm == "" {
@@ -174,7 +162,7 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 	}
 
 	var content []byte
-	var cipher = config.GetCipher()
+	var cipher = config.GetMerchantCipher()
 	// 根据序号(BillSequence)重新整理明细顺序
 	var serialList = make([]*DownloadBillList, billResponse.DownloadBillCount)
 	for _, list := range billResponse.DownloadBillList {
@@ -205,7 +193,7 @@ func DownloadSubMerchantFundFlowBill(config *service.Config, request *SubMerchan
 				return
 			}
 		default:
-			err = service.ErrInvalidHashType
+			err = errors.ErrInvalidHashType
 			return
 		}
 

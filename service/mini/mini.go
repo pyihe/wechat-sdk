@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/errors"
 	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/go-pkg/utils"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -21,15 +21,15 @@ import (
 // 接口详细描述: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
 func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if config.GetSecret() == "" {
-		err = service.ErrNoSecret
+		err = errors.ErrNoSecret
 		return
 	}
 	if config.GetAppId() == "" {
-		err = service.ErrNoAppId
+		err = errors.ErrNoAppId
 		return
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s", config.GetAppId(), config.GetSecret())
@@ -49,7 +49,7 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code:%d", errMsg, errCode)
 }
 
 // GetOpenId 微信小程序登录验证，同时可以获取用户OpenId
@@ -62,11 +62,11 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 // 接口详细介绍页面: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
 func GetOpenId(config *service.Config, jsCode string) (result maps.Param, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if config.GetSecret() == "" {
-		err = service.ErrNoSecret
+		err = errors.ErrNoSecret
 		return
 	}
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code", config.GetAppId(), config.GetSecret(), jsCode)
@@ -86,7 +86,7 @@ func GetOpenId(config *service.Config, jsCode string) (result maps.Param, err er
 	if errMsg == "ok" {
 		return result, nil
 	}
-	return nil, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return nil, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // CheckEncryptData 检查加密信息是否由微信生成（当前只支持手机号加密数据），只能检测最近3天生成的加密数据
@@ -119,7 +119,7 @@ func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err err
 	if errMsg == "ok" {
 		return valid, nil
 	}
-	return valid, errors.NewWithCode(errMsg, errors.NewErrCode(errCode))
+	return valid, fmt.Errorf("msg: %s, code: %v", errMsg, errCode)
 }
 
 // DecryptOpenData 用于解密微信小程序的敏感加密数据，如用户信息、用户手机号码等
@@ -152,7 +152,7 @@ func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err err
 // API详细介绍: https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html
 func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) (result maps.Param, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	openData, err := GetOpenId(config, code)
@@ -161,7 +161,7 @@ func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) 
 	}
 	session, ok := openData.Get("session_key")
 	if !ok {
-		err = service.ErrInvalidSessionKey
+		err = errors.ErrInvalidSessionKey
 		return
 	}
 	sessionKey, err := base64.StdEncoding.DecodeString(session.(string))
@@ -173,7 +173,7 @@ func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) 
 		return
 	}
 
-	plainData, err := aess.DecryptAES128CBCPKCS7(config.GetCipher(), encryptedData, sessionKey, iv)
+	plainData, err := aess.DecryptAES128CBCPKCS7(config.GetMerchantCipher(), encryptedData, sessionKey, iv)
 	if err != nil {
 		return
 	}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/rsas"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
@@ -15,38 +15,14 @@ import (
 // 服务商API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_4_1.shtml
 func Register(config *service.Config, request *RegisterRequest) (registerResponse *RegisterResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
-	if request.Corpid == "" {
-		err = errors.New("请填写corpid!")
-		return
-	}
-	if request.UserId == "" {
-		err = errors.New("请填写userid!")
-		return
-	}
-	if request.Name == "" {
-		err = errors.New("请填写name!")
-		return
-	}
-	if request.Mobile == "" {
-		err = errors.New("请填写mobile!")
-		return
-	}
-	if request.QrCode == "" {
-		err = errors.New("请填写qr_code!")
-		return
-	}
-	if request.Avatar == "" {
-		err = errors.New("请填写avatar!")
-		return
-	}
-	cipher := config.GetCipher()
+	cipher := config.GetMerchantCipher()
 	reqClone := request.clone()
 	reqClone.Name, err = rsas.EncryptOAEP(cipher, reqClone.Name)
 	if err != nil {
@@ -70,19 +46,11 @@ func Register(config *service.Config, request *RegisterRequest) (registerRespons
 // 服务商API文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_4_2.shtml
 func Assign(config *service.Config, request *AssignRequest) (assignResponse *AssignResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.GuideId == "" {
-		err = errors.New("请填写guide_id!")
-		return
-	}
-	if request.OutTradeNo == "" {
-		err = errors.New("请填写out_trade_no!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/smartguide/guides/%s/assign", request.GuideId), request)
@@ -99,11 +67,11 @@ func Assign(config *service.Config, request *AssignRequest) (assignResponse *Ass
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_4_2.shtml
 func Query(config *service.Config, request *QueryRequest) (queryResponse *QueryResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -115,7 +83,7 @@ func Query(config *service.Config, request *QueryRequest) (queryResponse *QueryR
 	}
 	if request.Mobile != "" {
 		mobile := ""
-		mobile, err = rsas.EncryptOAEP(config.GetCipher(), request.Mobile)
+		mobile, err = rsas.EncryptOAEP(config.GetMerchantCipher(), request.Mobile)
 		if err != nil {
 			return
 		}
@@ -145,15 +113,11 @@ func Query(config *service.Config, request *QueryRequest) (queryResponse *QueryR
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_4_4.shtml
 func Update(config *service.Config, guideId string, request *UpdateRequest) (updateResponse *UpdateResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if guideId == "" {
-		err = errors.New("请提供guide_id!")
+		err = errors.ErrNoConfig
 		return
 	}
 
-	var cipher = config.GetCipher()
+	var cipher = config.GetMerchantCipher()
 	var cloneReq *UpdateRequest
 	if request != nil && request.isZero() == false {
 		cloneReq = request.clone()

@@ -31,7 +31,7 @@ type QueryUserAuthorizationResponse struct {
 
 // RefundResponse 商圈退款成功通知应答参数
 type RefundResponse struct {
-	Id            string    `json:"-"`                        // 唯一通知ID
+	NotifyId      string    // 唯一通知ID
 	MchId         string    `json:"mchid,omitempty"`          // 商户号
 	MerchantName  string    `json:"merchant_name,omitempty"`  // 商圈商户名称
 	ShopName      string    `json:"shop_name,omitempty"`      // 门店名称
@@ -47,7 +47,7 @@ type RefundResponse struct {
 
 // PaymentResponse 商圈支付结果通知参数
 type PaymentResponse struct {
-	Id            string    `json:"-"`                        // 唯一通知ID
+	NotifyId      string    // 唯一通知ID
 	MchId         string    `json:"mchid,omitempty"`          // 商户号
 	MerchantName  string    `json:"merchant_name,omitempty"`  // 商圈商户名称
 	ShopName      string    `json:"shop_name,omitempty"`      // 门店名称

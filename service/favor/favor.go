@@ -4,11 +4,13 @@ import (
 	"crypto"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/pyihe/go-pkg/bytes"
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
@@ -18,11 +20,11 @@ import (
 // 服务商平台API: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_1.shtml
 func CreateStock(config *service.Config, request interface{}) (createResponse *CreateStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/marketing/favor/coupon-stocks", request)
@@ -39,15 +41,7 @@ func CreateStock(config *service.Config, request interface{}) (createResponse *C
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_3.shtml
 func StartStock(config *service.Config, stockCreatorMchId, stockId string) (startResponse *StartStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if stockCreatorMchId == "" {
-		err = errors.New("请提供stock_creator_mchid!")
-		return
-	}
-	if stockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrNoConfig
 		return
 	}
 
@@ -66,15 +60,15 @@ func StartStock(config *service.Config, stockCreatorMchId, stockId string) (star
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_2.shtml
 func SendStock(config *service.Config, openId string, request *SendCouponsRequest) (sendCouponsResponse *SendStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if openId == "" {
-		err = errors.New("请提供openid!")
+		err = errors.ErrParam
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, fmt.Sprintf("/v3/marketing/favor/users/%s/coupons", openId), request)
@@ -91,15 +85,7 @@ func SendStock(config *service.Config, openId string, request *SendCouponsReques
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_13.shtml
 func PauseStock(config *service.Config, stockCreatorMchId, stockId string) (pauseResponse *PauseStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if stockCreatorMchId == "" {
-		err = errors.New("请提供stock_creator_mchid!")
-		return
-	}
-	if stockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrNoConfig
 		return
 	}
 
@@ -119,15 +105,7 @@ func PauseStock(config *service.Config, stockCreatorMchId, stockId string) (paus
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_14.shtml
 func RestartStock(config *service.Config, stockCreatorMchId, stockId string) (restartResponse *RestartStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if stockCreatorMchId == "" {
-		err = errors.New("请提供stock_creator_mchid!")
-		return
-	}
-	if stockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrNoConfig
 		return
 	}
 	body := []byte(fmt.Sprintf("{\"stock_creator_mchid\": \"%s\"}", stockCreatorMchId))
@@ -146,19 +124,11 @@ func RestartStock(config *service.Config, stockCreatorMchId, stockId string) (re
 // 服务商平台API: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_4.shtml
 func QueryStockList(config *service.Config, request *QueryStockListRequest) (queryResponse *QueryStockListResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.Limit == 0 {
-		err = errors.New("请填写limit!")
-		return
-	}
-	if request.StockCreatorMchId == "" {
-		err = errors.New("请填写stock_creator_mchid!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	param := make(url.Values)
@@ -216,15 +186,7 @@ func QueryStockList(config *service.Config, request *QueryStockListRequest) (que
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_5.shtml
 func QueryStock(config *service.Config, stockCreatorMchId, stockId string) (stockResponse *QueryStockResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if stockCreatorMchId == "" {
-		err = errors.New("请提供stock_creator_mchid!")
-		return
-	}
-	if stockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrNoConfig
 		return
 	}
 	param := make(url.Values)
@@ -265,19 +227,7 @@ func QueryStock(config *service.Config, stockCreatorMchId, stockId string) (stoc
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_6.shtml
 func QueryCoupon(config *service.Config, couponId, appId, openId string) (queryResponse *QueryCouponResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if couponId == "" {
-		err = errors.New("请提供coupon_id!")
-		return
-	}
-	if appId == "" {
-		err = errors.New("请提供appid!")
-		return
-	}
-	if openId == "" {
-		err = errors.New("请提供openid!")
+		err = errors.ErrNoConfig
 		return
 	}
 	param := make(url.Values)
@@ -296,25 +246,14 @@ func QueryCoupon(config *service.Config, couponId, appId, openId string) (queryR
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_7.shtml
 func QueryStockMerchants(config *service.Config, request *QueryStockMerchantRequest) (queryResponse *QueryStockMerchantResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
-	if request.Limit == 0 {
-		err = errors.New("请填写limit!")
-		return
-	}
-	if request.StockCreatorMchId == "" {
-		err = errors.New("请填写stock_creator_mchid!")
-		return
-	}
-	if request.StockId == "" {
-		err = errors.New("请填写stock_id!")
-		return
-	}
+
 	param := make(url.Values)
 	param.Add("offset", fmt.Sprintf("%d", request.Offset))
 	param.Add("limit", fmt.Sprintf("%d", request.Limit))
@@ -334,25 +273,14 @@ func QueryStockMerchants(config *service.Config, request *QueryStockMerchantRequ
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_8.shtml
 func QueryStockItems(config *service.Config, request *QueryStockItemRequest) (queryResponse *QueryStockItemResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
-	if request.Limit == 0 {
-		err = errors.New("请填写limit!")
-		return
-	}
-	if request.StockCreatorMchId == "" {
-		err = errors.New("请填写stock_creator_mchid!")
-		return
-	}
-	if request.StockId == "" {
-		err = errors.New("请填写stock_id!")
-		return
-	}
+
 	param := make(url.Values)
 	param.Add("offset", fmt.Sprintf("%d", request.Offset))
 	param.Add("limit", fmt.Sprintf("%d", request.Limit))
@@ -372,25 +300,14 @@ func QueryStockItems(config *service.Config, request *QueryStockItemRequest) (qu
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_9.shtml
 func QueryUserCoupons(config *service.Config, request *QueryUserCouponsRequest) (queryResponse *QueryUserCouponsResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
-	if request.OpenId == "" {
-		err = errors.New("请填写openid!")
-		return
-	}
-	if request.AppId == "" {
-		err = errors.New("请填写appid!")
-		return
-	}
-	if request.CreatorMchId == "" && request.SenderMchId == "" && request.AvailableMchId == "" {
-		err = errors.New("creator_mchid,sender_mchid,available_mchid请选择一项填写!")
-		return
-	}
+
 	param := make(url.Values)
 	param.Add("appid", request.AppId)
 	if request.StockId != "" {
@@ -427,15 +344,15 @@ func QueryUserCoupons(config *service.Config, request *QueryUserCouponsRequest) 
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_10.shtml
 func DownloadStockUseFlow(config *service.Config, request *DownloadRequest) (downloadResponse *DownloadResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	if request.StockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrParam
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/marketing/favor/stocks/%s/use-flow", request.StockId), nil)
@@ -461,7 +378,7 @@ func DownloadStockUseFlow(config *service.Config, request *DownloadRequest) (dow
 			return
 		}
 	default:
-		err = errors.New("暂不支持的哈希类型!")
+		err = errors.ErrInvalidHashType
 		return
 	}
 
@@ -477,15 +394,15 @@ func DownloadStockUseFlow(config *service.Config, request *DownloadRequest) (dow
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_11.shtml
 func DownloadStockRefundFlow(config *service.Config, request *DownloadRequest) (downloadResponse *DownloadResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	if request.StockId == "" {
-		err = errors.New("请提供stock_id!")
+		err = errors.ErrParam
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/marketing/favor/stocks/%s/refund-flow", request.StockId), nil)
@@ -511,7 +428,7 @@ func DownloadStockRefundFlow(config *service.Config, request *DownloadRequest) (
 			return
 		}
 	default:
-		err = service.ErrInvalidHashType
+		err = errors.ErrInvalidHashType
 		return
 	}
 
@@ -533,11 +450,11 @@ func DownloadStockRefundFlow(config *service.Config, request *DownloadRequest) (
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_12.shtml
 func SetCallbacks(config *service.Config, request interface{}) (settingResponse *SettingCallbacksResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/marketing/favor/callbacks", request)
@@ -555,10 +472,51 @@ func SetCallbacks(config *service.Config, request interface{}) (settingResponse 
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_1_15.shtml
 func ParseUseNotify(config *service.Config, request *http.Request) (useResponse *UseResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	useResponse = new(UseResponse)
-	useResponse.Id, err = config.ParseWechatNotify(request, useResponse)
+	useResponse.NotifyId, err = config.ParseWechatNotify(request, useResponse)
+	return
+}
+
+// UploadImage 图片上传(营销专用)
+// 商户平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter9_0_1.shtml
+// 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter9_0_1.shtml
+// image格式支持: 文件存储路径(/p1/p2/name.JPG), 文件二进制字节切片, 文件内容reader
+func UploadImage(config *service.Config, fileName string, image interface{}) (uploadResponse *UploadImageResponse, err error) {
+	if config == nil {
+		err = errors.ErrNoConfig
+		return
+	}
+
+	var content []byte     // 图片数据流
+	var contentType string // 图片格式
+	contentType, err = service.ImageExt(fileName)
+	if err != nil {
+		return
+	}
+	switch data := image.(type) {
+	case string:
+		content, err = ioutil.ReadFile(data)
+	case []byte:
+		content = data
+	case io.Reader:
+		content, err = ioutil.ReadAll(data)
+	case io.ReadCloser:
+		content, err = ioutil.ReadAll(data)
+		_ = data.Close()
+	default:
+		err = errors.ErrImageFormatType
+	}
+	if err != nil {
+		return
+	}
+	response, err := config.UploadMedia("/v3/marketing/favor/media/image-upload", contentType, fileName, content)
+	if err != nil {
+		return
+	}
+	uploadResponse = new(UploadImageResponse)
+	uploadResponse.RequestId, err = config.ParseWechatResponse(response, uploadResponse)
 	return
 }

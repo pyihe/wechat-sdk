@@ -190,9 +190,9 @@ type SettingCallbacksResponse struct {
 
 // UseResponse 核销事件回调通知参数
 type UseResponse struct {
+	NotifyId                string              // 唯一通知ID
 	NoCash                  bool                `json:"no_cash,omitempty"`                   // 是否无资金流
 	SingleItem              bool                `json:"singleitem,omitempty"`                // 是否单品优惠
-	Id                      string              `json:"-"`                                   // 唯一通知ID
 	StockCreatorMchId       string              `json:"stock_creator_mchid,omitempty"`       // 创建批次的商户号
 	StockId                 string              `json:"stock_id,omitempty"`                  // 批次号
 	CouponId                string              `json:"coupon_id,omitempty"`                 // 代金券ID
@@ -207,6 +207,13 @@ type UseResponse struct {
 	DiscountTo              *DiscountTo         `json:"discount_to,omitempty"`               // 减至优惠特定信息
 	NormalCouponInformation *FixedNormalCoupon  `json:"normal_coupon_information,omitempty"` // 普通满减券信息
 	ConsumeInformation      *ConsumeInformation `json:"consume_information,omitempty"`       // 实扣代金券信息
+}
+
+// UploadImageResponse 上传图片
+type UploadImageResponse struct {
+	model.WechatError
+	RequestId string // 唯一请求ID
+	MediaUrl  string `json:"media_url,omitempty"` // 媒体文件URL地址
 }
 
 // Stock 代金券批次详情

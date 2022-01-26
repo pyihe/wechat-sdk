@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/pyihe/go-pkg/errors"
+	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
 
@@ -15,27 +15,11 @@ import (
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_1.shtml
 func FindParkingService(config *service.Config, request *FindRequest) (findResponse *FindResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if request == nil {
-		err = service.ErrNoRequest
-		return
-	}
-	if request.AppId == "" {
-		err = errors.New("请填写appid!")
-		return
-	}
-	if request.PlateNumber == "" {
-		err = errors.New("请填写plate_number!")
-		return
-	}
-	if request.PlateColor == "" {
-		err = errors.New("请填写plate_color!")
-		return
-	}
-	if request.OpenId == "" {
-		err = errors.New("请填写openid!")
+		err = errors.ErrNoSDKRequest
 		return
 	}
 
@@ -62,11 +46,11 @@ func FindParkingService(config *service.Config, request *FindRequest) (findRespo
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_2.shtml
 func CreateParking(config *service.Config, request interface{}) (createResponse *CreateParkingResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if reflect.ValueOf(request).IsZero() {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/vehicle/parking/parkings", request)
@@ -83,11 +67,11 @@ func CreateParking(config *service.Config, request interface{}) (createResponse 
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_3.shtml
 func TransactionsParking(config *service.Config, request interface{}) (transactionsResponse *TransactionsResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	if reflect.ValueOf(request).IsZero() {
-		err = service.ErrNoRequest
+		err = errors.ErrNoSDKRequest
 		return
 	}
 	response, err := config.RequestWithSign(http.MethodPost, "/v3/vehicle/transactions/parking", request)
@@ -104,11 +88,7 @@ func TransactionsParking(config *service.Config, request interface{}) (transacti
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_4.shtml
 func QueryOrder(config *service.Config, outTradeNo, subMchId string) (queryResponse *QueryResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
-		return
-	}
-	if outTradeNo == "" {
-		err = errors.New("请提供out_trade_no!")
+		err = errors.ErrNoConfig
 		return
 	}
 
@@ -133,11 +113,11 @@ func QueryOrder(config *service.Config, outTradeNo, subMchId string) (queryRespo
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_5.shtml
 func ParseParkingStateNotify(config *service.Config, request *http.Request) (stateResponse *ParkStateResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	stateResponse = new(ParkStateResponse)
-	stateResponse.Id, err = config.ParseWechatNotify(request, stateResponse)
+	stateResponse.NotifyId, err = config.ParseWechatNotify(request, stateResponse)
 	return
 }
 
@@ -146,10 +126,10 @@ func ParseParkingStateNotify(config *service.Config, request *http.Request) (sta
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_8_6.shtml
 func ParsePaymentNotify(config *service.Config, request *http.Request) (paymentResponse *PaymentResponse, err error) {
 	if config == nil {
-		err = service.ErrInitConfig
+		err = errors.ErrNoConfig
 		return
 	}
 	paymentResponse = new(PaymentResponse)
-	paymentResponse.Id, err = config.ParseWechatNotify(request, paymentResponse)
+	paymentResponse.NotifyId, err = config.ParseWechatNotify(request, paymentResponse)
 	return
 }

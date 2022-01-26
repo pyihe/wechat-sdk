@@ -17,3 +17,4 @@
 |下载批次退款明细|[DownloadStockRefundFlow](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L481)|
 |设置消息通知地址|[SetCallbacks](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L537)|
 |解析核销事件回调通知|[ParseUseNotify](https://github.com/pyihe/wechat-sdk/blob/master/service/favor/favor.go#L559)|
+|图片上传(营销专用)|[UploadImage]()|
