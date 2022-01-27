@@ -84,44 +84,41 @@ func handleErr(err error) {
 }
 
 func main() {
-	var opts = []service.Option{
-		service.WithAppId(WechatConfig.AppId),
-		service.WithMchId(WechatConfig.MchId),
-		service.WithApiV3Key(WechatConfig.Apikey),
-		service.WithSerialNo(WechatConfig.SerialNo),
-	}
-	var srvConfig = service.NewConfig(opts...)
-
-	var param = &PayBody{
-		AppId:       "wxdace645e0bc2cXXX",
-		MchId:       "1900006XXX",
-		Description: "Image形象店-深圳腾大-QQ公仔",
-		OutTradeNo:  "1217752501201407033233368318",
-		NotifyUrl:   "https://weixin.qq.com/",
-		Amount: &Amount{
-			Total:    1,
-			Currency: "CNY",
-		},
-		Payer: &Payer{OpenId: "o4GgauInH_RCEdvrrNGrntXDuXXX"},
-	}
-	// 普通商户支付
-	merchantResponse, err := merchant.JSAPI(srvConfig, param)
-	if err != nil {
-		handleErr(err)
-	}
-	if err = merchantResponse.Error(); err != nil {
-		handleErr(err)
-	}
-	// 小程序获取用户openid
-	miniData, err := mini.GetOpenId(srvConfig, "your jsCode")
-	if err != nil {
-		handleErr(err)
-	}
-	// 公众号获取用户openid
-	officialData, err := official.GetOpenId(srvConfig, "your grant code")
-	if err != nil {
-		handleErr(err)
-	}
+    var opts = []service.Option{
+        service.WithAppId(WechatConfig.AppId),
+        service.WithMchId(WechatConfig.MchId),
+        service.WithApiV3Key(WechatConfig.Apikey),
+        service.WithSerialNo(WechatConfig.SerialNo),
+    }
+    var srvConfig = service.NewConfig(opts...)
+    
+    var param = &PayBody{
+        AppId:       "wxdace645e0bc2cXXX",
+        MchId:       "1900006XXX",
+        Description: "Image形象店-深圳腾大-QQ公仔",
+        OutTradeNo:  "1217752501201407033233368318",
+        NotifyUrl:   "https://weixin.qq.com/",
+        Amount: &Amount{
+            Total:    1,
+            Currency: "CNY",
+        },
+        Payer: &Payer{OpenId: "o4GgauInH_RCEdvrrNGrntXDuXXX"},
+    }
+    // 普通商户支付
+    merchantResponse, err := merchant.JSAPI(srvConfig, param)
+    if err != nil {
+        handleErr(err)
+    }
+    // 小程序获取用户openid
+    miniData, err := mini.GetOpenId(srvConfig, "your jsCode")
+    if err != nil {
+        handleErr(err)
+    }
+    // 公众号获取用户openid
+    officialData, err := official.GetOpenId(srvConfig, "your grant code")
+    if err != nil {
+        handleErr(err)
+    }
 }
 ```
 
