@@ -32,6 +32,12 @@ type ApplyResponse struct {
 	ApplymentId uint64 `json:"applyment_id,omitempty"` // 微信支付申请单号
 }
 
+// QueryApplymentRequest 查询申请单状态请求参数
+type QueryApplymentRequest struct {
+	ApplymentId  uint64 // 申请单号
+	BusinessCode string // 业务申请编号
+}
+
 // QueryApplymentResponse 查询申请单状态应答参数
 type QueryApplymentResponse struct {
 	model.WechatError

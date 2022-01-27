@@ -131,7 +131,7 @@ func Apply(config *service.Config, request *ApplyRequest) (applyResponse *ApplyR
 		}
 	}
 
-	response, err := config.RequestWithSign(http.MethodPost, "/v3/applyment4sub/applyment/", request, "Wechatpay-Serial", serialNo)
+	response, err := config.RequestWithSign(http.MethodPost, "/v3/applyment4sub/applyment/", req, "Wechatpay-Serial", serialNo)
 	if err != nil {
 		return
 	}
@@ -140,34 +140,30 @@ func Apply(config *service.Config, request *ApplyRequest) (applyResponse *ApplyR
 	return
 }
 
-// QueryApplymentByApplymentId 根据applyment_id查询申请单状态
-// 商户平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter11_1_2.shtml
-func QueryApplymentByApplymentId(config *service.Config, applymentId uint64) (queryResponse *QueryApplymentResponse, err error) {
-	if config == nil {
-		err = errors.ErrNoConfig
-		return
-	}
-	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/applyment4sub/applyment/applyment_id/%d", applymentId), nil)
-	if err != nil {
-		return
-	}
-	queryResponse = new(QueryApplymentResponse)
-	queryResponse.RequestId, err = config.ParseWechatResponse(response, queryResponse)
-	return
-}
-
-// QueryApplymentByBusinessCode 根据业务申请编号查询申请单状态
+// QueryApplyment 查询申请单状态
 // 服务商平台文档: https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter11_1_2.shtml
-func QueryApplymentByBusinessCode(config *service.Config, businessCode string) (queryResponse *QueryApplymentResponse, err error) {
+func QueryApplyment(config *service.Config, request *QueryApplymentRequest) (queryResponse *QueryApplymentResponse, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
 	}
-	if businessCode == "" {
+	if request == nil {
+		err = errors.ErrNoSDKRequest
+		return
+	}
+
+	var apiUrl = "/v3/applyment4sub/applyment"
+	switch {
+	case request.ApplymentId > 0:
+		apiUrl = fmt.Sprintf("%s/applyment_id/%d", apiUrl, request.ApplymentId)
+	case request.BusinessCode != "":
+		apiUrl = fmt.Sprintf("%s/business_code/%s", apiUrl, request.BusinessCode)
+	default:
 		err = errors.ErrParam
 		return
 	}
-	response, err := config.RequestWithSign(http.MethodGet, fmt.Sprintf("/v3/applyment4sub/applyment/applyment_id/%s", businessCode), nil)
+
+	response, err := config.RequestWithSign(http.MethodGet, apiUrl, nil)
 	if err != nil {
 		return
 	}
