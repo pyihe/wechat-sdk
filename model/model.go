@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type WError interface {
+	Error() error
+}
+
 // WechatHeader 微信Header
 type WechatHeader struct {
 	RequestId string // 唯一请求ID
@@ -12,29 +16,29 @@ type WechatHeader struct {
 
 // WechatError 调用微信接口返回的通用错误格式
 type WechatError struct {
-	Code    string      `json:"code,omitempty"`    // 详细错误码
-	Message string      `json:"message,omitempty"` // 错误描述
+	Code    interface{} `json:"code,omitempty"`    // 详细错误码
+	Message interface{} `json:"message,omitempty"` // 错误描述
 	Detail  ErrorDetail `json:"detail,omitempty"`  // 错误详细信息
 }
 
 func (w WechatError) Error() error {
-	if len(w.Code) == 0 &&
-		len(w.Message) == 0 &&
-		len(w.Detail.Field) == 0 &&
-		len(w.Detail.Value) == 0 &&
-		len(w.Detail.Issue) == 0 &&
-		len(w.Detail.Location) == 0 {
+	if w.Code == nil &&
+		w.Message == nil &&
+		w.Detail.Field == nil &&
+		w.Detail.Value == nil &&
+		w.Detail.Issue == nil &&
+		w.Detail.Location == nil {
 		return nil
 	}
-	return fmt.Errorf(`{"code":"%s" "message":"%s" "field":"%s" "value":"%s" "issue":"%s" "location":"%s"}`, w.Code, w.Message, w.Detail.Field, w.Detail.Value, w.Detail.Issue, w.Detail.Location)
+	return fmt.Errorf(`{"code":"%v" "message":"%v" "field":"%v" "value":"%v" "issue":"%v" "location":"%v"}`, w.Code, w.Message, w.Detail.Field, w.Detail.Value, w.Detail.Issue, w.Detail.Location)
 }
 
 // ErrorDetail 错误详情
 type ErrorDetail struct {
-	Field    string `json:"field,omitempty"`    // 错误参数的位置
-	Value    string `json:"value,omitempty"`    // 错误的值
-	Issue    string `json:"issue,omitempty"`    // 具体错误的原因
-	Location string `json:"location,omitempty"` // 出错的位置
+	Field    interface{} `json:"field,omitempty"`    // 错误参数的位置
+	Value    interface{} `json:"value,omitempty"`    // 错误的值
+	Issue    interface{} `json:"issue,omitempty"`    // 具体错误的原因
+	Location interface{} `json:"location,omitempty"` // 出错的位置
 }
 
 // WechatNotifyResponse 微信通知的回复格式

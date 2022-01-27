@@ -346,6 +346,11 @@ func (c *Config) ParseWechatResponse(response *http.Response, dst interface{}) (
 		if err = unmarshalJSON(body, dst); err != nil {
 			return
 		}
+		if data, ok := dst.(model.WError); ok && data != nil {
+			if err = data.Error(); err != nil {
+				return
+			}
+		}
 		err = errors.New(code)
 		return
 	}
