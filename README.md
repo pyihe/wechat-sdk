@@ -38,30 +38,28 @@ import "github.com/pyihe/wechat-sdk/v3"
 3. 对于不同功能但应答参数相似的API(如预支付API和支付查询API等), 本package为了避免重复声明接收API应答参数的结构体, 最终使用了公共的结构体, 调用者处理API返回结果时,
    请严格参考 [微信官方文档](https://pay.weixin.qq.com/wiki/doc/apiv3/index.shtml) 忽略掉文档没有的参数!
 4. 对于微信异步回调回来的通知, 本package会将通知结果反序列化至对应的应答结构体, 请调用者根据结果处理自己的业务逻辑, 并在处理完成后一定告知微信服务器!
-5. 微信官方尚未移植的API有: [付款码支付(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/micropay.php?chapter=5_1)
-   , [现金红包(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/tools/cash_coupon.php?chapter=13_1)
-   , [付款(v2已实现)](https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_1)
-   , [清关报关(v2 TODO)](https://pay.weixin.qq.com/wiki/doc/api/external/declarecustom.php?chapter=17_1&index=1)
 
 ```go
 package main
 
 import (
 	"github.com/pyihe/wechat-sdk/v3/service"
-	"github.com/pyihe/wechat-sdk/v3/service/combine"
-	"github.com/pyihe/wechat-sdk/v3/service/merchant"
 	"github.com/pyihe/wechat-sdk/v3/service/mini"
 	"github.com/pyihe/wechat-sdk/v3/service/official"
-	"github.com/pyihe/wechat-sdk/v3/service/partner"
+	"github.com/pyihe/wechat-sdk/v3/service/payment/merchant"
 )
 
+// WechatConfig 微信相关参数配置
 var WechatConfig struct {
-	AppId    string `json:"appid"`
-	MchId    string `json:"mchid"`
-	SerialNo string `json:"serial_no"`
-	Apikey   string `json:"apikey"`
+	AppId          string `json:"appid"`       // 应用ID
+	MchId          string `json:"mchid"`       // 商户号
+	SerialNo       string `json:"serial_no"`   // 商户证书序列号
+	Apikey         string `json:"apikey"`      // API v3 Key
+	PrivateKeyPath string `json:"private_key"` // 商户平台私钥文件
+	PublicKeyPath  string `json:"public_key"`  // 商户微信支付平台公钥文件
 }
 
+// PayBody 支付请求参数
 type PayBody struct {
 	AppId       string  `json:"appid"`        // 应用ID
 	MchId       string  `json:"mchid"`        // 商户号
@@ -79,6 +77,10 @@ type Amount struct {
 
 type Payer struct {
 	OpenId string `json:"openid"` // 用户标识
+}
+
+func handleErr(err error) {
+	//...
 }
 
 func main() {
@@ -105,27 +107,20 @@ func main() {
 	// 普通商户支付
 	merchantResponse, err := merchant.JSAPI(srvConfig, param)
 	if err != nil {
-		handle(err)
+		handleErr(err)
 	}
-	// 合单支付
-	combineResponse, err := combine.JSAPI(srvConfig, param)
-	if err != nil {
-		handle(err)
-	}
-	// 服务商支付
-	partnerResponse, err := partner.JSAPI(srvConfig, param)
-	if err != nil {
-		handle(err)
+	if err = merchantResponse.Error(); err != nil {
+		handleErr(err)
 	}
 	// 小程序获取用户openid
 	miniData, err := mini.GetOpenId(srvConfig, "your jsCode")
 	if err != nil {
-		handle(err)
+		handleErr(err)
 	}
 	// 公众号获取用户openid
 	officialData, err := official.GetOpenId(srvConfig, "your grant code")
 	if err != nil {
-		handle(err)
+		handleErr(err)
 	}
 }
 ```
