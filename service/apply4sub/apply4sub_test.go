@@ -1,31 +1,10 @@
 package apply4sub
 
 import (
-	"github.com/pyihe/wechat-sdk/v3/service"
 	"testing"
-)
 
-var (
-	config     *service.Config
-	mchId      = "**********"
-	appId      = "******************"
-	apiV3Key   = "********************************"
-	serialNo   = "****************************************"
-	publicKey  = "./pem/public_key.pem"
-	privateKey = "./pem/apiclient_key.pem"
+	"github.com/pyihe/wechat-sdk/v3/service/tests"
 )
-
-func init() {
-	opts := []service.Option{
-		service.WithAppId(appId),
-		service.WithMchId(mchId),
-		service.WithApiV3Key(apiV3Key),
-		service.WithPrivateKey(privateKey),
-		service.WithPublicKey(publicKey),
-		service.WithSerialNo(serialNo),
-	}
-	config = service.NewConfig(opts...)
-}
 
 func TestApply(t *testing.T) {
 	request := &ApplyRequest{
@@ -64,13 +43,9 @@ func TestApply(t *testing.T) {
 			AccountNumber:   "11111111111111111111111111111111",
 		},
 	}
-	response, err := Apply(config, request)
+	response, err := Apply(tests.Config, request)
 	if err != nil {
 		t.Logf("apply err: %v\n", err)
-		return
-	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
 		return
 	}
 	t.Logf("response: %+v\n", *response)
@@ -81,13 +56,9 @@ func TestQueryApplyment(t *testing.T) {
 		//ApplymentId:  2000001234567890,
 		BusinessCode: "1900013511_10000",
 	}
-	response, err := QueryApplyment(config, request)
+	response, err := QueryApplyment(tests.Config, request)
 	if err != nil {
 		t.Logf("apply err: %v\n", err)
-		return
-	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
 		return
 	}
 	t.Logf("response: %+v\n", *response)
@@ -103,26 +74,18 @@ func TestModifySettlement(t *testing.T) {
 		BankBranchId:    "402713354941",
 		AccountNumber:   "123456789111199992229999",
 	}
-	response, err := ModifySettlement(config, request)
+	response, err := ModifySettlement(tests.Config, request)
 	if err != nil {
 		t.Logf("apply err: %v\n", err)
-		return
-	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
 		return
 	}
 	t.Logf("response: %+v\n", *response)
 }
 
 func TestQuerySettlement(t *testing.T) {
-	response, err := QuerySettlement(config, "")
+	response, err := QuerySettlement(tests.Config, "")
 	if err != nil {
 		t.Logf("apply err: %v\n", err)
-		return
-	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
 		return
 	}
 	t.Logf("response: %+v\n", *response)

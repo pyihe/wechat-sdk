@@ -1,31 +1,10 @@
 package apply4subject
 
 import (
-	"github.com/pyihe/wechat-sdk/v3/service"
 	"testing"
-)
 
-var (
-	config     *service.Config
-	mchId      = "**********"
-	appId      = "******************"
-	apiV3Key   = "********************************"
-	serialNo   = "****************************************"
-	publicKey  = "./pem/public_key.pem"
-	privateKey = "./pem/apiclient_key.pem"
+	"github.com/pyihe/wechat-sdk/v3/service/tests"
 )
-
-func init() {
-	opts := []service.Option{
-		service.WithAppId(appId),
-		service.WithMchId(mchId),
-		service.WithApiV3Key(apiV3Key),
-		service.WithPrivateKey(privateKey),
-		service.WithPublicKey(publicKey),
-		service.WithSerialNo(serialNo),
-	}
-	config = service.NewConfig(opts...)
-}
 
 func TestApply(t *testing.T) {
 	request := &ApplyRequest{
@@ -47,15 +26,12 @@ func TestApply(t *testing.T) {
 			IdentificationFrontCopy: "0P3ng6KTIW4-Q_l2FjKLZuhHjBWoMAjmVtCz7ScmhEIThCaV-4BBgVwtNkCHO_XXqK5dE5YdOmFJBZR9FwczhJehHhAZN6BKXQPcs-VvdSo",
 		},
 	}
-	response, err := Apply(config, request)
+	response, err := Apply(tests.Config, request)
 	if err != nil {
 		t.Logf("err: %v\n", err)
 		return
 	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
-		return
-	}
+
 	t.Logf("response: %+v\n", *response)
 }
 
@@ -64,15 +40,12 @@ func TestCancelApplyment(t *testing.T) {
 		//ApplymentId:  20000011111,
 		BusinessCode: "1900013511_10000",
 	}
-	response, err := CancelApplyment(config, request)
+	response, err := CancelApplyment(tests.Config, request)
 	if err != nil {
 		t.Logf("err: %v\n", err)
 		return
 	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
-		return
-	}
+
 	t.Logf("response: %+v\n", *response)
 }
 
@@ -81,27 +54,21 @@ func TestQueryApplyResult(t *testing.T) {
 		ApplymentId: 20000011111,
 		//BusinessCode: "1900013511_10000",
 	}
-	response, err := QueryApplyResult(config, request)
+	response, err := QueryApplyResult(tests.Config, request)
 	if err != nil {
 		t.Logf("err: %v\n", err)
 		return
 	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
-		return
-	}
+
 	t.Logf("response: %+v\n", *response)
 }
 
 func TestQueryMerchantState(t *testing.T) {
-	response, err := QueryMerchantState(config, "*************")
+	response, err := QueryMerchantState(tests.Config, "*************")
 	if err != nil {
 		t.Logf("err: %v\n", err)
 		return
 	}
-	if err = response.Error(); err != nil {
-		t.Logf("response err: %v\n", err)
-		return
-	}
+
 	t.Logf("response: %+v\n", *response)
 }
