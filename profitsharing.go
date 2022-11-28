@@ -703,13 +703,13 @@ func (m *myPayer) ProfitSharingNotify(body io.Reader) (ResultParam, error) {
 
 	//对密文执行解密
 	c := secret.NewCipher()
-	c.SetGCMNonce([]byte(data.Resource.Nonce))
 	request := &secret.SymRequest{
 		CipherData: data.Resource.Ciphertext,
 		Key:        []byte(m.apiV3Key),
 		ModeType:   secret.BlockModeGCM,
 		AddData:    []byte(data.Resource.AssociatedData),
 		Type:       secret.SymTypeAES,
+		Nonce:      []byte(data.Resource.Nonce),
 	}
 	plainBytes, err := c.SymDecrypt(request)
 	if err != nil {
