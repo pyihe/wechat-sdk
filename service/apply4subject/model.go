@@ -1,8 +1,8 @@
 package apply4subject
 
 import (
-	"github.com/pyihe/go-pkg/clone"
 	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 )
 
 // ApplyRequest 提交申请单请求参数
@@ -16,7 +16,7 @@ type ApplyRequest struct {
 }
 
 func (apply *ApplyRequest) clone() *ApplyRequest {
-	data := clone.DeepClone(apply)
+	data := pkg.DeepClone(apply)
 	req, ok := data.(*ApplyRequest)
 	if !ok || req == nil {
 		return nil
