@@ -11,7 +11,7 @@ const (
 	letterIdxMask = 1<<letterIdxBits - 1
 	letterIdxMax  = 63 / letterIdxBits
 
-	defaultN = 16
+	defaultN = 32
 )
 
 var (
