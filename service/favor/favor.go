@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pyihe/go-pkg/bytes"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/service"
@@ -164,7 +164,7 @@ func QueryStockList(config *service.Config, request *QueryStockListRequest) (que
 		}
 
 		switch {
-		case bytes.Contain('[', useRule.RawTradeTypes): // 如果是数组的形式，则解析到[]string中
+		case pkg.BytesContain('[', useRule.RawTradeTypes): // 如果是数组的形式，则解析到[]string中
 			var ts []string
 			if err = json.Unmarshal(useRule.RawTradeTypes, &ts); err != nil {
 				return
@@ -205,7 +205,7 @@ func QueryStock(config *service.Config, stockCreatorMchId, stockId string) (stoc
 	useRule := stockResponse.StockUseRule
 	if useRule != nil && len(useRule.RawTradeTypes) > 0 {
 		switch {
-		case bytes.Contain('[', useRule.RawTradeTypes): // 如果是数组的形式，则解析到[]string中
+		case pkg.BytesContain('[', useRule.RawTradeTypes): // 如果是数组的形式，则解析到[]string中
 			var ts []string
 			if err = json.Unmarshal(useRule.RawTradeTypes, &ts); err != nil {
 				return
