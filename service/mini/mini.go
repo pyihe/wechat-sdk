@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/maps"
-	"github.com/pyihe/go-pkg/utils"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
@@ -19,7 +18,7 @@ import (
 // 返回成功实例:
 // {"access_token":"ACCESS_TOKEN","expires_in":7200}
 // 接口详细描述: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
-func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
+func GetBaseAccessToken(config *service.Config) (result pkg.Param, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
@@ -39,7 +38,7 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -60,7 +59,7 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 // session_key: 会话密钥, 用于解密用户数据信息
 // unionid: 用户在开放平台的唯一标示
 // 接口详细介绍页面: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
-func GetOpenId(config *service.Config, jsCode string) (result maps.Param, err error) {
+func GetOpenId(config *service.Config, jsCode string) (result pkg.Param, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
@@ -76,7 +75,7 @@ func GetOpenId(config *service.Config, jsCode string) (result maps.Param, err er
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -96,7 +95,7 @@ func GetOpenId(config *service.Config, jsCode string) (result maps.Param, err er
 // 接口详细介绍页面: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/user-info/auth.checkEncryptedData.html
 func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/wxa/business/checkencryptedmsg?access_token=%s", accessToken)
-	var param = maps.NewParam()
+	var param = pkg.NewParam()
 	param.Add("encrypted_msg_hash", encryptedMsgHash)
 
 	bytesData, _ := json.Marshal(param)
@@ -106,7 +105,7 @@ func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err err
 	}
 	defer response.Body.Close()
 
-	var result = maps.NewParam()
+	var result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return false, err
@@ -129,28 +128,32 @@ func CheckEncryptData(accessToken, encryptedMsgHash string) (valid bool, err err
 // ivStr: iv加密向量
 // 返回结果包含的字段根据加密信息的不同而不同，但都是JSON数据格式
 // 手机号码的返回结果为:
-// {
-//    "phoneNumber": "13580006666", // 用户绑定的手机号（国外手机号会有区号）
-//    "purePhoneNumber": "13580006666", // 没有区号的手机号
-//    "countryCode": "86", // 区号
-//    "watermark":
-//    {
-//        "appid":"APPID",
-//        "timestamp": TIMESTAMP
-//    }
-// }
+//
+//	{
+//	   "phoneNumber": "13580006666", // 用户绑定的手机号（国外手机号会有区号）
+//	   "purePhoneNumber": "13580006666", // 没有区号的手机号
+//	   "countryCode": "86", // 区号
+//	   "watermark":
+//	   {
+//	       "appid":"APPID",
+//	       "timestamp": TIMESTAMP
+//	   }
+//	}
+//
 // 用户信息的解密结果为:
-// {
-//  "nickName": "Band", // 微信昵称
-//  "gender": 1, // 性别
-//  "language": "zh_CN", // 区域语言
-//  "city": "Guangzhou", // 城市
-//  "province": "Guangdong", // 省份
-//  "country": "CN", // 国家代码
-//  "avatarUrl": "http://wx.qlogo.cn/mmopen/vi_32/1vZvI39NWFQ9XM4LtQpFrQJ1xlgZxx3w7bQxKARol6503Iuswjjn6nIGBiaycAjAtpujxyzYsrztuuICqIM5ibXQ/0" // 头像
-// }
+//
+//	{
+//	 "nickName": "Band", // 微信昵称
+//	 "gender": 1, // 性别
+//	 "language": "zh_CN", // 区域语言
+//	 "city": "Guangzhou", // 城市
+//	 "province": "Guangdong", // 省份
+//	 "country": "CN", // 国家代码
+//	 "avatarUrl": "http://wx.qlogo.cn/mmopen/vi_32/1vZvI39NWFQ9XM4LtQpFrQJ1xlgZxx3w7bQxKARol6503Iuswjjn6nIGBiaycAjAtpujxyzYsrztuuICqIM5ibXQ/0" // 头像
+//	}
+//
 // API详细介绍: https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html
-func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) (result maps.Param, err error) {
+func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) (result pkg.Param, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
@@ -183,6 +186,6 @@ func DecryptOpenData(config *service.Config, code, encryptedData, ivStr string) 
 	if err != nil {
 		return nil, err
 	}
-	result = utils.Interface2Map(data.(map[string]interface{}))
+	result = pkg.Interface2Map(data.(map[string]interface{}))
 	return
 }

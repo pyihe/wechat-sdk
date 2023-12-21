@@ -3,8 +3,8 @@ package certificate
 import (
 	"time"
 
-	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 )
 
 // CertResponse 用于证书下载API返回的数据
@@ -12,7 +12,7 @@ type CertResponse struct {
 	model.WechatError             // 如果请求失败，微信返回的错误信息将存储在这里
 	RequestId         string      `json:"request_id,omitempty"`   // 存放请求的唯一ID
 	Data              []*Resource `json:"data,omitempty"`         // 微信返回的原始数据
-	Certificates      maps.Param  `json:"certificates,omitempty"` // 解密后的证书, key=证书序列号; value=证书*x509.Certificate
+	Certificates      pkg.Param   `json:"certificates,omitempty"` // 解密后的证书, key=证书序列号; value=证书*x509.Certificate
 }
 
 // Resource 微信返回的证书数据，包括加密数据

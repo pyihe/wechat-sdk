@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pyihe/go-pkg/maps"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/service"
 )
@@ -16,7 +16,7 @@ import (
 // expire_in: 凭证有效时长, 单位: s(秒)
 // 返回成功实例: {"access_token": "ACCESS_TOKEN", "expire_in": 7200}
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
-func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
+func GetBaseAccessToken(config *service.Config) (result pkg.Param, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
@@ -37,7 +37,7 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -61,15 +61,17 @@ func GetBaseAccessToken(config *service.Config) (result maps.Param, err error) {
 // openid: 用户在该公众号下的唯一标示
 // scope: 用户授权的作用域
 // 返回成功实例:
-// {
-//  "access_token":"ACCESS_TOKEN",
-//  "expires_in":7200,
-//  "refresh_token":"REFRESH_TOKEN",
-//  "openid":"OPENID",
-//  "scope":"SCOPE"
-//}
+//
+//	{
+//	 "access_token":"ACCESS_TOKEN",
+//	 "expires_in":7200,
+//	 "refresh_token":"REFRESH_TOKEN",
+//	 "openid":"OPENID",
+//	 "scope":"SCOPE"
+//	}
+//
 // 接口详情介绍页面：https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err error) {
+func GetOpenId(config *service.Config, grantCode string) (result pkg.Param, err error) {
 	if config == nil {
 		err = errors.ErrNoConfig
 		return
@@ -89,7 +91,7 @@ func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -113,15 +115,17 @@ func GetOpenId(config *service.Config, grantCode string) (result maps.Param, err
 // openid: 用户在该公众号下的唯一标示
 // scope: 用户授权的作用域
 // 返回成功实例:
-// {
-//  "access_token":"ACCESS_TOKEN",
-//  "expires_in":7200,
-//  "refresh_token":"REFRESH_TOKEN",
-//  "openid":"OPENID",
-//  "scope":"SCOPE"
-//}
+//
+//	{
+//	 "access_token":"ACCESS_TOKEN",
+//	 "expires_in":7200,
+//	 "refresh_token":"REFRESH_TOKEN",
+//	 "openid":"OPENID",
+//	 "scope":"SCOPE"
+//	}
+//
 // 接口详情介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func RefreshOauthAccessToken(config *service.Config, refreshToken string) (result maps.Param, err error) {
+func RefreshOauthAccessToken(config *service.Config, refreshToken string) (result pkg.Param, err error) {
 	if config.GetAppId() == "" {
 		err = errors.ErrNoSecret
 		return
@@ -133,7 +137,7 @@ func RefreshOauthAccessToken(config *service.Config, refreshToken string) (resul
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -152,19 +156,21 @@ func RefreshOauthAccessToken(config *service.Config, refreshToken string) (resul
 // openId: 通过GetUserInfoByOfficialAccounts接口获取到的用户openid
 // lang: 返回的国家地区语言版本, zh_CN: 简体中文, zh_TW: 繁体中文, en: 英语
 // 返回结果实例如下:
-// {
-//  "openid": "OPENID", // 用户openid
-//  "nickname": NICKNAME, // 用户微信昵称
-//  "sex": 1, // 用户性别, 1: 男性, 2: 女性
-//  "province":"PROVINCE", // 用户所微信所在省份
-//  "city":"CITY", // 用户微信所在城市
-//  "country":"COUNTRY", // 用户微信所在国家
-//  "headimgurl":"https://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46", // 用户微信头像
-//  "privilege":[ "PRIVILEGE1" "PRIVILEGE2"     ], // 用户特权信息
-//  "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL" // 用户在同一商户不同公众号的唯一标示
-//}
+//
+//	{
+//	 "openid": "OPENID", // 用户openid
+//	 "nickname": NICKNAME, // 用户微信昵称
+//	 "sex": 1, // 用户性别, 1: 男性, 2: 女性
+//	 "province":"PROVINCE", // 用户所微信所在省份
+//	 "city":"CITY", // 用户微信所在城市
+//	 "country":"COUNTRY", // 用户微信所在国家
+//	 "headimgurl":"https://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46", // 用户微信头像
+//	 "privilege":[ "PRIVILEGE1" "PRIVILEGE2"     ], // 用户特权信息
+//	 "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL" // 用户在同一商户不同公众号的唯一标示
+//	}
+//
 // 接口详细介绍页面: https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
-func GetUserInfo(accessToken, openId, lang string) (result maps.Param, err error) {
+func GetUserInfo(accessToken, openId, lang string) (result pkg.Param, err error) {
 	var url = fmt.Sprintf("https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s&lang=%s", accessToken, openId, lang)
 	response, err := http.Get(url)
 	if err != nil {
@@ -172,7 +178,7 @@ func GetUserInfo(accessToken, openId, lang string) (result maps.Param, err error
 	}
 	defer response.Body.Close()
 
-	result = maps.NewParam()
+	result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err == nil {
 		return result, nil
@@ -200,7 +206,7 @@ func CheckOauthAccessTokenValid(accessToken, openId string) (bool, error) {
 	}
 	defer response.Body.Close()
 
-	var result = maps.NewParam()
+	var result = pkg.NewParam()
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return false, err

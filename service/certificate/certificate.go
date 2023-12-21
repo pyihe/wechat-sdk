@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 
-	"github.com/pyihe/go-pkg/maps"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
 	"github.com/pyihe/wechat-sdk/v3/service"
@@ -39,7 +39,7 @@ func DownloadCertificates(config *service.Config, savePath string) (certsRespons
 	}
 	certsResponse = new(CertResponse)
 	certsResponse.RequestId = response.Header.Get("Request-ID")
-	certsResponse.Certificates = maps.NewParam()
+	certsResponse.Certificates = pkg.NewParam()
 	content, err := ioutil.ReadAll(response.Body)
 	_ = response.Body.Close()
 	if err = json.Unmarshal(content, &certsResponse); err != nil {

@@ -17,10 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pyihe/go-pkg/maps"
-	"github.com/pyihe/go-pkg/rands"
 	"github.com/pyihe/secret"
 	"github.com/pyihe/wechat-sdk/v3/model"
+	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 	"github.com/pyihe/wechat-sdk/v3/pkg/files"
@@ -141,7 +140,7 @@ type Config struct {
 	hasher secret.Hasher
 
 	// 微信平台公钥证书, key为serialNo, value为*x509.Certificate
-	certificates maps.Param
+	certificates pkg.Param
 }
 
 func NewConfig(opts ...Option) *Config {
@@ -151,7 +150,7 @@ func NewConfig(opts ...Option) *Config {
 		merchantCipher: secret.NewCipher(),
 		wechatCipher:   secret.NewCipher(),
 		hasher:         secret.NewHasher(),
-		certificates:   maps.NewParam(),
+		certificates:   pkg.NewParam(),
 	}
 	for _, op := range opts {
 		op(c)
@@ -275,7 +274,7 @@ func (c *Config) RequestWithSign(method, url string, body interface{}, headers .
 
 	method = strings.ToUpper(method) // 方法类型，转为大写
 	timestamp := time.Now().Unix()   // 时间戳
-	nonceStr := rands.String(32)     // 随机字符串
+	nonceStr := pkg.String(32)       // 随机字符串
 
 	source := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", method, url, timestamp, nonceStr, string(data))
 	signature, err := rsas.SignSHA256WithRSA(c.merchantCipher, source)
@@ -482,7 +481,7 @@ func (c *Config) UploadMedia(url string, contentType string, fileName string, fi
 	if err != nil {
 		return
 	}
-	meta := maps.NewParam()
+	meta := pkg.NewParam()
 	meta.Add("filename", fileName)
 	meta.Add("sha256", sha256Value)
 
@@ -502,7 +501,7 @@ func (c *Config) UploadMedia(url string, contentType string, fileName string, fi
 	// 构造签名
 	method := http.MethodPost      // 方法类型
 	timestamp := time.Now().Unix() // 时间戳
-	nonceStr := rands.String(32)   // 随机字符串
+	nonceStr := pkg.String(32)     // 随机字符串
 	source := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", method, url, timestamp, nonceStr, string(metaData))
 	signature, err := rsas.SignSHA256WithRSA(c.merchantCipher, source)
 	if err != nil {
