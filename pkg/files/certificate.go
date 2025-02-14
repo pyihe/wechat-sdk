@@ -6,12 +6,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
 // LoadRSAPrivateKey 加载RSA PRIVATE KEY
 func LoadRSAPrivateKey(file string) (privateKey *rsa.PrivateKey, err error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
@@ -20,15 +21,7 @@ func LoadRSAPrivateKey(file string) (privateKey *rsa.PrivateKey, err error) {
 		err = errors.New("证书类型必须是PRIVATE KEY")
 		return
 	}
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return
-	}
-	var ok bool
-	privateKey, ok = key.(*rsa.PrivateKey)
-	if !ok {
-		err = errors.New("请提供RSA私钥文件")
-	}
+	privateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 	return
 }
 
@@ -57,7 +50,7 @@ func LoadRSAPublicKey(file string) (publicKey *rsa.PublicKey, err error) {
 
 // LoadCertificate 加载证书
 func LoadCertificate(file string) (certificate *x509.Certificate, err error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
@@ -68,7 +61,7 @@ func LoadCertificate(file string) (certificate *x509.Certificate, err error) {
 
 // LoadRSAPublicKeyWithSerialNo 加载本地RSA公钥，同时返回证书序列号
 func LoadRSAPublicKeyWithSerialNo(file string) (serialNo string, publicKey *rsa.PublicKey, err error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}

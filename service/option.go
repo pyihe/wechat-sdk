@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/pyihe/secret"
+
 	"github.com/pyihe/wechat-sdk/v3/model"
 	"github.com/pyihe/wechat-sdk/v3/pkg"
 	"github.com/pyihe/wechat-sdk/v3/pkg/aess"
@@ -69,13 +70,9 @@ func WithSerialNo(serialNo string) Option {
 	}
 }
 
-func WithPrivateKey(file string) Option {
+func WithPrivateKey(file string, level secret.PKCSLevel) Option {
 	return func(config *Config) {
-		privateKey, err := files.LoadRSAPrivateKey(file)
-		if err != nil {
-			panic(err)
-		}
-		if err = config.merchantCipher.SetRSAPrivateKey(privateKey, secret.PKCSLevel8); err != nil {
+		if err := config.merchantCipher.SetRSAPrivateKey(file, level); err != nil {
 			panic(err)
 		}
 	}
@@ -92,7 +89,7 @@ func WithPublicKey(file string) Option {
 			panic("加载证书失败: 请确认证书是否为RSA PublicKey!")
 		}
 		serialNo := strings.ToUpper(cert.SerialNumber.Text(16))
-		if err = config.wechatCipher.SetRSAPublicKey(publicKey, secret.PKCSLevel8); err != nil {
+		if err = config.wechatCipher.SetRSAPublicKey(publicKey, 0); err != nil {
 			panic(err)
 		}
 		config.certificates.Add(serialNo, cert)
@@ -269,6 +266,7 @@ func (c *Config) RequestWithSign(method, url string, body interface{}, headers .
 	// 构造签名主体
 	data, err := marshalJSON(body)
 	if err != nil {
+		fmt.Println(11)
 		return
 	}
 
@@ -279,6 +277,7 @@ func (c *Config) RequestWithSign(method, url string, body interface{}, headers .
 	source := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", method, url, timestamp, nonceStr, string(data))
 	signature, err := rsas.SignSHA256WithRSA(c.merchantCipher, source)
 	if err != nil {
+		fmt.Println(22)
 		return
 	}
 	// 签名头

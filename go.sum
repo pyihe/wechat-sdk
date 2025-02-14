@@ -1,5 +1,6 @@
 github.com/pyihe/secret v0.0.7-0.20211217073949-f4e53165dcbe h1:dQL/S+x6kOUER/3gYvr3/nL88RbTZsdB1e8LpJBdF/U=
 github.com/pyihe/secret v0.0.7-0.20211217073949-f4e53165dcbe/go.mod h1:sdYR2so2a5O4lQxm1/QHjWaIyzXEW+ajvEI1zH3DbGg=
+github.com/pyihe/secret v0.0.8/go.mod h1:sdYR2so2a5O4lQxm1/QHjWaIyzXEW+ajvEI1zH3DbGg=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 h1:cg5LA/zNPRzIXIWSCxQW10Rvpy94aQh3LT/ShoCpkHw=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=

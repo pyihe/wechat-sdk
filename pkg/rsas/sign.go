@@ -4,6 +4,7 @@ import (
 	"crypto"
 
 	"github.com/pyihe/secret"
+
 	"github.com/pyihe/wechat-sdk/v3/pkg/errors"
 )
 
